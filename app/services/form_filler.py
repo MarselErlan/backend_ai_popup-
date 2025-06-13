@@ -18,6 +18,7 @@ from app.services.cache_service import CacheService
 
 class FormFiller:
     def __init__(self, openai_api_key: str, cache_service: CacheService = None, headless: bool = True, keep_browser_open: bool = False):
+        self.openai_api_key = openai_api_key  # Store the API key for extractor initialization
         self.client = AsyncOpenAI(api_key=openai_api_key)
         self.cache = cache_service or CacheService()
         self.headless = headless
@@ -197,12 +198,20 @@ class FormFiller:
         - **Additional Info**: Create relevant professional summaries
         
         SPECIAL HANDLING FOR COMMON FORM PATTERNS:
+        - **Upload Fields**: ALWAYS set action to "skip" and value to null for file upload fields (resume, cover letter, portfolio files)
         - **Work Authorization**: Analyze job location and provide appropriate visa/sponsorship responses
         - **Salary Questions**: Research typical salaries for the role and location
         - **Cover Letters**: Write personalized cover letters that highlight relevant experience for the specific job
         - **Additional Info**: Generate professional summaries that match the job requirements
         - **Hybrid Work**: Provide positive responses about work flexibility
         - **Demographics**: Handle optional demographic questions appropriately (can skip or decline)
+        
+        CRITICAL FILE UPLOAD HANDLING:
+        - **NEVER generate file paths** for upload fields
+        - **ALWAYS use action: "skip"** for any file upload field
+        - **File uploads include**: resume uploads, cover letter uploads, portfolio uploads, document uploads
+        - **Set value to null** for all upload fields
+        - **Reasoning**: "Skipped file upload - no files available for upload"
         
         RESPONSE FORMAT (JSON):
         {{
@@ -280,9 +289,9 @@ class FormFiller:
         🎯 Search resume vector database for relevant professional information
         """
         try:
-            from resume_extractor import ResumeExtractor
+            from resume_extractor_db import ResumeExtractorDB
             
-            resume_extractor = ResumeExtractor()
+            resume_extractor = ResumeExtractorDB(openai_api_key=self.openai_api_key, use_hf_fallback=True)
             
             # Create intelligent search queries based on field purposes
             search_queries = []
@@ -376,9 +385,9 @@ class FormFiller:
         🎯 Search personal info vector database for contact details and preferences
         """
         try:
-            from personal_info_extractor import PersonalInfoExtractor
+            from personal_info_extractor_db import PersonalInfoExtractorDB
             
-            personal_extractor = PersonalInfoExtractor()
+            personal_extractor = PersonalInfoExtractorDB(openai_api_key=self.openai_api_key, use_hf_fallback=True)
             
             # Create targeted search queries for personal information
             personal_queries = []
@@ -591,14 +600,10 @@ class FormFiller:
                             logger.info(f"   ✅ Filled: {field_purpose} = {value}")
                             
                         elif action == "upload":
-                            if os.path.exists(str(value)):
-                                await page.set_input_files(selector, str(value))
-                                results[field_purpose] = f"uploaded: {os.path.basename(str(value))}"
-                                filled_count += 1
-                                logger.info(f"   📎 Uploaded: {os.path.basename(str(value))}")
-                            else:
-                                results[field_purpose] = f"file not found: {value}"
-                                logger.warning(f"   ❌ File not found: {value}")
+                            # Skip all file uploads since we're using database-driven system
+                            results[field_purpose] = "skipped: file upload not supported in database-driven mode"
+                            logger.info(f"   ⏭️  Skipped file upload: {field_purpose} (database-driven mode)")
+                            # Note: File uploads are skipped because our system stores data in database, not files
                                 
                         elif action == "select":
                             await page.select_option(selector, str(value))
@@ -755,14 +760,10 @@ class FormFiller:
                                 logger.info(f"   ✅ Filled: {field_purpose} = {value}")
                                 
                             elif action == "upload":
-                                if os.path.exists(str(value)):
-                                    await page.set_input_files(selector, str(value))
-                                    results[field_purpose] = f"uploaded: {os.path.basename(str(value))}"
-                                    filled_count += 1
-                                    logger.info(f"   📎 Uploaded: {os.path.basename(str(value))}")
-                                else:
-                                    results[field_purpose] = f"file not found: {value}"
-                                    logger.warning(f"   ❌ File not found: {value}")
+                                # Skip all file uploads since we're using database-driven system
+                                results[field_purpose] = "skipped: file upload not supported in database-driven mode"
+                                logger.info(f"   ⏭️  Skipped file upload: {field_purpose} (database-driven mode)")
+                                # Note: File uploads are skipped because our system stores data in database, not files
                                     
                             elif action == "select":
                                 await page.select_option(selector, str(value))

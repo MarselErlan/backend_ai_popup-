@@ -16,8 +16,93 @@
         "min_chunk_size": 350,
         "max_chunk_size": 435
       }
+    },
+    {
+      "embeddings_json": "info/vectordb/personal_info_20250613_140943.json",
+      "embeddings_pickle": "info/vectordb/personal_info_20250613_140943.pkl",
+      "faiss_store": "info/vectordb/faiss_store_20250613_140943",
+      "timestamp": "20250613_140943",
+      "creation_date": "2025-06-13T14:09:43.481219",
+      "source_file": "docs/info/personal_information.txt",
+      "total_chunks": 4,
+      "embedding_dimension": 1536,
+      "model": "openai",
+      "chunk_stats": {
+        "total_characters": 1610,
+        "avg_chunk_size": 402.5,
+        "min_chunk_size": 350,
+        "max_chunk_size": 435
+      }
+    },
+    {
+      "embeddings_json": "info/vectordb/personal_info_20250613_141059.json",
+      "embeddings_pickle": "info/vectordb/personal_info_20250613_141059.pkl",
+      "faiss_store": "info/vectordb/faiss_store_20250613_141059",
+      "timestamp": "20250613_141059",
+      "creation_date": "2025-06-13T14:10:59.959826",
+      "source_file": "docs/info/personal_information.txt",
+      "total_chunks": 4,
+      "embedding_dimension": 1536,
+      "model": "openai",
+      "chunk_stats": {
+        "total_characters": 1610,
+        "avg_chunk_size": 402.5,
+        "min_chunk_size": 350,
+        "max_chunk_size": 435
+      }
+    },
+    {
+      "embeddings_json": "info/vectordb/personal_info_20250613_141431.json",
+      "embeddings_pickle": "info/vectordb/personal_info_20250613_141431.pkl",
+      "faiss_store": "info/vectordb/faiss_store_20250613_141431",
+      "timestamp": "20250613_141431",
+      "creation_date": "2025-06-13T14:14:31.513798",
+      "source_file": "docs/info/personal_information.txt",
+      "total_chunks": 4,
+      "embedding_dimension": 1536,
+      "model": "openai",
+      "chunk_stats": {
+        "total_characters": 1610,
+        "avg_chunk_size": 402.5,
+        "min_chunk_size": 350,
+        "max_chunk_size": 435
+      }
+    },
+    {
+      "embeddings_json": "info/vectordb/personal_info_20250613_142129.json",
+      "embeddings_pickle": "info/vectordb/personal_info_20250613_142129.pkl",
+      "faiss_store": "info/vectordb/faiss_store_20250613_142129",
+      "timestamp": "20250613_142129",
+      "creation_date": "2025-06-13T14:21:29.799592",
+      "source_database": "database",
+      "total_chunks": 4,
+      "embedding_dimension": 1536,
+      "model": "openai",
+      "chunk_stats": {
+        "total_characters": 1610,
+        "avg_chunk_size": 402.5,
+        "min_chunk_size": 350,
+        "max_chunk_size": 435
+      }
+    },
+    {
+      "embeddings_json": "info/vectordb/personal_info_20250613_144006.json",
+      "embeddings_pickle": "info/vectordb/personal_info_20250613_144006.pkl",
+      "faiss_store": "info/vectordb/faiss_store_20250613_144006",
+      "timestamp": "20250613_144006",
+      "creation_date": "2025-06-13T14:40:06.817136",
+      "source_database": "database",
+      "total_chunks": 4,
+      "embedding_dimension": 1536,
+      "model": "openai",
+      "chunk_stats": {
+        "total_characters": 1610,
+        "avg_chunk_size": 402.5,
+        "min_chunk_size": 350,
+        "max_chunk_size": 435
+      }
     }
   ],
-  "last_updated": "2025-06-13T13:13:01.632120",
-  "total_entries": 1
+  "last_updated": "2025-06-13T14:40:06.817431",
+  "total_entries": 6
 }

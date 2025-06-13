@@ -1,48 +1,90 @@
 #!/usr/bin/env python3
 """
-Personal Info Extractor - Uses LangChain to extract content from personal_information.txt, creates embeddings, and saves to vector database
-Reads from docs/info/personal_information.txt and saves embeddings to info/vectordb
+Database-based Personal Info Extractor - Smart Form Fill Vector Database Creation
+Reads personal info from database instead of files
 """
 
 import os
 import json
 import pickle
 from pathlib import Path
-from typing import Dict, List, Any
 from datetime import datetime
-
-# LangChain imports
+from typing import Dict, Any, List, Optional
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
-
-# Other imports
-import numpy as np
 from openai import OpenAI
 from loguru import logger
+from dotenv import load_dotenv
 
-class PersonalInfoExtractor:
-    def __init__(self, openai_api_key: str = None):
-        """Initialize the personal info extractor with LangChain components"""
-        self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY", "your_openai_api_key_here")
+load_dotenv()   
+
+# Try to import Hugging Face embeddings as fallback
+try:
+    from langchain_community.embeddings import HuggingFaceEmbeddings
+    HF_AVAILABLE = True
+except ImportError:
+    HF_AVAILABLE = False
+
+from app.services.document_service import DocumentService
+
+
+class PersonalInfoExtractorDB:
+    """Database-based Personal info extractor for creating vector embeddings"""
+    
+    def __init__(self, openai_api_key: str = None, database_url: str = None, user_id: str = None, use_hf_fallback: bool = True):
+        # API setup
+        self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+        self.database_url = database_url or os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/smart_form_filler")
+        self.user_id = user_id
+        self.use_hf_fallback = use_hf_fallback
         
-        if self.openai_api_key == "your_openai_api_key_here":
-            logger.warning("⚠️ OpenAI API key not set. Embeddings will not work.")
+        # Initialize document service
+        self.document_service = DocumentService(self.database_url)
+        
+        # Try OpenAI first, then fallback to Hugging Face
+        if self.openai_api_key:
+            try:
+                # Test OpenAI with a small embedding to verify quota
+                test_embeddings = OpenAIEmbeddings(
+                    openai_api_key=self.openai_api_key,
+                    model="text-embedding-3-small"
+                )
+                # Quick test to verify API works
+                test_embeddings.embed_query("test")
+                
+                self.embeddings = test_embeddings
+                self.client = OpenAI(api_key=self.openai_api_key)
+                self.embedding_model = "openai"
+                logger.info("✅ Using OpenAI embeddings")
+            except Exception as e:
+                logger.warning(f"⚠️ OpenAI setup failed: {e}")
+                self.embeddings = None
+                self.client = None
+        else:
             self.embeddings = None
             self.client = None
-        else:
-            self.embeddings = OpenAIEmbeddings(
-                openai_api_key=self.openai_api_key,
-                model="text-embedding-3-small"
-            )
-            self.client = OpenAI(api_key=self.openai_api_key)
         
-        # Paths
-        self.docs_path = Path("docs/info")
-        self.personal_info_file = self.docs_path / "personal_information.txt"
-        self.vectordb_path = Path("info/vectordb")
-        self.vectordb_path.mkdir(parents=True, exist_ok=True)
+        # Fallback to Hugging Face if OpenAI not available
+        if self.embeddings is None and self.use_hf_fallback and HF_AVAILABLE:
+            try:
+                logger.info("🤗 Initializing Hugging Face embeddings as fallback...")
+                self.embeddings = HuggingFaceEmbeddings(
+                    model_name="all-MiniLM-L6-v2",
+                    model_kwargs={'device': 'cpu'},
+                    encode_kwargs={'normalize_embeddings': True}
+                )
+                self.embedding_model = "huggingface"
+                self.client = None  # No OpenAI client needed
+                logger.info("✅ Using Hugging Face embeddings (all-MiniLM-L6-v2)")
+            except Exception as e:
+                logger.error(f"❌ Hugging Face embeddings setup failed: {e}")
+                self.embeddings = None
+        
+        if self.embeddings is None:
+            logger.error("❌ No embedding provider available. Install sentence-transformers for HF support.")
+            self.embedding_model = "none"
         
         # Text splitter for chunking (smaller chunks for personal info)
         self.text_splitter = RecursiveCharacterTextSplitter(
@@ -52,33 +94,50 @@ class PersonalInfoExtractor:
             separators=["\n\n", "\n", "=", " ", ""]
         )
         
-        logger.info(f"Personal info extractor initialized with LangChain")
-        logger.info(f"Personal info file: {self.personal_info_file}")
+        # Vector database path (still used for FAISS storage)
+        self.vectordb_path = Path("info/vectordb")
+        self.vectordb_path.mkdir(parents=True, exist_ok=True)
+        
+        logger.info("Personal info extractor (DB) initialized with LangChain")
+        logger.info(f"Database URL: {self.database_url}")
+        logger.info(f"User ID: {self.user_id}")
         logger.info(f"Vector DB path: {self.vectordb_path}")
     
-    def load_personal_info_with_langchain(self) -> List[Any]:
-        """Load personal information using LangChain TextLoader"""
+    def load_personal_info_from_database(self) -> List[Any]:
+        """Load personal info from database using document service"""
         try:
-            if not self.personal_info_file.exists():
-                raise FileNotFoundError(f"Personal info file not found: {self.personal_info_file}")
+            # Get personal info as temporary file
+            temp_result = self.document_service.get_personal_info_as_temp_file(self.user_id)
+            if not temp_result:
+                raise FileNotFoundError("No active personal info document found in database")
             
-            logger.info(f"📄 Loading personal info with LangChain from: {self.personal_info_file}")
+            temp_path, filename = temp_result
             
-            # Use LangChain's TextLoader
-            loader = TextLoader(str(self.personal_info_file), encoding='utf-8')
-            documents = loader.load()
+            logger.info(f"📄 Loading personal info from database: {filename}")
             
-            logger.info(f"✅ Loaded {len(documents)} document(s) with LangChain")
-            
-            # Log document details
-            for i, doc in enumerate(documents):
-                logger.info(f"   Document {i+1}: {len(doc.page_content)} characters")
-                logger.info(f"   Metadata: {doc.metadata}")
-            
-            return documents
+            try:
+                # Use LangChain's TextLoader with temporary file
+                loader = TextLoader(temp_path, encoding='utf-8')
+                documents = loader.load()
+                
+                logger.info(f"✅ Loaded {len(documents)} document(s) from database")
+                
+                # Log document details
+                for i, doc in enumerate(documents):
+                    logger.info(f"   Document {i+1}: {len(doc.page_content)} characters")
+                    # Update metadata to reflect database source
+                    doc.metadata['source'] = f"database:{filename}"
+                    doc.metadata['user_id'] = self.user_id
+                    logger.info(f"   Metadata: {doc.metadata}")
+                
+                return documents
+                
+            finally:
+                # Clean up temporary file
+                self.document_service.cleanup_temp_file(temp_path)
             
         except Exception as e:
-            logger.error(f"❌ Error loading personal info with LangChain: {e}")
+            logger.error(f"❌ Error loading personal info from database: {e}")
             raise
     
     def split_documents(self, documents: List[Any]) -> List[Any]:
@@ -105,11 +164,11 @@ class PersonalInfoExtractor:
             raise
     
     def create_embeddings_with_langchain(self, chunks: List[Any]) -> Dict[str, Any]:
-        """Create embeddings using LangChain OpenAI embeddings"""
+        """Create embeddings using LangChain embeddings"""
         try:
             if not self.embeddings:
-                logger.error("❌ OpenAI embeddings not initialized. Cannot create embeddings.")
-                return {"error": "OpenAI API key not set"}
+                logger.error("❌ Embeddings not initialized. Cannot create embeddings.")
+                return {"error": "No embedding provider available"}
             
             logger.info("🔢 Creating embeddings with LangChain...")
             
@@ -131,11 +190,11 @@ class PersonalInfoExtractor:
                 "query_embedding": query_embedding,
                 "texts": texts,
                 "metadatas": metadatas,
-                "model": "text-embedding-3-small",
+                "model": getattr(self, 'embedding_model', 'unknown'),
                 "total_chunks": len(texts),
                 "embedding_dimension": len(embeddings_list[0]) if embeddings_list else 0,
                 "creation_timestamp": datetime.now().isoformat(),
-                "source_file": str(self.personal_info_file),
+                "source_database": "database",
                 "chunk_stats": {
                     "total_characters": sum(len(text) for text in texts),
                     "avg_chunk_size": sum(len(text) for text in texts) / len(texts) if texts else 0,
@@ -156,7 +215,7 @@ class PersonalInfoExtractor:
         """Create FAISS vector store using LangChain"""
         try:
             if not self.embeddings:
-                logger.error("❌ OpenAI embeddings not initialized. Cannot create vector store.")
+                logger.error("❌ Embeddings not initialized. Cannot create vector store.")
                 return None
             
             logger.info("🗄️ Creating FAISS vector store...")
@@ -217,7 +276,7 @@ class PersonalInfoExtractor:
                 "faiss_store": str(faiss_path) if faiss_path else None,
                 "timestamp": timestamp,
                 "creation_date": datetime.now().isoformat(),
-                "source_file": str(self.personal_info_file),
+                "source_database": "database",
                 "total_chunks": embedding_data.get("total_chunks", 0),
                 "embedding_dimension": embedding_data.get("embedding_dimension", 0),
                 "model": embedding_data.get("model", "unknown"),
@@ -256,64 +315,97 @@ class PersonalInfoExtractor:
             raise
     
     def process_personal_info(self) -> Dict[str, Any]:
-        """Complete pipeline: load → split → embed → save"""
+        """Complete pipeline: load from DB → split → embed → save"""
         try:
-            logger.info("🚀 Starting LangChain personal info processing pipeline...")
+            start_time = datetime.now()
             
-            # Step 1: Load personal info with LangChain
-            logger.info("📄 Step 1: Loading personal info with LangChain...")
-            documents = self.load_personal_info_with_langchain()
+            logger.info("🚀 Starting LangChain personal info processing pipeline (Database)...")
             
-            # Step 2: Split into chunks
-            logger.info("🔪 Step 2: Splitting documents into chunks...")
-            chunks = self.split_documents(documents)
+            # Get active personal info document for logging
+            personal_info_doc = self.document_service.get_active_personal_info_document(self.user_id)
+            if not personal_info_doc:
+                raise ValueError("No active personal info document found in database")
             
-            # Step 3: Create embeddings
-            logger.info("🔢 Step 3: Creating embeddings...")
-            embedding_data = self.create_embeddings_with_langchain(chunks)
+            # Log processing start
+            log_id = self.document_service.log_processing_start("personal_info", personal_info_doc.id, self.user_id)
             
-            # Step 4: Create FAISS vector store
-            vectorstore = None
-            if "error" not in embedding_data:
+            try:
+                # Update personal info status to processing
+                self.document_service.update_personal_info_processing_status(personal_info_doc.id, "processing")
+                
+                # Step 1: Load personal info from database
+                logger.info("📄 Step 1: Loading personal info from database...")
+                documents = self.load_personal_info_from_database()
+                
+                # Step 2: Split documents
+                logger.info("🔪 Step 2: Splitting documents into chunks...")
+                chunks = self.split_documents(documents)
+                
+                # Step 3: Create embeddings
+                logger.info("🔢 Step 3: Creating embeddings...")
+                embedding_data = self.create_embeddings_with_langchain(chunks)
+                
+                if "error" in embedding_data:
+                    raise ValueError(embedding_data["error"])
+                
+                # Step 4: Create vector store
                 logger.info("🗄️ Step 4: Creating FAISS vector store...")
                 vectorstore = self.create_faiss_vectorstore(chunks)
-            else:
-                logger.warning("⚠️ Skipping vector store creation due to embedding error")
-            
-            # Step 5: Save to vector database
-            logger.info("💾 Step 5: Saving to vector database...")
-            timestamp = self.save_to_vectordb(embedding_data, vectorstore)
-            
-            # Prepare result
-            result = {
-                "status": "success",
-                "timestamp": timestamp,
-                "documents_loaded": len(documents),
-                "chunks_created": len(chunks),
-                "embedding_data": {
-                    "total_chunks": embedding_data.get("total_chunks", 0),
-                    "dimension": embedding_data.get("embedding_dimension", 0),
-                    "model": embedding_data.get("model", "none"),
-                    "chunk_stats": embedding_data.get("chunk_stats", {})
-                },
-                "vectorstore_created": vectorstore is not None,
-                "files_created": {
-                    "embeddings_json": f"personal_info_{timestamp}.json",
-                    "embeddings_pickle": f"personal_info_{timestamp}.pkl",
-                    "faiss_store": f"faiss_store_{timestamp}" if vectorstore else None,
-                    "metadata": f"metadata_{timestamp}.json"
+                
+                # Step 5: Save to vector database
+                logger.info("💾 Step 5: Saving to vector database...")
+                timestamp = self.save_to_vectordb(embedding_data, vectorstore)
+                
+                end_time = datetime.now()
+                processing_time = int((end_time - start_time).total_seconds())
+                
+                # Update processing status
+                self.document_service.update_personal_info_processing_status(personal_info_doc.id, "completed", end_time)
+                
+                # Log processing completion
+                self.document_service.log_processing_complete(
+                    log_id, processing_time, 
+                    embedding_data.get("total_chunks"),
+                    embedding_data.get("embedding_dimension"),
+                    embedding_data.get("model")
+                )
+                
+                result = {
+                    "status": "success",
+                    "message": "Personal info processing completed successfully from database",
+                    "timestamp": timestamp,
+                    "processing_time": processing_time,
+                    "source": "database",
+                    "user_id": self.user_id,
+                    "document_id": personal_info_doc.id,
+                    "database_info": {
+                        "total_chunks": embedding_data.get("total_chunks", 0),
+                        "embedding_dimension": embedding_data.get("embedding_dimension", 0),
+                        "model": embedding_data.get("model", "unknown"),
+                        "chunk_stats": embedding_data.get("chunk_stats", {}),
+                        "vectordb_path": str(self.vectordb_path)
+                    }
                 }
-            }
-            
-            logger.info("🎉 LangChain personal info processing completed successfully!")
-            return result
-            
+                
+                logger.info("🎉 LangChain personal info processing completed successfully from database!")
+                return result
+                
+            except Exception as e:
+                # Update processing status to failed
+                self.document_service.update_personal_info_processing_status(personal_info_doc.id, "failed")
+                
+                # Log processing error
+                self.document_service.log_processing_error(log_id, str(e))
+                
+                raise e
+        
         except Exception as e:
             logger.error(f"❌ Personal info processing failed: {e}")
             return {
                 "status": "error",
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
+                "message": f"Personal info processing failed: {str(e)}",
+                "source": "database",
+                "user_id": self.user_id
             }
     
     def search_personal_info(self, query: str, k: int = 5) -> Dict[str, Any]:
@@ -362,63 +454,13 @@ class PersonalInfoExtractor:
             logger.error(f"❌ Error searching personal info: {e}")
             return {"error": str(e)}
 
+
 def main():
-    """Main function to run the personal info extractor"""
-    print("🚀 LangChain Personal Info Extractor - personal_information.txt")
-    print("=" * 70)
-    
-    # Initialize extractor
-    extractor = PersonalInfoExtractor()
-    
-    # Process the personal info
+    """Test the database-based personal info extractor"""
+    extractor = PersonalInfoExtractorDB()
     result = extractor.process_personal_info()
-    
-    # Display results
-    print("\n📊 Processing Results:")
-    print("=" * 30)
-    
-    if result["status"] == "success":
-        print("✅ Status: SUCCESS")
-        print(f"📅 Timestamp: {result['timestamp']}")
-        print(f"📄 Documents loaded: {result['documents_loaded']}")
-        print(f"🔪 Chunks created: {result['chunks_created']}")
-        print(f"🔢 Embedding chunks: {result['embedding_data']['total_chunks']}")
-        print(f"📐 Embedding dimension: {result['embedding_data']['dimension']}")
-        print(f"🤖 Model: {result['embedding_data']['model']}")
-        print(f"🗄️ Vector store created: {result['vectorstore_created']}")
-        
-        # Show chunk statistics
-        chunk_stats = result['embedding_data'].get('chunk_stats', {})
-        if chunk_stats:
-            print(f"\n📈 Chunk Statistics:")
-            print(f"   • Total characters: {chunk_stats.get('total_characters', 0):,}")
-            print(f"   • Average chunk size: {chunk_stats.get('avg_chunk_size', 0):.0f}")
-            print(f"   • Min chunk size: {chunk_stats.get('min_chunk_size', 0)}")
-            print(f"   • Max chunk size: {chunk_stats.get('max_chunk_size', 0)}")
-        
-        print("\n📁 Files created:")
-        for file_type, filename in result['files_created'].items():
-            if filename:
-                print(f"   • {file_type}: {filename}")
-        
-        # Test search functionality
-        print("\n🔍 Testing search functionality...")
-        search_queries = ["work authorization", "salary expectations", "contact information"]
-        
-        for query in search_queries:
-            search_result = extractor.search_personal_info(query, k=2)
-            if "error" not in search_result:
-                print(f"   ✅ Search '{query}': {search_result['total_results']} results found")
-            else:
-                print(f"   ❌ Search '{query}' failed: {search_result['error']}")
-                break
-            
-    else:
-        print("❌ Status: ERROR")
-        print(f"💥 Error: {result['error']}")
-    
-    print("\n" + "=" * 70)
-    print("✨ LangChain personal info extraction completed!")
+    print(f"Processing result: {result}")
+
 
 if __name__ == "__main__":
     main() 
