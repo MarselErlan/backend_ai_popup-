@@ -14,19 +14,17 @@ from loguru import logger
 from typing import Dict, Optional, Any, List
 from datetime import datetime
 
-from app.services.cache_service import CacheService
-
 class FormFiller:
-    def __init__(self, openai_api_key: str, cache_service: CacheService = None, headless: bool = True, keep_browser_open: bool = False):
+    def __init__(self, openai_api_key: str, cache_service=None, headless: bool = True, keep_browser_open: bool = False):
         self.openai_api_key = openai_api_key  # Store the API key for extractor initialization
         self.client = AsyncOpenAI(api_key=openai_api_key)
-        self.cache = cache_service or CacheService()
+        self.cache = cache_service  # Cache service is optional now
         self.headless = headless
         self.keep_browser_open = keep_browser_open
     
     async def auto_fill_form(self, url: str, user_data: Dict, submit: bool = False, manual_submit: bool = False) -> Dict[str, Any]:
         """
-        Automatically fill form by retrieving analysis from Redis cache
+        Automatically fill form - now deprecated in favor of field-by-field approach
         
         Args:
             url: Form URL to fill
@@ -34,37 +32,12 @@ class FormFiller:
             submit: Whether to submit the form automatically
             manual_submit: If True, keeps browser open for manual submission
         """
-        logger.info(f"Starting auto-fill for: {url}")
+        logger.warning(f"auto_fill_form is deprecated. Use field-by-field approach instead.")
         
-        # Get form analysis from Redis cache
-        cache_key = f"form:{url}"
-        cached_data = self.cache.get(cache_key)
-        
-        if not cached_data:
-            return {
-                "status": "error", 
-                "error": f"No form analysis found in cache for {url}. Please analyze the form first using /api/analyze-form"
-            }
-        
-        # Extract field map from cached analysis
-        analysis = cached_data.get("analysis", {})
-        if analysis.get("status") != "success":
-            return {
-                "status": "error",
-                "error": f"Cached form analysis failed: {analysis.get('error', 'Unknown error')}"
-            }
-        
-        field_map = analysis.get("field_map")
-        if not field_map:
-            return {
-                "status": "error",
-                "error": "No field map found in cached analysis"
-            }
-        
-        logger.info(f"Retrieved form analysis from Redis cache for {url}")
-        
-        # Use the existing fill_form method with cached data
-        return await self.fill_form(url, field_map, user_data, submit, manual_submit)
+        return {
+            "status": "deprecated", 
+            "error": "This method is deprecated. Use the new field-by-field API endpoint /api/generate-field-answer instead."
+        }
     
     async def fill_form(self, url: str, field_map: str, user_data: Dict, submit: bool = False, manual_submit: bool = False) -> Dict[str, Any]:
         """
