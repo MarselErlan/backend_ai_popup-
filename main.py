@@ -114,6 +114,17 @@ async def generate_field_answer(request: FieldAnswerRequest) -> FieldAnswerRespo
     2. Personal info vector database (personal details)
     3. AI generation (when data is insufficient)
     """
+    # 🖥️  CONSOLE LOGGING - Frontend Request Data
+    print("=" * 80)
+    print("🔵 FRONTEND REQUEST - /api/generate-field-answer")
+    print("=" * 80)
+    print(f"📥 Request Data:")
+    print(f"   • Field Label: '{request.label}'")
+    print(f"   • Page URL: '{request.url}'")
+    print(f"   • User ID: '{request.user_id}'")
+    print(f"   • Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 80)
+    
     try:
         if form_filler is None:
             raise HTTPException(status_code=503, detail="Form filler service unavailable")
@@ -152,6 +163,13 @@ async def generate_field_answer(request: FieldAnswerRequest) -> FieldAnswerRespo
         
         logger.info(f"✅ Generated answer: '{answer}' (source: {data_source})")
         
+        # 🖥️  CONSOLE LOGGING - Response Data
+        print("📤 Response Data:")
+        print(f"   • Generated Answer: '{answer}'")
+        print(f"   • Data Source: {data_source}")
+        print(f"   • Reasoning: {reasoning}")
+        print("=" * 80)
+        
         return FieldAnswerResponse(
             answer=answer,
             data_source=data_source,
@@ -163,6 +181,8 @@ async def generate_field_answer(request: FieldAnswerRequest) -> FieldAnswerRespo
         raise
     except Exception as e:
         logger.error(f"❌ Field answer generation failed: {e}")
+        print(f"❌ ERROR: {str(e)}")
+        print("=" * 80)
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 # ============================================================================
@@ -172,6 +192,15 @@ async def generate_field_answer(request: FieldAnswerRequest) -> FieldAnswerRespo
 @app.post("/api/v1/resume/reembed", response_model=ReembedResponse)
 async def reembed_resume_from_database(user_id: str = Query("default", description="User ID for multi-user support")):
     """Re-embed resume from database using consolidated extractor"""
+    # 🖥️  CONSOLE LOGGING - Frontend Request Data
+    print("=" * 80)
+    print("🟡 FRONTEND REQUEST - /api/v1/resume/reembed")
+    print("=" * 80)
+    print(f"📥 Request Data:")
+    print(f"   • User ID: '{user_id}'")
+    print(f"   • Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 80)
+    
     try:
         if resume_extractor_db is None:
             raise HTTPException(status_code=503, detail="Resume extractor service unavailable")
@@ -190,6 +219,13 @@ async def reembed_resume_from_database(user_id: str = Query("default", descripti
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         
+        # 🖥️  CONSOLE LOGGING - Response Data
+        print("📤 Response Data:")
+        print(f"   • Status: {result.get('status')}")
+        print(f"   • Processing Time: {processing_time:.2f}s")
+        print(f"   • Database Info: {result.get('database_info', {})}")
+        print("=" * 80)
+        
         return ReembedResponse(
             status="success",
             message="Resume re-embedding completed from database",
@@ -197,11 +233,22 @@ async def reembed_resume_from_database(user_id: str = Query("default", descripti
             database_info=result.get("database_info", {})
         )
     except Exception as e:
+        print(f"❌ ERROR: {str(e)}")
+        print("=" * 80)
         raise HTTPException(status_code=500, detail=f"Database re-embedding failed: {str(e)}")
 
 @app.post("/api/v1/personal-info/reembed", response_model=ReembedResponse)
 async def reembed_personal_info_from_database(user_id: str = Query("default", description="User ID for multi-user support")):
     """Re-embed personal info from database using consolidated extractor"""
+    # 🖥️  CONSOLE LOGGING - Frontend Request Data
+    print("=" * 80)
+    print("🟠 FRONTEND REQUEST - /api/v1/personal-info/reembed")
+    print("=" * 80)
+    print(f"📥 Request Data:")
+    print(f"   • User ID: '{user_id}'")
+    print(f"   • Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 80)
+    
     try:
         if personal_info_extractor_db is None:
             raise HTTPException(status_code=503, detail="Personal info extractor service unavailable")
@@ -220,6 +267,13 @@ async def reembed_personal_info_from_database(user_id: str = Query("default", de
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         
+        # 🖥️  CONSOLE LOGGING - Response Data
+        print("📤 Response Data:")
+        print(f"   • Status: {result.get('status')}")
+        print(f"   • Processing Time: {processing_time:.2f}s")
+        print(f"   • Database Info: {result.get('database_info', {})}")
+        print("=" * 80)
+        
         return ReembedResponse(
             status="success",
             message="Personal info re-embedding completed from database",
@@ -227,17 +281,28 @@ async def reembed_personal_info_from_database(user_id: str = Query("default", de
             database_info=result.get("database_info", {})
         )
     except Exception as e:
+        print(f"❌ ERROR: {str(e)}")
+        print("=" * 80)
         raise HTTPException(status_code=500, detail=f"Database re-embedding failed: {str(e)}")
 
 @app.get("/api/v1/documents/status")
 async def get_documents_status(user_id: str = Query(None, description="User ID for multi-user support")):
     """Get status of documents in the database"""
+    # 🖥️  CONSOLE LOGGING - Frontend Request Data
+    print("=" * 80)
+    print("🟢 FRONTEND REQUEST - /api/v1/documents/status")
+    print("=" * 80)
+    print(f"📥 Request Data:")
+    print(f"   • User ID: '{user_id or 'default'}'")
+    print(f"   • Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 80)
+    
     try:
         # Get resume documents status
         resume_docs = document_service.get_user_resume_documents(user_id or "default")
         personal_docs = document_service.get_user_personal_info_documents(user_id or "default")
         
-        return {
+        response_data = {
             "status": "success",
             "user_id": user_id or "default",
             "resume_documents": {
@@ -263,7 +328,18 @@ async def get_documents_status(user_id: str = Query(None, description="User ID f
                 ]
             }
         }
+        
+        # 🖥️  CONSOLE LOGGING - Response Data
+        print("📤 Response Data:")
+        print(f"   • Resume Documents: {len(resume_docs)} found")
+        print(f"   • Personal Info Documents: {len(personal_docs)} found")
+        print(f"   • Total Files: {len(resume_docs) + len(personal_docs)}")
+        print("=" * 80)
+        
+        return response_data
     except Exception as e:
+        print(f"❌ ERROR: {str(e)}")
+        print("=" * 80)
         raise HTTPException(status_code=500, detail=f"Failed to get documents status: {str(e)}")
 
 # ============================================================================
