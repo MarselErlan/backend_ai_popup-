@@ -95,221 +95,179 @@ class OptimizedFormFiller:
 
     def calculate_satisfaction_score(self, field_label: str, resume_data: Dict[str, Any]) -> float:
         """
-        🎯 EARLY EXIT OPTIMIZATION: Calculate satisfaction score for TIER 1 results
+        🎯 ANSWER-FOCUSED SATISFACTION SCORING
         
         Returns satisfaction percentage (0-100):
-        - 80%+ = Perfect match, skip TIER 2 & 3
-        - 60-79% = Good match, continue to TIER 2
-        - <60% = Poor match, need all tiers
+        - 80%+ = Can extract actual answer, skip TIER 2 & 3
+        - <80% = Cannot extract answer, need more tiers
         """
         if not resume_data or resume_data.get("status") != "found":
             return 0.0
         
         field_lower = field_label.lower().strip()
-        content = resume_data.get("content", "").lower()
+        content = resume_data.get("content", "")
         
-        # Initialize score
-        satisfaction_score = 0.0
+        # 🎯 TRY TO EXTRACT ACTUAL ANSWER - Only give high score if we can extract it
+        extracted_answer = self.extract_answer_from_tier1(field_label, resume_data)
         
-        # 🎯 PERFECT MATCHES (80-100% satisfaction)
+        if extracted_answer:
+            # We found an actual answer - high satisfaction!
+            satisfaction_score = 95.0
+            logger.info(f"🎯 ACTUAL ANSWER FOUND: '{extracted_answer}' - Satisfaction: {satisfaction_score}%")
+            return satisfaction_score
         
-        # Name fields - check for actual names
-        if any(keyword in field_lower for keyword in ['name', 'full name', 'first name', 'last name']):
-            # Look for name patterns in content
-            name_patterns = [
-                r'\b[A-Z][a-z]+ [A-Z][a-z]+\b',  # First Last
-                r'\b[A-Z][a-z]+ [A-Z]\. [A-Z][a-z]+\b',  # First M. Last
-                r'eric abram',  # Known name
-                r'name[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)'  # "Name: First Last"
-            ]
-            
-            for pattern in name_patterns:
-                if re.search(pattern, content, re.IGNORECASE):
-                    satisfaction_score = 95.0  # Very high confidence
-                    logger.info(f"🎯 PERFECT NAME MATCH found in resume - Satisfaction: {satisfaction_score}%")
-                    break
-            
-            # Fallback: if content mentions name-related terms
-            if satisfaction_score == 0 and any(term in content for term in ['name', 'contact', 'profile']):
-                satisfaction_score = 70.0
+        # 🎯 NO ANSWER FOUND - Check if we have relevant context for complex questions
         
-        # Email fields - check for actual email addresses
-        elif any(keyword in field_lower for keyword in ['email', 'e-mail', 'mail']):
-            email_patterns = [
-                r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',  # Standard email
-                r'ericabram33@gmail\.com',  # Known email
-                r'email[:\s]+([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})'  # "Email: address"
-            ]
-            
-            for pattern in email_patterns:
-                if re.search(pattern, content, re.IGNORECASE):
-                    satisfaction_score = 95.0  # Very high confidence
-                    logger.info(f"🎯 PERFECT EMAIL MATCH found in resume - Satisfaction: {satisfaction_score}%")
-                    break
-            
-            # Fallback: if content mentions email-related terms
-            if satisfaction_score == 0 and any(term in content for term in ['email', 'contact', '@']):
-                satisfaction_score = 70.0
+        # For simple factual fields, if no answer found = 0% satisfaction
+        simple_fields = ['name', 'email', 'phone', 'address', 'city', 'state', 'zip']
+        if any(keyword in field_lower for keyword in simple_fields):
+            logger.info(f"❌ NO ANSWER for simple field '{field_label}' - Satisfaction: 0%")
+            return 0.0
         
-        # Phone fields - check for actual phone numbers
-        elif any(keyword in field_lower for keyword in ['phone', 'telephone', 'mobile', 'cell']):
-            phone_patterns = [
-                r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b',  # 123-456-7890 or 123.456.7890 or 1234567890
-                r'\(\d{3}\)\s?\d{3}[-.]?\d{4}',   # (123) 456-7890
-                r'312-805-9851',  # Known phone
-                r'phone[:\s]+(\d{3}[-.]?\d{3}[-.]?\d{4})'  # "Phone: 123-456-7890"
-            ]
-            
-            for pattern in phone_patterns:
-                if re.search(pattern, content, re.IGNORECASE):
-                    satisfaction_score = 95.0  # Very high confidence
-                    logger.info(f"🎯 PERFECT PHONE MATCH found in resume - Satisfaction: {satisfaction_score}%")
-                    break
-            
-            # Fallback: if content mentions phone-related terms
-            if satisfaction_score == 0 and any(term in content for term in ['phone', 'mobile', 'contact']):
-                satisfaction_score = 70.0
+        # For complex questions, check if we have relevant context
+        content_lower = content.lower()
         
-        # Address fields - check for address patterns
-        elif any(keyword in field_lower for keyword in ['address', 'location', 'city', 'state', 'zip']):
-            address_patterns = [
-                r'\b\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Drive|Dr|Lane|Ln)\b',  # Street address
-                r'\b[A-Za-z\s]+,\s*[A-Z]{2}\s+\d{5}\b',  # City, ST 12345
-                r'san francisco',  # Known location
-                r'address[:\s]+(.+)'  # "Address: ..."
-            ]
-            
-            for pattern in address_patterns:
-                if re.search(pattern, content, re.IGNORECASE):
-                    satisfaction_score = 90.0  # High confidence
-                    logger.info(f"🎯 GOOD ADDRESS MATCH found in resume - Satisfaction: {satisfaction_score}%")
-                    break
-            
-            # Fallback: if content mentions location terms
-            if satisfaction_score == 0 and any(term in content for term in ['address', 'location', 'city']):
-                satisfaction_score = 65.0
+        # Experience/Work questions - check for substantial work content
+        if any(keyword in field_lower for keyword in ['experience', 'work', 'job', 'position', 'startup', 'company']):
+            work_indicators = ['experience', 'work', 'job', 'position', 'company', 'role', 'responsibilities']
+            work_content_count = sum(1 for indicator in work_indicators if indicator in content_lower)
+            if work_content_count >= 3:  # Substantial work content
+                satisfaction_score = 60.0  # Some context, but not enough for early exit
+                logger.info(f"📊 WORK CONTEXT found but no direct answer - Satisfaction: {satisfaction_score}%")
+                return satisfaction_score
         
-        # 🎯 GOOD MATCHES (60-79% satisfaction)
+        # Technology/Skills questions
+        elif any(keyword in field_lower for keyword in ['technology', 'skill', 'programming', 'software', 'computer']):
+            tech_indicators = ['technology', 'programming', 'software', 'technical', 'skill', 'java', 'python']
+            tech_content_count = sum(1 for indicator in tech_indicators if indicator in content_lower)
+            if tech_content_count >= 2:  # Some tech content
+                satisfaction_score = 50.0  # Minimal context
+                logger.info(f"📊 TECH CONTEXT found but no direct answer - Satisfaction: {satisfaction_score}%")
+                return satisfaction_score
         
-        # Experience/Work fields
-        elif any(keyword in field_lower for keyword in ['experience', 'work', 'job', 'position', 'title', 'company']):
-            if any(term in content for term in ['experience', 'work', 'job', 'position', 'company', 'role']):
-                satisfaction_score = 75.0  # Good match, but might need more context
-                logger.info(f"🎯 GOOD EXPERIENCE MATCH found in resume - Satisfaction: {satisfaction_score}%")
-        
-        # Education fields
+        # Education questions
         elif any(keyword in field_lower for keyword in ['education', 'degree', 'school', 'university', 'college']):
-            if any(term in content for term in ['education', 'degree', 'university', 'college', 'school']):
-                satisfaction_score = 75.0  # Good match, but might need more context
-                logger.info(f"🎯 GOOD EDUCATION MATCH found in resume - Satisfaction: {satisfaction_score}%")
+            edu_indicators = ['education', 'degree', 'university', 'college', 'school', 'bachelor', 'master']
+            edu_content_count = sum(1 for indicator in edu_indicators if indicator in content_lower)
+            if edu_content_count >= 2:  # Some education content
+                satisfaction_score = 60.0  # Some context
+                logger.info(f"📊 EDUCATION CONTEXT found but no direct answer - Satisfaction: {satisfaction_score}%")
+                return satisfaction_score
         
-        # Skills fields
-        elif any(keyword in field_lower for keyword in ['skill', 'technology', 'programming', 'software']):
-            if any(term in content for term in ['skill', 'technology', 'programming', 'software', 'technical']):
-                satisfaction_score = 70.0  # Decent match
-                logger.info(f"🎯 DECENT SKILLS MATCH found in resume - Satisfaction: {satisfaction_score}%")
-        
-        # 🎯 FALLBACK: General content relevance
+        # No relevant content found
+        logger.info(f"❌ NO RELEVANT CONTENT for '{field_label}' - Satisfaction: 0%")
+        return 0.0
+    
+    def _log_satisfaction_decision(self, field_label: str, satisfaction_score: float):
+        """Log the satisfaction decision with clear reasoning"""
+        if satisfaction_score >= 80.0:
+            logger.info(f"📊 '{field_label}' satisfaction: {satisfaction_score}% → 🚀 EARLY EXIT")
         else:
-            # Check if field keywords appear in content
-            field_keywords = field_lower.split()
-            matches = sum(1 for keyword in field_keywords if keyword in content)
-            if matches > 0:
-                satisfaction_score = min(50.0 + (matches * 10), 70.0)  # Cap at 70% for general matches
-        
-        logger.info(f"📊 '{field_label}' satisfaction: {satisfaction_score}% → {'🚀 EARLY EXIT' if satisfaction_score >= 80 else '➡️ CONTINUE'}")
-        
-        return satisfaction_score
+            logger.info(f"📊 '{field_label}' satisfaction: {satisfaction_score}% → ➡️ CONTINUE")
 
     def extract_answer_from_tier1(self, field_label: str, resume_data: Dict[str, Any]) -> str:
         """
-        🎯 EARLY EXIT: Extract direct answer from TIER 1 resume data
+        🎯 EXTRACT ACTUAL ANSWER from TIER 1 data
+        Returns the answer if found, empty string if not found
         """
         if not resume_data or resume_data.get("status") != "found":
             return ""
         
-        content = resume_data.get("content", "")
         field_lower = field_label.lower().strip()
+        content = resume_data.get("content", "")
         
-        # Name extraction
-        if any(keyword in field_lower for keyword in ['name', 'full name']):
-            # Try to find "Eric Abram" or similar patterns
-            name_match = re.search(r'\b([A-Z][a-z]+ [A-Z][a-z]+)\b', content)
-            if name_match:
-                return name_match.group(1)
-            # Fallback to known name
-            if 'eric abram' in content.lower():
-                return "Eric Abram"
+        # Name fields - extract actual names
+        if any(keyword in field_lower for keyword in ['name', 'full name', 'first name', 'last name']):
+            name_patterns = [
+                r'\b([A-Z][a-z]+ [A-Z][a-z]+)\b',  # First Last
+                r'\b([A-Z][a-z]+ [A-Z]\. [A-Z][a-z]+)\b',  # First M. Last
+                r'name[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)',  # "Name: First Last"
+                r'(Eric Abram)',  # Known name
+            ]
+            
+            for pattern in name_patterns:
+                match = re.search(pattern, content, re.IGNORECASE)
+                if match:
+                    return match.group(1).strip()
         
-        # Email extraction
-        elif any(keyword in field_lower for keyword in ['email', 'e-mail']):
-            email_match = re.search(r'\b([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})\b', content)
-            if email_match:
-                return email_match.group(1)
-            # Fallback to known email
-            if 'ericabram33@gmail.com' in content.lower():
-                return "ericabram33@gmail.com"
+        # Email fields - extract actual email addresses
+        elif any(keyword in field_lower for keyword in ['email', 'e-mail', 'mail']):
+            email_patterns = [
+                r'\b([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})\b',  # Standard email
+                r'email[:\s]+([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})',  # "Email: address"
+                r'(ericabram33@gmail\.com)',  # Known email
+            ]
+            
+            for pattern in email_patterns:
+                match = re.search(pattern, content, re.IGNORECASE)
+                if match:
+                    return match.group(1).strip()
         
-        # Phone extraction
-        elif any(keyword in field_lower for keyword in ['phone', 'telephone']):
-            phone_match = re.search(r'\b(\d{3}[-.]?\d{3}[-.]?\d{4})\b', content)
-            if phone_match:
-                return phone_match.group(1)
-            # Fallback to known phone
-            if '312-805-9851' in content:
-                return "312-805-9851"
+        # Phone fields - extract actual phone numbers
+        elif any(keyword in field_lower for keyword in ['phone', 'telephone', 'mobile', 'cell']):
+            phone_patterns = [
+                r'\b(\d{3}[-.]?\d{3}[-.]?\d{4})\b',  # 123-456-7890 or 123.456.7890 or 1234567890
+                r'(\(\d{3}\)\s?\d{3}[-.]?\d{4})',   # (123) 456-7890
+                r'phone[:\s]+(\d{3}[-.]?\d{3}[-.]?\d{4})',  # "Phone: 123-456-7890"
+                r'(312-805-9851)',  # Known phone
+            ]
+            
+            for pattern in phone_patterns:
+                match = re.search(pattern, content, re.IGNORECASE)
+                if match:
+                    return match.group(1).strip()
         
+        # Address fields - extract address information
+        elif any(keyword in field_lower for keyword in ['address', 'location', 'city', 'state', 'zip']):
+            address_patterns = [
+                r'\b(\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Drive|Dr|Lane|Ln))\b',  # Street address
+                r'\b([A-Za-z\s]+,\s*[A-Z]{2}\s+\d{5})\b',  # City, ST 12345
+                r'address[:\s]+(.+?)(?:\n|$)',  # "Address: ..."
+                r'(San Francisco)',  # Known location
+            ]
+            
+            for pattern in address_patterns:
+                match = re.search(pattern, content, re.IGNORECASE)
+                if match:
+                    return match.group(1).strip()
+        
+        # For complex questions, we can't extract simple answers from TIER 1
+        # Return empty string to indicate no direct answer found
         return ""
 
     def calculate_combined_satisfaction_score(self, field_label: str, resume_data: Dict[str, Any], personal_data: Dict[str, Any]) -> float:
         """
-        🎯 TIER 2 EARLY EXIT: Calculate satisfaction score for combined TIER 1 + TIER 2 data
+        🎯 TIER 2 ANSWER-FOCUSED SATISFACTION SCORING
         """
-        # Start with TIER 1 satisfaction score
+        # Try to extract actual answer from combined data
+        combined_answer = self.extract_answer_from_combined_data(field_label, resume_data, personal_data)
+        
+        if combined_answer:
+            # We found an actual answer - high satisfaction!
+            satisfaction_score = 95.0
+            logger.info(f"🎯 ACTUAL ANSWER FOUND in TIER 2: '{combined_answer}' - Satisfaction: {satisfaction_score}%")
+            return satisfaction_score
+        
+        # No answer found - check if we have relevant context
         tier1_score = self.calculate_satisfaction_score(field_label, resume_data)
         
-        # If TIER 1 already has high satisfaction, return it
-        if tier1_score >= 80.0:
-            return tier1_score
+        # If TIER 1 already found context, check if TIER 2 adds more context
+        if tier1_score > 0 and personal_data and personal_data.get("status") == "found":
+            personal_content = personal_data.get("content", "").lower()
+            field_lower = field_label.lower().strip()
+            
+            # Check if TIER 2 has additional relevant context
+            if any(keyword in field_lower for keyword in ['authorization', 'visa', 'work', 'salary', 'compensation']):
+                relevant_terms = ['authorization', 'visa', 'work', 'salary', 'compensation', 'eligible', 'citizen']
+                if any(term in personal_content for term in relevant_terms):
+                    # Some additional context, but not enough for early exit
+                    combined_score = min(tier1_score + 10.0, 75.0)  # Cap below 80% since no direct answer
+                    logger.info(f"📊 TIER 2 CONTEXT: Additional context found - Combined: {combined_score}%")
+                    return combined_score
         
-        # Check if TIER 2 (personal info) adds significant value
-        if not personal_data or personal_data.get("status") != "found":
-            return tier1_score  # No improvement from TIER 2
-        
-        field_lower = field_label.lower().strip()
-        personal_content = personal_data.get("content", "").lower()
-        
-        # TIER 2 can boost satisfaction for specific field types
-        tier2_boost = 0.0
-        
-        # Work authorization fields - TIER 2 specializes in this
-        if any(keyword in field_lower for keyword in ['authorization', 'visa', 'work status', 'eligible']):
-            if any(term in personal_content for term in ['authorization', 'visa', 'eligible', 'citizen', 'permanent']):
-                tier2_boost = 25.0  # Significant boost for authorization fields
-                logger.info(f"🎯 TIER 2 BOOST: Work authorization data found - +{tier2_boost}%")
-        
-        # Salary/compensation fields - TIER 2 specializes in this
-        elif any(keyword in field_lower for keyword in ['salary', 'compensation', 'pay', 'wage']):
-            if any(term in personal_content for term in ['salary', 'compensation', 'pay', 'wage', '$']):
-                tier2_boost = 25.0  # Significant boost for salary fields
-                logger.info(f"🎯 TIER 2 BOOST: Salary data found - +{tier2_boost}%")
-        
-        # Contact preferences - TIER 2 might have additional contact info
-        elif any(keyword in field_lower for keyword in ['contact', 'phone', 'email', 'address']):
-            if any(term in personal_content for term in ['contact', 'phone', 'email', 'address', '@']):
-                tier2_boost = 15.0  # Moderate boost for contact fields
-                logger.info(f"🎯 TIER 2 BOOST: Additional contact data found - +{tier2_boost}%")
-        
-        # General boost if TIER 2 has relevant content
-        elif tier1_score > 0 and len(personal_content) > 50:
-            tier2_boost = 10.0  # Small boost for having additional data
-            logger.info(f"🎯 TIER 2 BOOST: Additional relevant data found - +{tier2_boost}%")
-        
-        combined_score = min(tier1_score + tier2_boost, 100.0)  # Cap at 100%
-        
-        logger.info(f"📊 Combined satisfaction: {tier1_score}% + {tier2_boost}% = {combined_score}% → {'🚀 TIER 2 EXIT' if combined_score >= 80 else '➡️ TIER 3'}")
-        
-        return combined_score
+        # No improvement from TIER 2
+        logger.info(f"❌ NO ANSWER or additional context from TIER 2 - Satisfaction: {tier1_score}%")
+        return tier1_score
 
     def extract_answer_from_combined_data(self, field_label: str, resume_data: Dict[str, Any], personal_data: Dict[str, Any]) -> str:
         """
@@ -405,6 +363,7 @@ class OptimizedFormFiller:
         # 🚀 EARLY EXIT OPTIMIZATION: Check if TIER 1 is sufficient
         field_label = field_purposes[0] if field_purposes else "unknown"
         satisfaction_score = self.calculate_satisfaction_score(field_label, resume_data)
+        self._log_satisfaction_decision(field_label, satisfaction_score)
         
         if satisfaction_score >= 80.0:
             # EARLY EXIT: TIER 1 is sufficient!
@@ -942,11 +901,11 @@ class OptimizedFormFiller:
             response = await self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are a form filling assistant. Generate accurate field values based on provided data."},
+                    {"role": "system", "content": "You are a professional career coach and job application expert. Your goal is to help candidates write compelling, enthusiastic, and professional answers that will help them get hired. Write answers that showcase personality, qualifications, and genuine interest in the role. Never give short, generic answers."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.1,
-                max_tokens=1000
+                temperature=0.3,  # Slightly higher for more creative/human-like responses
+                max_tokens=1500   # More tokens for detailed answers
             )
             
             # Parse response
@@ -970,31 +929,67 @@ class OptimizedFormFiller:
             return [{"field": field.get("name", "unknown"), "value": "", "data_source": "error"} for field in fields]
 
     def _create_optimized_prompt(self, fields: List[Dict], combined_data: Dict, data_assessment: Dict) -> str:
-        """Create optimized prompt for LLM"""
+        """Create job-focused prompt for compelling answers"""
         prompt_parts = []
         
-        prompt_parts.append("Fill the following form fields using the provided data:")
+        # 🎯 JOB APPLICATION CONTEXT
+        prompt_parts.append("You are helping someone fill out a JOB APPLICATION form. Your goal is to help them GET HIRED by writing compelling, professional, and enthusiastic answers that showcase their qualifications and personality.")
         
-        # Add available data
+        prompt_parts.append("\n🎯 WRITING GUIDELINES:")
+        prompt_parts.append("- Write answers that sound HUMAN and ENTHUSIASTIC")
+        prompt_parts.append("- Show PASSION and GENUINE INTEREST in the role/company")
+        prompt_parts.append("- Use SPECIFIC EXAMPLES when possible")
+        prompt_parts.append("- Keep answers PROFESSIONAL but PERSONABLE")
+        prompt_parts.append("- NEVER give one-word answers like 'Yes' or 'No'")
+        prompt_parts.append("- For yes/no questions, explain WHY and give context")
+        prompt_parts.append("- Show CONFIDENCE without being arrogant")
+        
+        # Add available data with context
         resume_data = combined_data.get("resume_vectordb_data", {})
         if resume_data.get("status") == "found":
-            prompt_parts.append(f"\nResume Data: {resume_data.get('content', '')}")
+            prompt_parts.append(f"\n📄 CANDIDATE'S RESUME DATA:")
+            prompt_parts.append(f"{resume_data.get('content', '')}")
         
         personal_data = combined_data.get("personal_info_vectordb_data", {})
         if personal_data.get("status") == "found":
-            prompt_parts.append(f"\nPersonal Info: {personal_data.get('content', '')}")
+            prompt_parts.append(f"\n👤 PERSONAL INFORMATION:")
+            prompt_parts.append(f"{personal_data.get('content', '')}")
         
         user_data = combined_data.get("provided_user_data", {})
         if user_data:
-            prompt_parts.append(f"\nUser Provided: {json.dumps(user_data)}")
+            prompt_parts.append(f"\n💼 ADDITIONAL INFO: {json.dumps(user_data)}")
         
-        # Add fields to fill
-        prompt_parts.append("\nFields to fill:")
+        # Add fields with job context
+        prompt_parts.append("\n📝 FORM FIELDS TO FILL:")
         for i, field in enumerate(fields):
             field_name = field.get("name", field.get("selector", f"field_{i}"))
-            prompt_parts.append(f"{i+1}. {field_name}")
+            
+            # Add context hints for common question types
+            context_hint = ""
+            field_lower = field_name.lower()
+            
+            if any(keyword in field_lower for keyword in ['startup', 'fast paced', 'hard working']):
+                context_hint = " (Show enthusiasm for startup culture and fast-paced environment)"
+            elif any(keyword in field_lower for keyword in ['why', 'motivation', 'interest']):
+                context_hint = " (Show genuine interest and specific reasons)"
+            elif any(keyword in field_lower for keyword in ['experience', 'background']):
+                context_hint = " (Highlight relevant experience with specific examples)"
+            elif any(keyword in field_lower for keyword in ['strength', 'skill', 'good at']):
+                context_hint = " (Be confident and provide concrete examples)"
+            elif any(keyword in field_lower for keyword in ['challenge', 'difficult']):
+                context_hint = " (Show problem-solving ability and growth mindset)"
+            
+            prompt_parts.append(f"{i+1}. {field_name}{context_hint}")
         
-        prompt_parts.append("\nProvide answers in format: 1. [answer] 2. [answer] etc.")
+        # 🎯 EXAMPLE ANSWERS for reference
+        prompt_parts.append("\n💡 EXAMPLE OF GOOD vs BAD ANSWERS:")
+        prompt_parts.append("❌ BAD: 'Yes' (too short, no personality)")
+        prompt_parts.append("✅ GOOD: 'Absolutely! I thrive in fast-paced environments where I can make a direct impact. In my previous role at [company], I successfully managed multiple projects under tight deadlines while maintaining high quality standards. I'm excited about the opportunity to contribute to a growing startup where my skills in [relevant skill] can help drive the company's success.'")
+        
+        prompt_parts.append("\n📋 PROVIDE ANSWERS IN FORMAT:")
+        prompt_parts.append("1. [Your compelling answer here]")
+        prompt_parts.append("2. [Your compelling answer here]")
+        prompt_parts.append("etc.")
         
         return "\n".join(prompt_parts)
 

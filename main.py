@@ -9,12 +9,18 @@ import asyncio
 from functools import lru_cache
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from loguru import logger
+from sqlalchemy.orm import Session
+
+# Import auth components
+from database import get_db
+from models import User
+from auth import create_access_token, get_current_user, get_current_user_id
 
 # Import form filling services
 from app.services.form_filler_optimized import OptimizedFormFiller
@@ -126,6 +132,29 @@ class FieldAnswerResponse(BaseModel):
     status: str
     performance_metrics: Optional[Dict[str, Any]] = None
 
+# ============================================================================
+# USER AUTHENTICATION MODELS
+# ============================================================================
+
+class UserRegister(BaseModel):
+    email: str
+    password: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    created_at: datetime
+    is_active: bool
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserResponse
+
 # Initialize FastAPI app with lifecycle management
 app = FastAPI(
     title="Smart Form Fill API (OPTIMIZED)",
@@ -150,7 +179,10 @@ app.add_middleware(
 # ============================================================================
 
 @app.post("/api/generate-field-answer", response_model=FieldAnswerResponse)
-async def generate_field_answer(request: FieldAnswerRequest) -> FieldAnswerResponse:
+async def generate_field_answer(
+    field_request: FieldAnswerRequest,
+    user_id: str = Depends(get_current_user_id)
+) -> FieldAnswerResponse:
     """
     ⚡ OPTIMIZED: Generate intelligent answer for form field with performance metrics
     """
@@ -170,18 +202,19 @@ async def generate_field_answer(request: FieldAnswerRequest) -> FieldAnswerRespo
     try:
         form_filler = get_form_filler()
         
-        logger.info(f"🎯 Generating answer for field: '{request.label}' on {request.url}")
+        logger.info(f"🎯 Generating answer for field: '{field_request.label}' on {field_request.url}")
+        logger.info(f"👤 Authenticated user: {user_id}")
         
         # Create a mock field object for the existing logic
         mock_field = {
-            "field_purpose": request.label,
-            "name": request.label,
+            "field_purpose": field_request.label,
+            "name": field_request.label,
             "selector": "#mock-field",
             "field_type": "text"
         }
         
-        # Use the optimized field generation logic
-        result = await form_filler.generate_field_values_optimized([mock_field], {}, request.user_id)
+        # Use the authenticated user_id (no fallback to default)
+        result = await form_filler.generate_field_values_optimized([mock_field], {}, user_id)
         
         if result["status"] != "success":
             raise HTTPException(status_code=500, detail=f"Field generation failed: {result.get('error', 'Unknown error')}")
@@ -240,6 +273,155 @@ async def generate_field_answer(request: FieldAnswerRequest) -> FieldAnswerRespo
         print(f"❌ ERROR: {str(e)} (in {processing_time:.2f}s)")
         print("=" * 80)
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+# ============================================================================
+# DEMO ENDPOINT (No Authentication Required)
+# ============================================================================
+
+@app.post("/api/demo/generate-field-answer", response_model=FieldAnswerResponse)
+async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> FieldAnswerResponse:
+    """
+    🎯 DEMO: Generate field answer without authentication (uses default user data)
+    
+    This endpoint is for testing/demo purposes only.
+    For production use, users should register and use the authenticated endpoint.
+    """
+    try:
+        logger.info(f"🎯 DEMO: Generating answer for field: '{field_request.label}' on {field_request.url}")
+        logger.info(f"👤 Using demo user: default")
+        
+        # Get the form filler service
+        form_filler = get_form_filler()
+        
+        # Create a mock field object for the existing logic
+        mock_field = {
+            "field_purpose": field_request.label,
+            "name": field_request.label,
+            "selector": "#mock-field",
+            "field_type": "text"
+        }
+        
+        # Use default user for demo
+        result = await form_filler.generate_field_values_optimized([mock_field], {}, "default")
+        
+        if result["status"] != "success":
+            raise HTTPException(status_code=500, detail=f"Form filling failed: {result.get('error', 'Unknown error')}")
+        
+        # Extract the answer from the result
+        field_answer = result["values"][0] if result.get("values") else {}
+        answer = field_answer.get("value", "Unable to generate answer")
+        data_source = field_answer.get("data_source", "unknown")
+        reasoning = field_answer.get("reasoning", "No reasoning provided")
+        
+        # Get performance metrics
+        performance_metrics = {
+            "processing_time_seconds": result.get("processing_time", 0),
+            "optimization_enabled": True,
+            "cache_hits": result.get("cache_analytics", {}).get("cache_hit_rate", 0),
+            "early_exit": result.get("early_exit", False),
+            "tier_exit": result.get("tier_exit", 3),
+            "tiers_used": result.get("tiers_used", 3)
+        }
+        
+        logger.info(f"✅ DEMO Generated answer: '{answer}' (source: {data_source}) in {performance_metrics.get('processing_time_seconds', 0):.2f}s")
+        
+        return FieldAnswerResponse(
+            answer=answer,
+            data_source=data_source,
+            reasoning=reasoning,
+            status="success",
+            performance_metrics=performance_metrics
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ DEMO Error generating field answer: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+# ============================================================================
+# USER AUTHENTICATION ENDPOINTS
+# ============================================================================
+
+@app.post("/api/auth/register", response_model=TokenResponse)
+async def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
+    """🔐 Register new user"""
+    try:
+        # Check if user already exists
+        existing_user = db.query(User).filter(User.email == user_data.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        
+        # Create new user
+        new_user = User(email=user_data.email)
+        new_user.set_password(user_data.password)
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        
+        # Create access token
+        access_token = create_access_token(new_user.id)
+        
+        logger.info(f"✅ New user registered: {user_data.email}")
+        
+        return TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            user=UserResponse(
+                id=new_user.id,
+                email=new_user.email,
+                created_at=new_user.created_at,
+                is_active=new_user.is_active
+            )
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Registration failed: {e}")
+        raise HTTPException(status_code=500, detail="Registration failed")
+
+@app.post("/api/auth/login", response_model=TokenResponse)
+async def login_user(user_data: UserLogin, db: Session = Depends(get_db)):
+    """🔐 Login user"""
+    try:
+        # Find user by email
+        user = db.query(User).filter(User.email == user_data.email, User.is_active == True).first()
+        if not user or not user.verify_password(user_data.password):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        # Create access token
+        access_token = create_access_token(user.id)
+        
+        logger.info(f"✅ User logged in: {user_data.email}")
+        
+        return TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            user=UserResponse(
+                id=user.id,
+                email=user.email,
+                created_at=user.created_at,
+                is_active=user.is_active
+            )
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Login failed: {e}")
+        raise HTTPException(status_code=500, detail="Login failed")
+
+@app.get("/api/auth/me", response_model=UserResponse)
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """👤 Get current user info"""
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        created_at=current_user.created_at,
+        is_active=current_user.is_active
+    )
 
 # ============================================================================
 # OPTIMIZED VECTOR DATABASE ENDPOINTS
