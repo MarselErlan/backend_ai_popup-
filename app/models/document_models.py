@@ -39,7 +39,9 @@ class PersonalInfoDocument(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(100), nullable=True, index=True)  # For multi-user support
     filename = Column(String(255), nullable=False)
-    content = Column(Text, nullable=False)  # Store text content directly
+    file_content = Column(LargeBinary, nullable=False)  # Store file binary data
+    content_type = Column(String(100), nullable=False)  # MIME type (e.g., 'text/plain', 'application/pdf')
+    file_size = Column(Integer, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)  # For soft delete
     
     # Metadata

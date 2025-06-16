@@ -180,35 +180,52 @@ app.add_middleware(
 )
 
 # ============================================================================
-# OPTIMIZED MAIN FIELD ANSWER ENDPOINT
+# SIMPLIFIED MAIN FIELD ANSWER ENDPOINT (Backend Authorization)
 # ============================================================================
 
 @app.post("/api/generate-field-answer", response_model=FieldAnswerResponse)
 async def generate_field_answer(
     field_request: FieldAnswerRequest,
-    user_id: str = Depends(get_current_user_id)
+    request: Request,
+    db: Session = Depends(get_db)
 ) -> FieldAnswerResponse:
     """
-    ⚡ OPTIMIZED: Generate intelligent answer for form field with performance metrics
+    ⚡ SIMPLIFIED: Generate intelligent answer for form field with backend authorization
+    Frontend only sends: question + user_id (no JWT tokens needed)
     """
     start_time = datetime.now()
     
-    # 🖥️  CONSOLE LOGGING - Frontend Request Data
+    # Extract user_id from the request
+    user_id = field_request.user_id or "default"
+    
+    # Backend authorization - validate user exists and is active
+    if user_id != "default":
+        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+        if not user:
+            raise HTTPException(status_code=401, detail=f"Invalid or inactive user: {user_id}")
+        logger.info(f"✅ User validated: {user.email} (ID: {user_id})")
+    else:
+        logger.info(f"🎯 Using demo user: default")
+    
+    # 🖥️  CONSOLE LOGGING - Frontend Request Data + Headers
     print("=" * 80)
-    print("⚡ OPTIMIZED REQUEST - /api/generate-field-answer")
+    print("⚡ SIMPLIFIED REQUEST - /api/generate-field-answer")
     print("=" * 80)
     print(f"📥 Request Data:")
-    print(f"   • Field Label: '{request.label}'")
-    print(f"   • Page URL: '{request.url}'")
-    print(f"   • User ID: '{request.user_id}'")
+    print(f"   • Field Label: '{field_request.label}'")
+    print(f"   • Page URL: '{field_request.url}'")
+    print(f"   • User ID: '{user_id}'")
     print(f"   • Timestamp: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"🔒 Headers Debug:")
+    print(f"   • Content-Type: '{request.headers.get('content-type', 'NOT SENT')}'")
+    print(f"   • User-Agent: '{request.headers.get('user-agent', 'NOT SENT')}'")
     print("=" * 80)
     
     try:
         form_filler = get_form_filler()
         
         logger.info(f"🎯 Generating answer for field: '{field_request.label}' on {field_request.url}")
-        logger.info(f"👤 Authenticated user: {user_id}")
+        logger.info(f"👤 Authorized user: {user_id}")
         
         # Create a mock field object for the existing logic
         mock_field = {
@@ -218,7 +235,7 @@ async def generate_field_answer(
             "field_type": "text"
         }
         
-        # Use the authenticated user_id (no fallback to default)
+        # Use the validated user_id
         result = await form_filler.generate_field_values_optimized([mock_field], {}, user_id)
         
         if result["status"] != "success":
@@ -250,14 +267,16 @@ async def generate_field_answer(
             "processing_time_seconds": processing_time,
             "optimization_enabled": True,
             "cache_hits": result.get("cache_hits", 0),
-            "database_queries": result.get("database_queries", 0)
+            "database_queries": result.get("database_queries", 0),
+            "backend_authorization": True
         }
         
         # 🖥️  CONSOLE LOGGING - Response Data
-        print("📤 OPTIMIZED Response Data:")
+        print("📤 SIMPLIFIED Response Data:")
         print(f"   • Generated Answer: '{answer}'")
         print(f"   • Data Source: {data_source}")
         print(f"   • Processing Time: {processing_time:.2f}s")
+        print(f"   • Authorization: Backend Validated")
         print(f"   • Reasoning: {reasoning}")
         print("=" * 80)
         
@@ -280,6 +299,136 @@ async def generate_field_answer(
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 # ============================================================================
+# USER ID VALIDATION ENDPOINT (For Extension Setup)
+# ============================================================================
+
+@app.get("/api/validate-user/{user_id}")
+async def validate_user_id(user_id: str, db: Session = Depends(get_db)):
+    """
+    🔍 Validate if user_id exists and is active
+    Extension can use this to verify user before sending requests
+    """
+    try:
+        if user_id == "default":
+            return {
+                "status": "valid",
+                "user_id": "default",
+                "user_type": "demo",
+                "message": "Demo user - no registration required"
+            }
+        
+        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found or inactive")
+        
+        return {
+            "status": "valid",
+            "user_id": user_id,
+            "user_type": "registered",
+            "email": user.email,
+            "message": "User validated successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ User validation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
+
+# ============================================================================
+# SIMPLIFIED USER REGISTRATION (Returns User ID)
+# ============================================================================
+
+class SimpleRegisterResponse(BaseModel):
+    status: str
+    user_id: str
+    email: str
+    message: str
+
+@app.post("/api/simple/register", response_model=SimpleRegisterResponse)
+async def simple_register_user(user_data: UserRegister, db: Session = Depends(get_db)):
+    """
+    🔐 Simplified Registration: Returns user_id directly (no JWT tokens)
+    Extension can store the user_id and use it for all requests
+    """
+    try:
+        # Check if user already exists
+        existing_user = db.query(User).filter(User.email == user_data.email).first()
+        if existing_user:
+            if existing_user.is_active:
+                return SimpleRegisterResponse(
+                    status="exists",
+                    user_id=existing_user.id,
+                    email=existing_user.email,
+                    message="User already exists - you can use this user_id"
+                )
+            else:
+                # Reactivate inactive user
+                existing_user.is_active = True
+                existing_user.set_password(user_data.password)
+                db.commit()
+                return SimpleRegisterResponse(
+                    status="reactivated",
+                    user_id=existing_user.id,
+                    email=existing_user.email,
+                    message="User reactivated successfully"
+                )
+        
+        # Create new user
+        new_user = User(email=user_data.email)
+        new_user.set_password(user_data.password)
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        
+        logger.info(f"✅ New user registered: {user_data.email} (ID: {new_user.id})")
+        
+        return SimpleRegisterResponse(
+            status="registered",
+            user_id=new_user.id,
+            email=new_user.email,
+            message="User registered successfully - save this user_id for future requests"
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Simple registration failed: {e}")
+        raise HTTPException(status_code=500, detail="Registration failed")
+
+# ============================================================================
+# SIMPLIFIED USER LOGIN (Returns User ID)  
+# ============================================================================
+
+@app.post("/api/simple/login", response_model=SimpleRegisterResponse)
+async def simple_login_user(user_data: UserLogin, db: Session = Depends(get_db)):
+    """
+    🔐 Simplified Login: Returns user_id directly (no JWT tokens)
+    Extension can store the user_id and use it for all requests
+    """
+    try:
+        # Find user by email
+        user = db.query(User).filter(User.email == user_data.email, User.is_active == True).first()
+        if not user or not user.verify_password(user_data.password):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        logger.info(f"✅ User logged in: {user_data.email} (ID: {user.id})")
+        
+        return SimpleRegisterResponse(
+            status="authenticated",
+            user_id=user.id,
+            email=user.email,
+            message="Login successful - save this user_id for future requests"
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Simple login failed: {e}")
+        raise HTTPException(status_code=500, detail="Login failed")
+
+# ============================================================================
 # DEMO ENDPOINT (No Authentication Required)
 # ============================================================================
 
@@ -289,7 +438,7 @@ async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> Field
     🎯 DEMO: Generate field answer without authentication (uses default user data)
     
     This endpoint is for testing/demo purposes only.
-    For production use, users should register and use the authenticated endpoint.
+    For production use, users should register and use the main endpoint.
     """
     try:
         logger.info(f"🎯 DEMO: Generating answer for field: '{field_request.label}' on {field_request.url}")
@@ -345,12 +494,12 @@ async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> Field
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 # ============================================================================
-# USER AUTHENTICATION ENDPOINTS
+# FULL JWT AUTHENTICATION ENDPOINTS (Optional)
 # ============================================================================
 
 @app.post("/api/auth/register", response_model=TokenResponse)
 async def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
-    """🔐 Register new user"""
+    """🔐 Full JWT Registration (for users who want JWT tokens)"""
     try:
         # Check if user already exists
         existing_user = db.query(User).filter(User.email == user_data.email).first()
@@ -389,7 +538,7 @@ async def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
 
 @app.post("/api/auth/login", response_model=TokenResponse)
 async def login_user(user_data: UserLogin, db: Session = Depends(get_db)):
-    """🔐 Login user"""
+    """🔐 Full JWT Login (for users who want JWT tokens)"""
     try:
         # Find user by email
         user = db.query(User).filter(User.email == user_data.email, User.is_active == True).first()
@@ -420,13 +569,95 @@ async def login_user(user_data: UserLogin, db: Session = Depends(get_db)):
 
 @app.get("/api/auth/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
-    """👤 Get current user info"""
+    """👤 Get current user info (JWT-based)"""
     return UserResponse(
         id=current_user.id,
         email=current_user.email,
         created_at=current_user.created_at,
         is_active=current_user.is_active
     )
+
+# ============================================================================
+# JWT-BASED AUTHENTICATED ENDPOINT (For Full Auth Users)
+# ============================================================================
+
+@app.post("/api/auth/generate-field-answer", response_model=FieldAnswerResponse)
+async def auth_generate_field_answer(
+    field_request: FieldAnswerRequest,
+    request: Request,
+    user_id: str = Depends(get_current_user_id)
+) -> FieldAnswerResponse:
+    """
+    🔐 JWT-AUTHENTICATED: Generate field answer with full JWT authentication
+    For users who prefer the complete JWT token-based authentication system
+    """
+    start_time = datetime.now()
+    
+    try:
+        form_filler = get_form_filler()
+        
+        logger.info(f"🔐 JWT AUTH: Generating answer for field: '{field_request.label}' on {field_request.url}")
+        logger.info(f"👤 JWT Authenticated user: {user_id}")
+        
+        # Create a mock field object for the existing logic
+        mock_field = {
+            "field_purpose": field_request.label,
+            "name": field_request.label,
+            "selector": "#mock-field",
+            "field_type": "text"
+        }
+        
+        # Use the JWT-authenticated user_id
+        result = await form_filler.generate_field_values_optimized([mock_field], {}, user_id)
+        
+        if result["status"] != "success":
+            raise HTTPException(status_code=500, detail=f"Field generation failed: {result.get('error', 'Unknown error')}")
+        
+        # Extract the answer from the result
+        field_mappings = result.get("values", [])
+        if not field_mappings:
+            raise HTTPException(status_code=500, detail="No field mapping generated")
+        
+        field_mapping = field_mappings[0]
+        answer = field_mapping.get("value", "")
+        data_source = field_mapping.get("data_source", "unknown")
+        reasoning = field_mapping.get("reasoning", "No reasoning provided")
+        
+        # Handle skip actions
+        if field_mapping.get("action") == "skip" or not answer:
+            answer = ""
+            data_source = "skipped"
+            reasoning = "Field skipped - unable to generate appropriate answer"
+        
+        end_time = datetime.now()
+        processing_time = (end_time - start_time).total_seconds()
+        
+        logger.info(f"✅ JWT AUTH Generated answer: '{answer}' (source: {data_source}) in {processing_time:.2f}s")
+        
+        # Performance metrics
+        performance_metrics = {
+            "processing_time_seconds": processing_time,
+            "optimization_enabled": True,
+            "cache_hits": result.get("cache_hits", 0),
+            "database_queries": result.get("database_queries", 0),
+            "jwt_authentication": True
+        }
+        
+        return FieldAnswerResponse(
+            answer=answer,
+            data_source=data_source,
+            reasoning=reasoning,
+            status="success",
+            performance_metrics=performance_metrics
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        end_time = datetime.now()
+        processing_time = (end_time - start_time).total_seconds()
+        logger.error(f"❌ JWT AUTH Field answer generation failed: {e} (in {processing_time:.2f}s)")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 # ============================================================================
 # OPTIMIZED VECTOR DATABASE ENDPOINTS
@@ -734,52 +965,70 @@ async def delete_user_resume(
 
 @app.post("/api/v1/personal-info/upload", response_model=DocumentUploadResponse)
 async def upload_personal_info(
-    content: str = Form(..., description="Personal information content"),
+    file: UploadFile = File(...),
     user_id: str = Depends(get_current_user_id)
 ):
     """
-    📝 Upload personal information to database (One per user - replaces existing)
+    📝 Upload personal information document to database (One per user - replaces existing)
     
-    Personal info is stored as text content, not files.
+    Supports: PDF, DOCX, DOC, TXT files
     Examples: Contact details, work authorization, salary expectations, preferences
     """
     start_time = datetime.now()
     
+    # Validate file type
+    allowed_types = {
+        'application/pdf': ['.pdf'],
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+        'application/msword': ['.doc'],
+        'text/plain': ['.txt']
+    }
+    
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Unsupported file type: {file.content_type}. Supported: PDF, DOCX, DOC, TXT"
+        )
+    
     try:
-        if len(content.strip()) == 0:
-            raise HTTPException(status_code=400, detail="Content cannot be empty")
-        
-        if len(content) > 50000:  # 50KB text limit
-            raise HTTPException(status_code=400, detail="Content too large. Maximum: 50KB")
-        
         # Check if user already has personal info
         document_service = get_document_service()
         existing_info = document_service.get_active_personal_info_document(user_id)
         had_previous = existing_info is not None
         
+        # Read file content
+        file_content = await file.read()
+        
+        if len(file_content) == 0:
+            raise HTTPException(status_code=400, detail="Empty file uploaded")
+        
+        if len(file_content) > 10 * 1024 * 1024:  # 10MB limit
+            raise HTTPException(status_code=400, detail="File too large. Maximum size: 10MB")
+        
         # Save to database (this will automatically deactivate previous personal info)
         document_id = document_service.save_personal_info_document(
-            filename="personal_info.txt",
-            content=content,
+            filename=file.filename,
+            file_content=file_content,
+            content_type=file.content_type,
             user_id=user_id
         )
         
         end_time = datetime.now()
         processing_time = (end_time - start_time).total_seconds()
         
-        message = "Personal info uploaded successfully"
+        message = f"Personal info '{file.filename}' uploaded successfully"
         if had_previous:
-            message += " (replaced previous personal info)"
+            message += f" (replaced previous personal info)"
         
-        logger.info(f"✅ Personal info uploaded successfully (ID: {document_id})")
+        logger.info(f"✅ Personal info uploaded successfully: {file.filename} (ID: {document_id})")
         
         return DocumentUploadResponse(
             status="success",
             message=message,
             document_id=document_id,
-            filename="personal_info.txt",
+            filename=file.filename,
             processing_time=processing_time,
-            file_size=len(content.encode('utf-8')),
+            file_size=len(file_content),
             replaced_previous=had_previous
         )
         
@@ -804,7 +1053,7 @@ async def get_user_personal_info(
         return DocumentInfoResponse(
             id=document.id,
             filename=document.filename,
-            content_length=len(document.content) if document.content else 0,
+            file_size=document.file_size,
             processing_status=document.processing_status,
             is_active=document.is_active,
             created_at=document.created_at.isoformat() if document.created_at else "",
@@ -831,8 +1080,8 @@ async def download_user_personal_info(
             raise HTTPException(status_code=404, detail="No personal info found for this user")
         
         return StreamingResponse(
-            io.BytesIO(document.content.encode('utf-8')),
-            media_type="text/plain",
+            io.BytesIO(document.file_content),
+            media_type=document.content_type,
             headers={"Content-Disposition": f"attachment; filename={document.filename}"}
         )
         
@@ -913,7 +1162,8 @@ async def get_user_documents_status(
         if personal_info_doc:
             status_data["personal_info"] = {
                 "id": personal_info_doc.id,
-                "content_length": len(personal_info_doc.content) if personal_info_doc.content else 0,
+                "filename": personal_info_doc.filename,
+                "file_size": personal_info_doc.file_size,
                 "processing_status": personal_info_doc.processing_status,
                 "created_at": personal_info_doc.created_at.isoformat() if personal_info_doc.created_at else None,
                 "last_processed_at": personal_info_doc.last_processed_at.isoformat() if personal_info_doc.last_processed_at else None
@@ -936,308 +1186,235 @@ async def get_user_documents_status(
         raise HTTPException(status_code=500, detail=f"Status check failed: {str(e)}")
 
 # ============================================================================
-# DEMO UPLOAD ENDPOINTS (No Authentication Required)
+# DEMO ENDPOINT (No Authentication Required)
 # ============================================================================
 
-@app.post("/api/demo/resume/upload", response_model=DocumentUploadResponse)
-async def demo_upload_resume(
-    file: UploadFile = File(...)
-):
+@app.post("/api/demo/generate-field-answer", response_model=FieldAnswerResponse)
+async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> FieldAnswerResponse:
     """
-    🎯 DEMO: Upload resume without authentication (uses default user)
+    🎯 DEMO: Generate field answer without authentication (uses default user data)
     
-    For testing/demo purposes only.
+    This endpoint is for testing/demo purposes only.
+    For production use, users should register and use the main endpoint.
+    """
+    try:
+        logger.info(f"🎯 DEMO: Generating answer for field: '{field_request.label}' on {field_request.url}")
+        logger.info(f"👤 Using demo user: default")
+        
+        # Get the form filler service
+        form_filler = get_form_filler()
+        
+        # Create a mock field object for the existing logic
+        mock_field = {
+            "field_purpose": field_request.label,
+            "name": field_request.label,
+            "selector": "#mock-field",
+            "field_type": "text"
+        }
+        
+        # Use default user for demo
+        result = await form_filler.generate_field_values_optimized([mock_field], {}, "default")
+        
+        if result["status"] != "success":
+            raise HTTPException(status_code=500, detail=f"Form filling failed: {result.get('error', 'Unknown error')}")
+        
+        # Extract the answer from the result
+        field_answer = result["values"][0] if result.get("values") else {}
+        answer = field_answer.get("value", "Unable to generate answer")
+        data_source = field_answer.get("data_source", "unknown")
+        reasoning = field_answer.get("reasoning", "No reasoning provided")
+        
+        # Get performance metrics
+        performance_metrics = {
+            "processing_time_seconds": result.get("processing_time", 0),
+            "optimization_enabled": True,
+            "cache_hits": result.get("cache_analytics", {}).get("cache_hit_rate", 0),
+            "early_exit": result.get("early_exit", False),
+            "tier_exit": result.get("tier_exit", 3),
+            "tiers_used": result.get("tiers_used", 3)
+        }
+        
+        logger.info(f"✅ DEMO Generated answer: '{answer}' (source: {data_source}) in {performance_metrics.get('processing_time_seconds', 0):.2f}s")
+        
+        return FieldAnswerResponse(
+            answer=answer,
+            data_source=data_source,
+            reasoning=reasoning,
+            status="success",
+            performance_metrics=performance_metrics
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ DEMO Error generating field answer: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+# ============================================================================
+# FULL JWT AUTHENTICATION ENDPOINTS (Optional)
+# ============================================================================
+
+@app.post("/api/auth/register", response_model=TokenResponse)
+async def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
+    """🔐 Full JWT Registration (for users who want JWT tokens)"""
+    try:
+        # Check if user already exists
+        existing_user = db.query(User).filter(User.email == user_data.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        
+        # Create new user
+        new_user = User(email=user_data.email)
+        new_user.set_password(user_data.password)
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        
+        # Create access token
+        access_token = create_access_token(new_user.id)
+        
+        logger.info(f"✅ New user registered: {user_data.email}")
+        
+        return TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            user=UserResponse(
+                id=new_user.id,
+                email=new_user.email,
+                created_at=new_user.created_at,
+                is_active=new_user.is_active
+            )
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Registration failed: {e}")
+        raise HTTPException(status_code=500, detail="Registration failed")
+
+@app.post("/api/auth/login", response_model=TokenResponse)
+async def login_user(user_data: UserLogin, db: Session = Depends(get_db)):
+    """🔐 Full JWT Login (for users who want JWT tokens)"""
+    try:
+        # Find user by email
+        user = db.query(User).filter(User.email == user_data.email, User.is_active == True).first()
+        if not user or not user.verify_password(user_data.password):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+        # Create access token
+        access_token = create_access_token(user.id)
+        
+        logger.info(f"✅ User logged in: {user_data.email}")
+        
+        return TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            user=UserResponse(
+                id=user.id,
+                email=user.email,
+                created_at=user.created_at,
+                is_active=user.is_active
+            )
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Login failed: {e}")
+        raise HTTPException(status_code=500, detail="Login failed")
+
+@app.get("/api/auth/me", response_model=UserResponse)
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """👤 Get current user info (JWT-based)"""
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        created_at=current_user.created_at,
+        is_active=current_user.is_active
+    )
+
+# ============================================================================
+# JWT-BASED AUTHENTICATED ENDPOINT (For Full Auth Users)
+# ============================================================================
+
+@app.post("/api/auth/generate-field-answer", response_model=FieldAnswerResponse)
+async def auth_generate_field_answer(
+    field_request: FieldAnswerRequest,
+    request: Request,
+    user_id: str = Depends(get_current_user_id)
+) -> FieldAnswerResponse:
+    """
+    🔐 JWT-AUTHENTICATED: Generate field answer with full JWT authentication
+    For users who prefer the complete JWT token-based authentication system
     """
     start_time = datetime.now()
     
-    # Same validation as authenticated endpoint
-    allowed_types = {
-        'application/pdf': ['.pdf'],
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-        'application/msword': ['.doc'],
-        'text/plain': ['.txt']
-    }
-    
-    if file.content_type not in allowed_types:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Unsupported file type: {file.content_type}. Supported: PDF, DOCX, DOC, TXT"
-        )
-    
     try:
-        # Check if default user already has a resume
-        document_service = get_document_service()
-        existing_resume = document_service.get_active_resume_document("default")
-        had_previous = existing_resume is not None
+        form_filler = get_form_filler()
         
-        file_content = await file.read()
+        logger.info(f"🔐 JWT AUTH: Generating answer for field: '{field_request.label}' on {field_request.url}")
+        logger.info(f"👤 JWT Authenticated user: {user_id}")
         
-        if len(file_content) == 0:
-            raise HTTPException(status_code=400, detail="Empty file uploaded")
+        # Create a mock field object for the existing logic
+        mock_field = {
+            "field_purpose": field_request.label,
+            "name": field_request.label,
+            "selector": "#mock-field",
+            "field_type": "text"
+        }
         
-        if len(file_content) > 10 * 1024 * 1024:  # 10MB limit
-            raise HTTPException(status_code=400, detail="File too large. Maximum size: 10MB")
+        # Use the JWT-authenticated user_id
+        result = await form_filler.generate_field_values_optimized([mock_field], {}, user_id)
         
-        # Save to database with default user
-        document_id = document_service.save_resume_document(
-            filename=file.filename,
-            file_content=file_content,
-            content_type=file.content_type,
-            user_id="default"  # Demo user
-        )
+        if result["status"] != "success":
+            raise HTTPException(status_code=500, detail=f"Field generation failed: {result.get('error', 'Unknown error')}")
+        
+        # Extract the answer from the result
+        field_mappings = result.get("values", [])
+        if not field_mappings:
+            raise HTTPException(status_code=500, detail="No field mapping generated")
+        
+        field_mapping = field_mappings[0]
+        answer = field_mapping.get("value", "")
+        data_source = field_mapping.get("data_source", "unknown")
+        reasoning = field_mapping.get("reasoning", "No reasoning provided")
+        
+        # Handle skip actions
+        if field_mapping.get("action") == "skip" or not answer:
+            answer = ""
+            data_source = "skipped"
+            reasoning = "Field skipped - unable to generate appropriate answer"
         
         end_time = datetime.now()
         processing_time = (end_time - start_time).total_seconds()
         
-        message = f"Demo resume '{file.filename}' uploaded successfully"
-        if had_previous:
-            message += " (replaced previous demo resume)"
+        logger.info(f"✅ JWT AUTH Generated answer: '{answer}' (source: {data_source}) in {processing_time:.2f}s")
         
-        logger.info(f"✅ DEMO: Resume uploaded successfully: {file.filename} (ID: {document_id})")
-        
-        return DocumentUploadResponse(
-            status="success",
-            message=message,
-            document_id=document_id,
-            filename=file.filename,
-            processing_time=processing_time,
-            file_size=len(file_content),
-            replaced_previous=had_previous
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Demo resume upload failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
-
-@app.get("/api/demo/resume")
-async def demo_get_resume():
-    """
-    🎯 DEMO: Get resume document info without authentication (uses default user)
-    """
-    try:
-        document_service = get_document_service()
-        document = document_service.get_active_resume_document("default")
-        
-        if not document:
-            raise HTTPException(status_code=404, detail="No demo resume found")
-        
-        return {
-            "status": "success",
-            "data": {
-                "id": document.id,
-                "filename": document.filename,
-                "file_size": document.file_size,
-                "processing_status": document.processing_status,
-                "is_active": document.is_active,
-                "created_at": document.created_at.isoformat() if document.created_at else "",
-                "last_processed_at": document.last_processed_at.isoformat() if document.last_processed_at else None,
-                "user_id": document.user_id
-            }
+        # Performance metrics
+        performance_metrics = {
+            "processing_time_seconds": processing_time,
+            "optimization_enabled": True,
+            "cache_hits": result.get("cache_hits", 0),
+            "database_queries": result.get("database_queries", 0),
+            "jwt_authentication": True
         }
         
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Failed to get demo resume: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get resume: {str(e)}")
-
-@app.get("/api/demo/resume/download")
-async def demo_download_resume():
-    """
-    🎯 DEMO: Download resume document without authentication (uses default user)
-    """
-    try:
-        document_service = get_document_service()
-        document = document_service.get_active_resume_document("default")
-        
-        if not document:
-            raise HTTPException(status_code=404, detail="No demo resume found")
-        
-        return StreamingResponse(
-            io.BytesIO(document.file_content),
-            media_type=document.content_type,
-            headers={"Content-Disposition": f"attachment; filename={document.filename}"}
+        return FieldAnswerResponse(
+            answer=answer,
+            data_source=data_source,
+            reasoning=reasoning,
+            status="success",
+            performance_metrics=performance_metrics
         )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Failed to download demo resume: {e}")
-        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
-
-@app.post("/api/demo/personal-info/upload", response_model=DocumentUploadResponse)
-async def demo_upload_personal_info(
-    content: str = Form(...)
-):
-    """
-    🎯 DEMO: Upload personal info without authentication (uses default user)
-    """
-    start_time = datetime.now()
     
-    try:
-        if len(content.strip()) == 0:
-            raise HTTPException(status_code=400, detail="Content cannot be empty")
-        
-        if len(content) > 50000:  # 50KB text limit
-            raise HTTPException(status_code=400, detail="Content too large. Maximum: 50KB")
-        
-        # Check if default user already has personal info
-        document_service = get_document_service()
-        existing_info = document_service.get_active_personal_info_document("default")
-        had_previous = existing_info is not None
-        
-        # Save to database with default user
-        document_id = document_service.save_personal_info_document(
-            filename="demo_personal_info.txt",
-            content=content,
-            user_id="default"  # Demo user
-        )
-        
+    except HTTPException:
+        raise
+    except Exception as e:
         end_time = datetime.now()
         processing_time = (end_time - start_time).total_seconds()
-        
-        message = "Demo personal info uploaded successfully"
-        if had_previous:
-            message += " (replaced previous demo personal info)"
-        
-        logger.info(f"✅ DEMO: Personal info uploaded successfully (ID: {document_id})")
-        
-        return DocumentUploadResponse(
-            status="success",
-            message=message,
-            document_id=document_id,
-            filename="demo_personal_info.txt",
-            processing_time=processing_time,
-            file_size=len(content.encode('utf-8')),
-            replaced_previous=had_previous
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Demo personal info upload failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
-
-@app.get("/api/demo/personal-info")
-async def demo_get_personal_info():
-    """
-    🎯 DEMO: Get personal info document without authentication (uses default user)
-    """
-    try:
-        document_service = get_document_service()
-        document = document_service.get_active_personal_info_document("default")
-        
-        if not document:
-            raise HTTPException(status_code=404, detail="No demo personal info found")
-        
-        return {
-            "status": "success",
-            "data": {
-                "id": document.id,
-                "filename": document.filename,
-                "content_length": len(document.content) if document.content else 0,
-                "processing_status": document.processing_status,
-                "is_active": document.is_active,
-                "created_at": document.created_at.isoformat() if document.created_at else "",
-                "last_processed_at": document.last_processed_at.isoformat() if document.last_processed_at else None,
-                "user_id": document.user_id
-            }
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Failed to get demo personal info: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get personal info: {str(e)}")
-
-@app.get("/api/demo/personal-info/download")
-async def demo_download_personal_info():
-    """
-    🎯 DEMO: Download personal info document without authentication (uses default user)
-    """
-    try:
-        document_service = get_document_service()
-        document = document_service.get_active_personal_info_document("default")
-        
-        if not document:
-            raise HTTPException(status_code=404, detail="No demo personal info found")
-        
-        return StreamingResponse(
-            io.BytesIO(document.content.encode('utf-8')),
-            media_type="text/plain",
-            headers={"Content-Disposition": f"attachment; filename={document.filename}"}
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Failed to download demo personal info: {e}")
-        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
-
-@app.get("/api/demo/documents/status")
-async def demo_get_documents_status():
-    """
-    🎯 DEMO: Get documents status without authentication (uses default user)
-    """
-    try:
-        document_service = get_document_service()
-        
-        # Get default user's documents
-        resume_doc = document_service.get_active_resume_document("default")
-        personal_info_doc = document_service.get_active_personal_info_document("default")
-        
-        status_data = {
-            "user_id": "default",
-            "resume": None,
-            "personal_info": None,
-            "summary": {
-                "has_resume": resume_doc is not None,
-                "has_personal_info": personal_info_doc is not None,
-                "documents_ready": False,
-                "resume_status": "none",
-                "personal_info_status": "none"
-            }
-        }
-        
-        # Add resume info if exists
-        if resume_doc:
-            status_data["resume"] = {
-                "id": resume_doc.id,
-                "filename": resume_doc.filename,
-                "file_size": resume_doc.file_size,
-                "processing_status": resume_doc.processing_status,
-                "created_at": resume_doc.created_at.isoformat() if resume_doc.created_at else None,
-                "last_processed_at": resume_doc.last_processed_at.isoformat() if resume_doc.last_processed_at else None
-            }
-            status_data["summary"]["resume_status"] = resume_doc.processing_status
-        
-        # Add personal info if exists
-        if personal_info_doc:
-            status_data["personal_info"] = {
-                "id": personal_info_doc.id,
-                "content_length": len(personal_info_doc.content) if personal_info_doc.content else 0,
-                "processing_status": personal_info_doc.processing_status,
-                "created_at": personal_info_doc.created_at.isoformat() if personal_info_doc.created_at else None,
-                "last_processed_at": personal_info_doc.last_processed_at.isoformat() if personal_info_doc.last_processed_at else None
-            }
-            status_data["summary"]["personal_info_status"] = personal_info_doc.processing_status
-        
-        # Determine if documents are ready
-        resume_ready = resume_doc and resume_doc.processing_status == "completed"
-        personal_info_ready = personal_info_doc and personal_info_doc.processing_status == "completed"
-        status_data["summary"]["documents_ready"] = resume_ready and personal_info_ready
-        
-        return {
-            "status": "success",
-            "timestamp": datetime.now().isoformat(),
-            "data": status_data
-        }
-    
-    except Exception as e:
-        logger.error(f"❌ Demo status check failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Status check failed: {str(e)}")
+        logger.error(f"❌ JWT AUTH Field answer generation failed: {e} (in {processing_time:.2f}s)")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 # ============================================================================
 # HEALTH CHECK ENDPOINTS

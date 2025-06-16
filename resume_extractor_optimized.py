@@ -121,7 +121,7 @@ class ResumeExtractorOptimized:
             
             # Create hash from document content
             doc = resume_docs[0]  # Get the active document
-            content_hash = hashlib.md5(doc.file_data).hexdigest()
+            content_hash = hashlib.md5(doc.file_content).hexdigest()
             return f"{doc.id}_{content_hash}"
         except Exception as e:
             logger.error(f"Failed to get document hash: {e}")

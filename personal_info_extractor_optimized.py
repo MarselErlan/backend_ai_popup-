@@ -120,7 +120,7 @@ class PersonalInfoExtractorOptimized:
             
             # Create hash from document content
             doc = personal_docs[0]  # Get the active document
-            content_hash = hashlib.md5(doc.content.encode()).hexdigest()
+            content_hash = hashlib.md5(doc.file_content).hexdigest()
             return f"{doc.id}_{content_hash}"
         except Exception as e:
             logger.error(f"Failed to get document hash: {e}")
@@ -148,13 +148,25 @@ class PersonalInfoExtractorOptimized:
             # Convert to document format
             documents = []
             for doc in personal_docs:
+                # Decode file content to text (assuming it's text-based)
+                try:
+                    if doc.content_type == 'text/plain':
+                        page_content = doc.file_content.decode('utf-8')
+                    else:
+                        # For other file types, you'd need proper parsing (PDF, DOCX, etc.)
+                        page_content = doc.file_content.decode('utf-8', errors='ignore')
+                except Exception as e:
+                    logger.warning(f"Failed to decode file content for doc {doc.id}: {e}")
+                    page_content = str(doc.file_content, errors='ignore')
+                
                 document = {
-                    "page_content": doc.content,
+                    "page_content": page_content,
                     "metadata": {
-                        'source': f"database:{doc.title}",
+                        'source': f"database:{doc.filename}",
                         'user_id': self.user_id,
                         'doc_hash': doc_hash,
-                        'title': doc.title,
+                        'filename': doc.filename,
+                        'content_type': doc.content_type,
                         'document_id': doc.id
                     }
                 }

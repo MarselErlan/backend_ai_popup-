@@ -135,8 +135,8 @@ class DocumentService:
     # PERSONAL INFO DOCUMENT OPERATIONS
     # ============================================================================
     
-    def save_personal_info_document(self, filename: str, content: str, 
-                                  user_id: str = None) -> int:
+    def save_personal_info_document(self, filename: str, file_content: bytes, 
+                                  content_type: str, user_id: str = None) -> int:
         """Save personal info document to database"""
         try:
             with self.get_session() as session:
@@ -150,7 +150,9 @@ class DocumentService:
                 personal_info_doc = PersonalInfoDocument(
                     user_id=user_id,
                     filename=filename,
-                    content=content,
+                    file_content=file_content,
+                    content_type=content_type,
+                    file_size=len(file_content),
                     is_active=True,
                     processing_status='pending'
                 )
@@ -198,8 +200,9 @@ class DocumentService:
                 return None
             
             # Create temporary file
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as temp_file:
-                temp_file.write(personal_info_doc.content)
+            file_extension = self._get_file_extension(personal_info_doc.content_type)
+            with tempfile.NamedTemporaryFile(mode='wb', suffix=file_extension, delete=False) as temp_file:
+                temp_file.write(personal_info_doc.file_content)
                 temp_path = temp_file.name
             
             logger.info(f"📂 Created temporary file for personal info: {temp_path}")
@@ -371,8 +374,8 @@ class DocumentService:
                         "documents": [
                             {
                                 "id": doc.id,
-                                "title": doc.filename,
-                                "content_length": len(doc.content) if doc.content else 0,
+                                "filename": doc.filename,
+                                "file_size": doc.file_size,
                                 "processing_status": doc.processing_status,
                                 "uploaded_at": doc.created_at.isoformat() if doc.created_at else None,
                                 "last_processed": doc.last_processed_at.isoformat() if doc.last_processed_at else None
@@ -456,3 +459,13 @@ class DocumentService:
                 logger.info(f"🧹 Cleaned up temporary file: {temp_path}")
         except Exception as e:
             logger.warning(f"⚠️ Error cleaning up temporary file {temp_path}: {e}") 
+    
+    def _get_file_extension(self, content_type: str) -> str:
+        """Get file extension based on content type"""
+        extension_map = {
+            'application/pdf': '.pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+            'application/msword': '.doc',
+            'text/plain': '.txt'
+        }
+        return extension_map.get(content_type, '.txt')
