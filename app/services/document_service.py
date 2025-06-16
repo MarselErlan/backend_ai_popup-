@@ -383,7 +383,7 @@ class DocumentService:
                         {
                             "id": log.id,
                             "document_type": log.document_type,
-                            "status": log.status,
+                            "status": log.processing_status,
                             "started_at": log.started_at.isoformat() if log.started_at else None,
                             "completed_at": log.completed_at.isoformat() if log.completed_at else None,
                             "processing_time": log.processing_time_seconds,

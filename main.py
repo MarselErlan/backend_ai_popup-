@@ -17,7 +17,7 @@ from datetime import datetime
 from loguru import logger
 
 # Import form filling services
-from app.services.form_filler_optimized import FormFillerOptimized
+from app.services.form_filler_optimized import OptimizedFormFiller
 
 # Import database-based extractors
 from resume_extractor_optimized import ResumeExtractorOptimized
@@ -77,7 +77,7 @@ def get_form_filler():
     """Cached form filler singleton"""
     global _form_filler
     if _form_filler is None:
-        _form_filler = FormFillerOptimized(
+        _form_filler = OptimizedFormFiller(
             openai_api_key=OPENAI_API_KEY,
             resume_extractor=get_resume_extractor(),
             personal_info_extractor=get_personal_info_extractor(),

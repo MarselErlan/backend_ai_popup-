@@ -359,11 +359,14 @@ class ResumeExtractorOptimized:
     def search_resume(self, query: str, k: int = 5) -> Dict[str, Any]:
         """Optimized resume search with caching"""
         try:
-            # Load the latest vector store
+            # Load the latest vector store - check multiple naming patterns
             vectorstore_files = list(self.vectordb_path.glob(f"resume_faiss_{self.user_id}_*"))
             if not vectorstore_files:
                 # Fallback to any resume vector store
                 vectorstore_files = list(self.vectordb_path.glob("resume_faiss_*"))
+            if not vectorstore_files:
+                # Fallback to legacy naming pattern
+                vectorstore_files = list(self.vectordb_path.glob("faiss_store_*"))
             
             if not vectorstore_files:
                 return {"status": "not_found", "message": "No vector store found"}

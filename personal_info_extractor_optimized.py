@@ -379,11 +379,14 @@ class PersonalInfoExtractorOptimized:
     def search_personal_info(self, query: str, k: int = 5) -> Dict[str, Any]:
         """Optimized personal info search with caching"""
         try:
-            # Load the latest vector store
+            # Load the latest vector store - check multiple naming patterns
             vectorstore_files = list(self.vectordb_path.glob(f"personal_info_faiss_{self.user_id}_*"))
             if not vectorstore_files:
                 # Fallback to any personal info vector store
                 vectorstore_files = list(self.vectordb_path.glob("personal_info_faiss_*"))
+            if not vectorstore_files:
+                # Fallback to legacy naming pattern
+                vectorstore_files = list(self.vectordb_path.glob("faiss_store_*"))
             
             if not vectorstore_files:
                 return {"status": "not_found", "message": "No personal info vector store found"}

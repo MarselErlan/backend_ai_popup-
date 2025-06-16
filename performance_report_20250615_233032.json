@@ -1,0 +1,59 @@
+{
+  "test_summary": {
+    "total_requests": 6,
+    "test_duration": "3.46s",
+    "successful_requests": 6,
+    "failed_requests": 0,
+    "average_response_time": "0.52s"
+  },
+  "endpoint_performance": {
+    "/api/generate-field-answer": {
+      "total_requests": 3,
+      "average_response_time": "0.95s",
+      "min_response_time": "0.81s",
+      "max_response_time": "1.17s",
+      "success_rate": "100.0%",
+      "cache_hits": 18,
+      "database_queries": 30
+    },
+    "/api/v1/documents/status": {
+      "total_requests": 1,
+      "average_response_time": "0.26s",
+      "min_response_time": "0.26s",
+      "max_response_time": "0.26s",
+      "success_rate": "100.0%",
+      "cache_hits": 0,
+      "database_queries": 0
+    },
+    "/health": {
+      "total_requests": 1,
+      "average_response_time": "0.00s",
+      "min_response_time": "0.00s",
+      "max_response_time": "0.00s",
+      "success_rate": "100.0%",
+      "cache_hits": 0,
+      "database_queries": 0
+    },
+    "/": {
+      "total_requests": 1,
+      "average_response_time": "0.00s",
+      "min_response_time": "0.00s",
+      "max_response_time": "0.00s",
+      "success_rate": "100.0%",
+      "cache_hits": 0,
+      "database_queries": 0
+    }
+  },
+  "optimization_metrics": {
+    "total_cache_hits": 18,
+    "total_database_queries": 30,
+    "optimization_enabled_requests": 3,
+    "cache_hit_ratio": 0.375
+  },
+  "recommendations": [
+    "\u2705 /api/v1/documents/status has excellent performance (avg: 0.26s)",
+    "\u2705 /health has excellent performance (avg: 0.00s)",
+    "\u2705 / has excellent performance (avg: 0.00s)",
+    "\u26a1 Good cache performance - room for improvement"
+  ]
+}
