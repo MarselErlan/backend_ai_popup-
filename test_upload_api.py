@@ -95,7 +95,6 @@ def test_demo_personal_info_upload():
     """
     
     data = {
-        'title': 'Contact Information & Preferences',
         'content': personal_info
     }
     
@@ -322,9 +321,8 @@ def test_demo_get_documents():
         print(f"   📊 Status: {data['processing_status']}")
         print(f"   📅 Created: {data['created_at']}")
         
-        # Show first 100 characters of content
-        content_preview = data['content'][:100] + "..." if len(data['content']) > 100 else data['content']
-        print(f"   📖 Content preview: {content_preview}")
+        # Note: Content is not returned in GET endpoint (use download endpoint to get content)
+        print(f"   📄 Filename: {data['filename']}")
     elif response.status_code == 404:
         print("⚠️  No demo personal info found - upload one first")
     else:

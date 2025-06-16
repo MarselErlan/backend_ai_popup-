@@ -115,7 +115,6 @@ POST /api/v1/personal-info/upload
 
 **Body (Form Data):**
 
-- `title`: Title for the information (e.g., "Contact Information")
 - `content`: The personal information content (text)
 
 **Response:**
@@ -123,9 +122,9 @@ POST /api/v1/personal-info/upload
 ```json
 {
   "status": "success",
-  "message": "Personal info 'Contact Information' uploaded successfully (replaced previous personal info)",
+  "message": "Personal info uploaded successfully (replaced previous personal info)",
   "document_id": 8,
-  "filename": "Contact Information",
+  "filename": "personal_info.txt",
   "processing_time": 0.08,
   "file_size": 1024,
   "replaced_previous": true
@@ -143,8 +142,7 @@ GET /api/v1/personal-info
 ```json
 {
   "id": 8,
-  "title": "Contact Information",
-  "content": "Name: John Doe\nEmail: john@example.com\n...",
+  "filename": "personal_info.txt",
   "content_length": 1024,
   "processing_status": "completed",
   "is_active": true,
@@ -154,25 +152,15 @@ GET /api/v1/personal-info
 }
 ```
 
-### Update User's Personal Information
+### Download User's Personal Information
 
 ```http
-PUT /api/v1/personal-info
+GET /api/v1/personal-info/download
 ```
-
-**Body (Form Data):**
-
-- `title`: Updated title
-- `content`: Updated content
 
 **Response:**
 
-```json
-{
-  "status": "success",
-  "message": "Personal info updated successfully"
-}
-```
+- Returns the user's personal info as a text file with appropriate headers for download
 
 ### Delete User's Personal Information
 
@@ -297,8 +285,7 @@ GET /api/demo/personal-info
   "status": "success",
   "data": {
     "id": 8,
-    "title": "Contact Information & Preferences",
-    "content": "CONTACT INFORMATION:\nName: John Doe\nEmail: john.doe@email.com\n...",
+    "filename": "demo_personal_info.txt",
     "content_length": 1024,
     "processing_status": "completed",
     "is_active": true,
@@ -308,6 +295,16 @@ GET /api/demo/personal-info
   }
 }
 ```
+
+### Demo Personal Info Download
+
+```http
+GET /api/demo/personal-info/download
+```
+
+**Response:**
+
+- Returns the demo personal info as a text file with appropriate headers for download
 
 ### Demo Documents Status
 

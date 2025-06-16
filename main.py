@@ -3,15 +3,17 @@
 Smart Form Fill API - Field-by-Field Form Filling
 OPTIMIZED VERSION with Performance Enhancements
 """
-
+# %%
 import os
 import asyncio
 from functools import lru_cache
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query, Depends, Request, UploadFile, File, Form
+from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from httpcore import request
 from pydantic import BaseModel, HttpUrl
 from typing import Dict, Any, List, Optional
 from datetime import datetime
@@ -757,7 +759,7 @@ async def upload_personal_info(
         
         # Save to database (this will automatically deactivate previous personal info)
         document_id = document_service.save_personal_info_document(
-            filename="personal_info.txt",  # Standard filename
+            filename="personal_info.txt",
             content=content,
             user_id=user_id
         )
@@ -791,7 +793,7 @@ async def upload_personal_info(
 async def get_user_personal_info(
     user_id: str = Depends(get_current_user_id)
 ):
-    """📝 Get user's personal info document with content (One per user)"""
+    """📝 Get user's personal info document info (One per user)"""
     try:
         document_service = get_document_service()
         document = document_service.get_active_personal_info_document(user_id)
@@ -799,16 +801,16 @@ async def get_user_personal_info(
         if not document:
             raise HTTPException(status_code=404, detail="No personal info found for this user")
         
-        return {
-            "id": document.id,
-            "content": document.content,
-            "content_length": len(document.content) if document.content else 0,
-            "processing_status": document.processing_status,
-            "is_active": document.is_active,
-            "created_at": document.created_at.isoformat() if document.created_at else "",
-            "last_processed_at": document.last_processed_at.isoformat() if document.last_processed_at else None,
-            "user_id": document.user_id
-        }
+        return DocumentInfoResponse(
+            id=document.id,
+            filename=document.filename,
+            content_length=len(document.content) if document.content else 0,
+            processing_status=document.processing_status,
+            is_active=document.is_active,
+            created_at=document.created_at.isoformat() if document.created_at else "",
+            last_processed_at=document.last_processed_at.isoformat() if document.last_processed_at else None,
+            user_id=document.user_id
+        )
         
     except HTTPException:
         raise
@@ -816,45 +818,29 @@ async def get_user_personal_info(
         logger.error(f"❌ Failed to get personal info document: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get document: {str(e)}")
 
-@app.put("/api/v1/personal-info")
-async def update_user_personal_info(
-    content: str = Form(...),
+@app.get("/api/v1/personal-info/download")
+async def download_user_personal_info(
     user_id: str = Depends(get_current_user_id)
 ):
-    """✏️ Update user's personal info document"""
+    """⬇️ Download user's personal info document"""
     try:
-        if len(content.strip()) == 0:
-            raise HTTPException(status_code=400, detail="Content cannot be empty")
-        
-        if len(content) > 50000:  # 50KB text limit
-            raise HTTPException(status_code=400, detail="Content too large. Maximum: 50KB")
-        
         document_service = get_document_service()
-        with document_service.get_session() as session:
-            result = session.query(PersonalInfoDocument).filter(
-                PersonalInfoDocument.user_id == user_id,
-                PersonalInfoDocument.is_active == True
-            ).update({
-                "content": content,
-                "updated_at": datetime.now(),
-                "processing_status": "pending"  # Reset to pending after update
-            })
-            
-            if result == 0:
-                raise HTTPException(status_code=404, detail="No personal info found for this user")
-            
-            session.commit()
-            
-            return {
-                "status": "success", 
-                "message": "Personal info updated successfully"
-            }
-            
+        document = document_service.get_active_personal_info_document(user_id)
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="No personal info found for this user")
+        
+        return StreamingResponse(
+            io.BytesIO(document.content.encode('utf-8')),
+            media_type="text/plain",
+            headers={"Content-Disposition": f"attachment; filename={document.filename}"}
+        )
+        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Failed to update personal info: {e}")
-        raise HTTPException(status_code=500, detail=f"Update failed: {str(e)}")
+        logger.error(f"❌ Failed to download personal info: {e}")
+        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
 
 @app.delete("/api/v1/personal-info")
 async def delete_user_personal_info(
@@ -1104,7 +1090,7 @@ async def demo_upload_personal_info(
         
         # Save to database with default user
         document_id = document_service.save_personal_info_document(
-            filename="personal_info.txt",
+            filename="demo_personal_info.txt",
             content=content,
             user_id="default"  # Demo user
         )
@@ -1122,7 +1108,7 @@ async def demo_upload_personal_info(
             status="success",
             message=message,
             document_id=document_id,
-            filename="personal_info.txt",
+            filename="demo_personal_info.txt",
             processing_time=processing_time,
             file_size=len(content.encode('utf-8')),
             replaced_previous=had_previous
@@ -1150,7 +1136,7 @@ async def demo_get_personal_info():
             "status": "success",
             "data": {
                 "id": document.id,
-                "content": document.content,
+                "filename": document.filename,
                 "content_length": len(document.content) if document.content else 0,
                 "processing_status": document.processing_status,
                 "is_active": document.is_active,
@@ -1165,6 +1151,30 @@ async def demo_get_personal_info():
     except Exception as e:
         logger.error(f"❌ Failed to get demo personal info: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get personal info: {str(e)}")
+
+@app.get("/api/demo/personal-info/download")
+async def demo_download_personal_info():
+    """
+    🎯 DEMO: Download personal info document without authentication (uses default user)
+    """
+    try:
+        document_service = get_document_service()
+        document = document_service.get_active_personal_info_document("default")
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="No demo personal info found")
+        
+        return StreamingResponse(
+            io.BytesIO(document.content.encode('utf-8')),
+            media_type="text/plain",
+            headers={"Content-Disposition": f"attachment; filename={document.filename}"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to download demo personal info: {e}")
+        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
 
 @app.get("/api/demo/documents/status")
 async def demo_get_documents_status():
