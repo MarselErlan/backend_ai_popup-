@@ -303,7 +303,7 @@ class DocumentService:
     # ============================================================================
     
     def get_document_stats(self) -> Dict[str, Any]:
-        """Get statistics about stored documents"""
+        """Get document statistics"""
         try:
             with self.get_session() as session:
                 resume_count = session.query(ResumeDocument).filter(
@@ -314,13 +314,13 @@ class DocumentService:
                     PersonalInfoDocument.is_active == True
                 ).count()
                 
-                total_processing_logs = session.query(DocumentProcessingLog).count()
+                processing_logs_count = session.query(DocumentProcessingLog).count()
                 
                 stats = {
-                    "active_resumes": resume_count,
-                    "active_personal_info": personal_info_count,
-                    "total_processing_logs": total_processing_logs,
-                    "last_updated": datetime.now().isoformat()
+                    "active_resume_documents": resume_count,
+                    "active_personal_info_documents": personal_info_count,
+                    "total_processing_logs": processing_logs_count,
+                    "timestamp": datetime.now().isoformat()
                 }
                 
                 logger.info(f"📊 Document stats: {stats}")
@@ -328,6 +328,124 @@ class DocumentService:
                 
         except Exception as e:
             logger.error(f"❌ Error getting document stats: {e}")
+            raise
+    
+    def get_documents_status(self, user_id: str = None) -> Dict[str, Any]:
+        """⚡ OPTIMIZED: Get comprehensive documents status for a user"""
+        try:
+            with self.get_session() as session:
+                # Get resume documents
+                resume_query = session.query(ResumeDocument)
+                if user_id:
+                    resume_query = resume_query.filter(ResumeDocument.user_id == user_id)
+                resume_docs = resume_query.filter(ResumeDocument.is_active == True).all()
+                
+                # Get personal info documents
+                personal_query = session.query(PersonalInfoDocument)
+                if user_id:
+                    personal_query = personal_query.filter(PersonalInfoDocument.user_id == user_id)
+                personal_docs = personal_query.filter(PersonalInfoDocument.is_active == True).all()
+                
+                # Get recent processing logs
+                log_query = session.query(DocumentProcessingLog)
+                if user_id:
+                    log_query = log_query.filter(DocumentProcessingLog.user_id == user_id)
+                recent_logs = log_query.order_by(desc(DocumentProcessingLog.started_at)).limit(10).all()
+                
+                status_data = {
+                    "resume_documents": {
+                        "count": len(resume_docs),
+                        "documents": [
+                            {
+                                "id": doc.id,
+                                "filename": doc.filename,
+                                "file_size": doc.file_size,
+                                "processing_status": doc.processing_status,
+                                "uploaded_at": doc.created_at.isoformat() if doc.created_at else None,
+                                "last_processed": doc.last_processed_at.isoformat() if doc.last_processed_at else None
+                            } for doc in resume_docs
+                        ]
+                    },
+                    "personal_info_documents": {
+                        "count": len(personal_docs),
+                        "documents": [
+                            {
+                                "id": doc.id,
+                                "title": doc.filename,
+                                "content_length": len(doc.content) if doc.content else 0,
+                                "processing_status": doc.processing_status,
+                                "uploaded_at": doc.created_at.isoformat() if doc.created_at else None,
+                                "last_processed": doc.last_processed_at.isoformat() if doc.last_processed_at else None
+                            } for doc in personal_docs
+                        ]
+                    },
+                    "recent_processing_logs": [
+                        {
+                            "id": log.id,
+                            "document_type": log.document_type,
+                            "status": log.status,
+                            "started_at": log.started_at.isoformat() if log.started_at else None,
+                            "completed_at": log.completed_at.isoformat() if log.completed_at else None,
+                            "processing_time": log.processing_time_seconds,
+                            "total_chunks": log.total_chunks,
+                            "model_used": log.model_used
+                        } for log in recent_logs
+                    ],
+                    "summary": {
+                        "total_active_documents": len(resume_docs) + len(personal_docs),
+                        "resume_status": "available" if resume_docs else "missing",
+                        "personal_info_status": "available" if personal_docs else "missing",
+                        "last_activity": max([
+                            doc.last_processed_at for doc in (resume_docs + personal_docs) 
+                            if doc.last_processed_at
+                        ], default=None)
+                    }
+                }
+                
+                if status_data["summary"]["last_activity"]:
+                    status_data["summary"]["last_activity"] = status_data["summary"]["last_activity"].isoformat()
+                
+                logger.info(f"📋 Retrieved document status for user: {user_id or 'default'}")
+                return status_data
+                
+        except Exception as e:
+            logger.error(f"❌ Error getting documents status: {e}")
+            raise
+    
+    def get_user_resume_documents(self, user_id: str = None) -> List[ResumeDocument]:
+        """⚡ OPTIMIZED: Get user resume documents"""
+        try:
+            with self.get_session() as session:
+                query = session.query(ResumeDocument).filter(
+                    ResumeDocument.is_active == True
+                )
+                
+                if user_id:
+                    query = query.filter(ResumeDocument.user_id == user_id)
+                
+                documents = query.order_by(desc(ResumeDocument.created_at)).all()
+                return documents
+                
+        except Exception as e:
+            logger.error(f"❌ Error getting user resume documents: {e}")
+            raise
+    
+    def get_user_personal_info_documents(self, user_id: str = None) -> List[PersonalInfoDocument]:
+        """⚡ OPTIMIZED: Get user personal info documents"""
+        try:
+            with self.get_session() as session:
+                query = session.query(PersonalInfoDocument).filter(
+                    PersonalInfoDocument.is_active == True
+                )
+                
+                if user_id:
+                    query = query.filter(PersonalInfoDocument.user_id == user_id)
+                
+                documents = query.order_by(desc(PersonalInfoDocument.created_at)).all()
+                return documents
+                
+        except Exception as e:
+            logger.error(f"❌ Error getting user personal info documents: {e}")
             raise
     
     def cleanup_temp_file(self, temp_path: str):
