@@ -9,13 +9,15 @@ import asyncio
 from functools import lru_cache
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query, Depends, Request
+from fastapi import FastAPI, HTTPException, Query, Depends, Request, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, HttpUrl
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from loguru import logger
 from sqlalchemy.orm import Session
+import io
 
 # Import auth components
 from database import get_db
@@ -29,6 +31,7 @@ from app.services.form_filler_optimized import OptimizedFormFiller
 from resume_extractor_optimized import ResumeExtractorOptimized
 from personal_info_extractor_optimized import PersonalInfoExtractorOptimized
 from app.services.document_service import DocumentService
+from app.models.document_models import ResumeDocument, PersonalInfoDocument
 
 # Load environment variables
 load_dotenv()
@@ -520,9 +523,9 @@ async def reembed_personal_info_from_database(user_id: str = Query("default", de
         logger.error(f"❌ Personal info re-embedding failed: {e}")
         raise HTTPException(status_code=500, detail=f"Re-embedding failed: {str(e)}")
 
-@app.get("/api/v1/documents/status")
-async def get_documents_status(user_id: str = Query(None, description="User ID for multi-user support")):
-    """⚡ OPTIMIZED: Get documents status using cached service"""
+@app.get("/api/v1/documents/status/all")
+async def get_documents_status_legacy(user_id: str = Query(None, description="User ID for multi-user support")):
+    """⚡ LEGACY: Get documents status using cached service (for backward compatibility)"""
     try:
         document_service = get_document_service()
         
@@ -539,6 +542,699 @@ async def get_documents_status(user_id: str = Query(None, description="User ID f
     
     except Exception as e:
         logger.error(f"❌ Status check failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Status check failed: {str(e)}")
+
+# ============================================================================
+# DOCUMENT UPLOAD & CRUD ENDPOINTS
+# ============================================================================
+
+# Additional Pydantic models for document operations
+class DocumentUploadResponse(BaseModel):
+    status: str
+    message: str
+    document_id: int
+    filename: str
+    processing_time: float
+    file_size: int
+    replaced_previous: bool  # Indicates if a previous document was replaced
+
+class DocumentInfoResponse(BaseModel):
+    id: int
+    filename: str
+    file_size: Optional[int] = None
+    content_length: Optional[int] = None
+    processing_status: str
+    is_active: bool
+    created_at: str
+    last_processed_at: Optional[str] = None
+    user_id: Optional[str] = None
+
+# ============================================================================
+# RESUME DOCUMENT ENDPOINTS (ONE PER USER)
+# ============================================================================
+
+@app.post("/api/v1/resume/upload", response_model=DocumentUploadResponse)
+async def upload_resume(
+    file: UploadFile = File(...),
+    user_id: str = Depends(get_current_user_id)
+):
+    """
+    📄 Upload resume document to database (One per user - replaces existing)
+    
+    Supports: PDF, DOCX, DOC, TXT files
+    """
+    start_time = datetime.now()
+    
+    # Validate file type
+    allowed_types = {
+        'application/pdf': ['.pdf'],
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+        'application/msword': ['.doc'],
+        'text/plain': ['.txt']
+    }
+    
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Unsupported file type: {file.content_type}. Supported: PDF, DOCX, DOC, TXT"
+        )
+    
+    try:
+        # Check if user already has a resume
+        document_service = get_document_service()
+        existing_resume = document_service.get_active_resume_document(user_id)
+        had_previous = existing_resume is not None
+        
+        # Read file content
+        file_content = await file.read()
+        
+        if len(file_content) == 0:
+            raise HTTPException(status_code=400, detail="Empty file uploaded")
+        
+        if len(file_content) > 10 * 1024 * 1024:  # 10MB limit
+            raise HTTPException(status_code=400, detail="File too large. Maximum size: 10MB")
+        
+        # Save to database (this will automatically deactivate previous resume)
+        document_id = document_service.save_resume_document(
+            filename=file.filename,
+            file_content=file_content,
+            content_type=file.content_type,
+            user_id=user_id
+        )
+        
+        end_time = datetime.now()
+        processing_time = (end_time - start_time).total_seconds()
+        
+        message = f"Resume '{file.filename}' uploaded successfully"
+        if had_previous:
+            message += f" (replaced previous resume)"
+        
+        logger.info(f"✅ Resume uploaded successfully: {file.filename} (ID: {document_id})")
+        
+        return DocumentUploadResponse(
+            status="success",
+            message=message,
+            document_id=document_id,
+            filename=file.filename,
+            processing_time=processing_time,
+            file_size=len(file_content),
+            replaced_previous=had_previous
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Resume upload failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@app.get("/api/v1/resume")
+async def get_user_resume(
+    user_id: str = Depends(get_current_user_id)
+):
+    """📄 Get user's resume document info (One per user)"""
+    try:
+        document_service = get_document_service()
+        document = document_service.get_active_resume_document(user_id)
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="No resume found for this user")
+        
+        return DocumentInfoResponse(
+            id=document.id,
+            filename=document.filename,
+            file_size=document.file_size,
+            processing_status=document.processing_status,
+            is_active=document.is_active,
+            created_at=document.created_at.isoformat() if document.created_at else "",
+            last_processed_at=document.last_processed_at.isoformat() if document.last_processed_at else None,
+            user_id=document.user_id
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to get resume document: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get document: {str(e)}")
+
+@app.get("/api/v1/resume/download")
+async def download_user_resume(
+    user_id: str = Depends(get_current_user_id)
+):
+    """⬇️ Download user's resume document"""
+    try:
+        document_service = get_document_service()
+        document = document_service.get_active_resume_document(user_id)
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="No resume found for this user")
+        
+        return StreamingResponse(
+            io.BytesIO(document.file_content),
+            media_type=document.content_type,
+            headers={"Content-Disposition": f"attachment; filename={document.filename}"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to download resume: {e}")
+        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
+
+@app.delete("/api/v1/resume")
+async def delete_user_resume(
+    user_id: str = Depends(get_current_user_id)
+):
+    """🗑️ Delete user's resume document"""
+    try:
+        document_service = get_document_service()
+        with document_service.get_session() as session:
+            result = session.query(ResumeDocument).filter(
+                ResumeDocument.user_id == user_id,
+                ResumeDocument.is_active == True
+            ).update({"is_active": False})
+            
+            if result == 0:
+                raise HTTPException(status_code=404, detail="No resume found for this user")
+            
+            session.commit()
+            
+            return {"status": "success", "message": "Resume deleted successfully"}
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to delete resume: {e}")
+        raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
+
+# ============================================================================
+# PERSONAL INFO DOCUMENT ENDPOINTS (ONE PER USER)
+# ============================================================================
+
+@app.post("/api/v1/personal-info/upload", response_model=DocumentUploadResponse)
+async def upload_personal_info(
+    title: str = Form(..., description="Title for the personal info (e.g., 'Contact Information')"),
+    content: str = Form(..., description="Personal information content"),
+    user_id: str = Depends(get_current_user_id)
+):
+    """
+    📝 Upload personal information to database (One per user - replaces existing)
+    
+    Personal info is stored as text content, not files.
+    Examples: Contact details, work authorization, salary expectations, preferences
+    """
+    start_time = datetime.now()
+    
+    try:
+        if len(content.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Content cannot be empty")
+        
+        if len(content) > 50000:  # 50KB text limit
+            raise HTTPException(status_code=400, detail="Content too large. Maximum: 50KB")
+        
+        # Check if user already has personal info
+        document_service = get_document_service()
+        existing_info = document_service.get_active_personal_info_document(user_id)
+        had_previous = existing_info is not None
+        
+        # Save to database (this will automatically deactivate previous personal info)
+        document_id = document_service.save_personal_info_document(
+            filename=title,  # Using title as filename
+            content=content,
+            user_id=user_id
+        )
+        
+        end_time = datetime.now()
+        processing_time = (end_time - start_time).total_seconds()
+        
+        message = f"Personal info '{title}' uploaded successfully"
+        if had_previous:
+            message += f" (replaced previous personal info)"
+        
+        logger.info(f"✅ Personal info uploaded successfully: {title} (ID: {document_id})")
+        
+        return DocumentUploadResponse(
+            status="success",
+            message=message,
+            document_id=document_id,
+            filename=title,
+            processing_time=processing_time,
+            file_size=len(content.encode('utf-8')),
+            replaced_previous=had_previous
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Personal info upload failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@app.get("/api/v1/personal-info")
+async def get_user_personal_info(
+    user_id: str = Depends(get_current_user_id)
+):
+    """📝 Get user's personal info document with content (One per user)"""
+    try:
+        document_service = get_document_service()
+        document = document_service.get_active_personal_info_document(user_id)
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="No personal info found for this user")
+        
+        return {
+            "id": document.id,
+            "title": document.filename,
+            "content": document.content,
+            "content_length": len(document.content) if document.content else 0,
+            "processing_status": document.processing_status,
+            "is_active": document.is_active,
+            "created_at": document.created_at.isoformat() if document.created_at else "",
+            "last_processed_at": document.last_processed_at.isoformat() if document.last_processed_at else None,
+            "user_id": document.user_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to get personal info document: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get document: {str(e)}")
+
+@app.put("/api/v1/personal-info")
+async def update_user_personal_info(
+    title: str = Form(...),
+    content: str = Form(...),
+    user_id: str = Depends(get_current_user_id)
+):
+    """✏️ Update user's personal info document"""
+    try:
+        if len(content.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Content cannot be empty")
+        
+        if len(content) > 50000:  # 50KB text limit
+            raise HTTPException(status_code=400, detail="Content too large. Maximum: 50KB")
+        
+        document_service = get_document_service()
+        with document_service.get_session() as session:
+            result = session.query(PersonalInfoDocument).filter(
+                PersonalInfoDocument.user_id == user_id,
+                PersonalInfoDocument.is_active == True
+            ).update({
+                "filename": title,
+                "content": content,
+                "updated_at": datetime.now(),
+                "processing_status": "pending"  # Reset to pending after update
+            })
+            
+            if result == 0:
+                raise HTTPException(status_code=404, detail="No personal info found for this user")
+            
+            session.commit()
+            
+            return {
+                "status": "success", 
+                "message": "Personal info updated successfully"
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to update personal info: {e}")
+        raise HTTPException(status_code=500, detail=f"Update failed: {str(e)}")
+
+@app.delete("/api/v1/personal-info")
+async def delete_user_personal_info(
+    user_id: str = Depends(get_current_user_id)
+):
+    """🗑️ Delete user's personal info document"""
+    try:
+        document_service = get_document_service()
+        with document_service.get_session() as session:
+            result = session.query(PersonalInfoDocument).filter(
+                PersonalInfoDocument.user_id == user_id,
+                PersonalInfoDocument.is_active == True
+            ).update({"is_active": False})
+            
+            if result == 0:
+                raise HTTPException(status_code=404, detail="No personal info found for this user")
+            
+            session.commit()
+            
+            return {"status": "success", "message": "Personal info deleted successfully"}
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to delete personal info: {e}")
+        raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
+
+# ============================================================================
+# USER DOCUMENT STATUS ENDPOINT
+# ============================================================================
+
+@app.get("/api/v1/documents/status")
+async def get_user_documents_status(
+    user_id: str = Depends(get_current_user_id)
+):
+    """📊 Get user's document status (One resume + One personal info per user)"""
+    try:
+        document_service = get_document_service()
+        
+        # Get user's documents
+        resume_doc = document_service.get_active_resume_document(user_id)
+        personal_info_doc = document_service.get_active_personal_info_document(user_id)
+        
+        status_data = {
+            "user_id": user_id,
+            "resume": None,
+            "personal_info": None,
+            "summary": {
+                "has_resume": resume_doc is not None,
+                "has_personal_info": personal_info_doc is not None,
+                "documents_ready": False,
+                "resume_status": "none",
+                "personal_info_status": "none"
+            }
+        }
+        
+        # Add resume info if exists
+        if resume_doc:
+            status_data["resume"] = {
+                "id": resume_doc.id,
+                "filename": resume_doc.filename,
+                "file_size": resume_doc.file_size,
+                "processing_status": resume_doc.processing_status,
+                "created_at": resume_doc.created_at.isoformat() if resume_doc.created_at else None,
+                "last_processed_at": resume_doc.last_processed_at.isoformat() if resume_doc.last_processed_at else None
+            }
+            status_data["summary"]["resume_status"] = resume_doc.processing_status
+        
+        # Add personal info if exists
+        if personal_info_doc:
+            status_data["personal_info"] = {
+                "id": personal_info_doc.id,
+                "title": personal_info_doc.filename,
+                "content_length": len(personal_info_doc.content) if personal_info_doc.content else 0,
+                "processing_status": personal_info_doc.processing_status,
+                "created_at": personal_info_doc.created_at.isoformat() if personal_info_doc.created_at else None,
+                "last_processed_at": personal_info_doc.last_processed_at.isoformat() if personal_info_doc.last_processed_at else None
+            }
+            status_data["summary"]["personal_info_status"] = personal_info_doc.processing_status
+        
+        # Determine if documents are ready
+        resume_ready = resume_doc and resume_doc.processing_status == "completed"
+        personal_info_ready = personal_info_doc and personal_info_doc.processing_status == "completed"
+        status_data["summary"]["documents_ready"] = resume_ready and personal_info_ready
+        
+        return {
+            "status": "success",
+            "timestamp": datetime.now().isoformat(),
+            "data": status_data
+        }
+    
+    except Exception as e:
+        logger.error(f"❌ Status check failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Status check failed: {str(e)}")
+
+# ============================================================================
+# DEMO UPLOAD ENDPOINTS (No Authentication Required)
+# ============================================================================
+
+@app.post("/api/demo/resume/upload", response_model=DocumentUploadResponse)
+async def demo_upload_resume(
+    file: UploadFile = File(...)
+):
+    """
+    🎯 DEMO: Upload resume without authentication (uses default user)
+    
+    For testing/demo purposes only.
+    """
+    start_time = datetime.now()
+    
+    # Same validation as authenticated endpoint
+    allowed_types = {
+        'application/pdf': ['.pdf'],
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+        'application/msword': ['.doc'],
+        'text/plain': ['.txt']
+    }
+    
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Unsupported file type: {file.content_type}. Supported: PDF, DOCX, DOC, TXT"
+        )
+    
+    try:
+        # Check if default user already has a resume
+        document_service = get_document_service()
+        existing_resume = document_service.get_active_resume_document("default")
+        had_previous = existing_resume is not None
+        
+        file_content = await file.read()
+        
+        if len(file_content) == 0:
+            raise HTTPException(status_code=400, detail="Empty file uploaded")
+        
+        if len(file_content) > 10 * 1024 * 1024:  # 10MB limit
+            raise HTTPException(status_code=400, detail="File too large. Maximum size: 10MB")
+        
+        # Save to database with default user
+        document_id = document_service.save_resume_document(
+            filename=file.filename,
+            file_content=file_content,
+            content_type=file.content_type,
+            user_id="default"  # Demo user
+        )
+        
+        end_time = datetime.now()
+        processing_time = (end_time - start_time).total_seconds()
+        
+        message = f"Demo resume '{file.filename}' uploaded successfully"
+        if had_previous:
+            message += " (replaced previous demo resume)"
+        
+        logger.info(f"✅ DEMO: Resume uploaded successfully: {file.filename} (ID: {document_id})")
+        
+        return DocumentUploadResponse(
+            status="success",
+            message=message,
+            document_id=document_id,
+            filename=file.filename,
+            processing_time=processing_time,
+            file_size=len(file_content),
+            replaced_previous=had_previous
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Demo resume upload failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@app.get("/api/demo/resume")
+async def demo_get_resume():
+    """
+    🎯 DEMO: Get resume document info without authentication (uses default user)
+    """
+    try:
+        document_service = get_document_service()
+        document = document_service.get_active_resume_document("default")
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="No demo resume found")
+        
+        return {
+            "status": "success",
+            "data": {
+                "id": document.id,
+                "filename": document.filename,
+                "file_size": document.file_size,
+                "processing_status": document.processing_status,
+                "is_active": document.is_active,
+                "created_at": document.created_at.isoformat() if document.created_at else "",
+                "last_processed_at": document.last_processed_at.isoformat() if document.last_processed_at else None,
+                "user_id": document.user_id
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to get demo resume: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get resume: {str(e)}")
+
+@app.get("/api/demo/resume/download")
+async def demo_download_resume():
+    """
+    🎯 DEMO: Download resume document without authentication (uses default user)
+    """
+    try:
+        document_service = get_document_service()
+        document = document_service.get_active_resume_document("default")
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="No demo resume found")
+        
+        return StreamingResponse(
+            io.BytesIO(document.file_content),
+            media_type=document.content_type,
+            headers={"Content-Disposition": f"attachment; filename={document.filename}"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to download demo resume: {e}")
+        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
+
+@app.post("/api/demo/personal-info/upload", response_model=DocumentUploadResponse)
+async def demo_upload_personal_info(
+    title: str = Form(...),
+    content: str = Form(...)
+):
+    """
+    🎯 DEMO: Upload personal info without authentication (uses default user)
+    """
+    start_time = datetime.now()
+    
+    try:
+        if len(content.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Content cannot be empty")
+        
+        if len(content) > 50000:  # 50KB text limit
+            raise HTTPException(status_code=400, detail="Content too large. Maximum: 50KB")
+        
+        # Check if default user already has personal info
+        document_service = get_document_service()
+        existing_info = document_service.get_active_personal_info_document("default")
+        had_previous = existing_info is not None
+        
+        # Save to database with default user
+        document_id = document_service.save_personal_info_document(
+            filename=title,
+            content=content,
+            user_id="default"  # Demo user
+        )
+        
+        end_time = datetime.now()
+        processing_time = (end_time - start_time).total_seconds()
+        
+        message = f"Demo personal info '{title}' uploaded successfully"
+        if had_previous:
+            message += " (replaced previous demo personal info)"
+        
+        logger.info(f"✅ DEMO: Personal info uploaded successfully: {title} (ID: {document_id})")
+        
+        return DocumentUploadResponse(
+            status="success",
+            message=message,
+            document_id=document_id,
+            filename=title,
+            processing_time=processing_time,
+            file_size=len(content.encode('utf-8')),
+            replaced_previous=had_previous
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Demo personal info upload failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@app.get("/api/demo/personal-info")
+async def demo_get_personal_info():
+    """
+    🎯 DEMO: Get personal info document without authentication (uses default user)
+    """
+    try:
+        document_service = get_document_service()
+        document = document_service.get_active_personal_info_document("default")
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="No demo personal info found")
+        
+        return {
+            "status": "success",
+            "data": {
+                "id": document.id,
+                "title": document.filename,
+                "content": document.content,
+                "content_length": len(document.content) if document.content else 0,
+                "processing_status": document.processing_status,
+                "is_active": document.is_active,
+                "created_at": document.created_at.isoformat() if document.created_at else "",
+                "last_processed_at": document.last_processed_at.isoformat() if document.last_processed_at else None,
+                "user_id": document.user_id
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to get demo personal info: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get personal info: {str(e)}")
+
+@app.get("/api/demo/documents/status")
+async def demo_get_documents_status():
+    """
+    🎯 DEMO: Get documents status without authentication (uses default user)
+    """
+    try:
+        document_service = get_document_service()
+        
+        # Get default user's documents
+        resume_doc = document_service.get_active_resume_document("default")
+        personal_info_doc = document_service.get_active_personal_info_document("default")
+        
+        status_data = {
+            "user_id": "default",
+            "resume": None,
+            "personal_info": None,
+            "summary": {
+                "has_resume": resume_doc is not None,
+                "has_personal_info": personal_info_doc is not None,
+                "documents_ready": False,
+                "resume_status": "none",
+                "personal_info_status": "none"
+            }
+        }
+        
+        # Add resume info if exists
+        if resume_doc:
+            status_data["resume"] = {
+                "id": resume_doc.id,
+                "filename": resume_doc.filename,
+                "file_size": resume_doc.file_size,
+                "processing_status": resume_doc.processing_status,
+                "created_at": resume_doc.created_at.isoformat() if resume_doc.created_at else None,
+                "last_processed_at": resume_doc.last_processed_at.isoformat() if resume_doc.last_processed_at else None
+            }
+            status_data["summary"]["resume_status"] = resume_doc.processing_status
+        
+        # Add personal info if exists
+        if personal_info_doc:
+            status_data["personal_info"] = {
+                "id": personal_info_doc.id,
+                "title": personal_info_doc.filename,
+                "content_length": len(personal_info_doc.content) if personal_info_doc.content else 0,
+                "processing_status": personal_info_doc.processing_status,
+                "created_at": personal_info_doc.created_at.isoformat() if personal_info_doc.created_at else None,
+                "last_processed_at": personal_info_doc.last_processed_at.isoformat() if personal_info_doc.last_processed_at else None
+            }
+            status_data["summary"]["personal_info_status"] = personal_info_doc.processing_status
+        
+        # Determine if documents are ready
+        resume_ready = resume_doc and resume_doc.processing_status == "completed"
+        personal_info_ready = personal_info_doc and personal_info_doc.processing_status == "completed"
+        status_data["summary"]["documents_ready"] = resume_ready and personal_info_ready
+        
+        return {
+            "status": "success",
+            "timestamp": datetime.now().isoformat(),
+            "data": status_data
+        }
+    
+    except Exception as e:
+        logger.error(f"❌ Demo status check failed: {e}")
         raise HTTPException(status_code=500, detail=f"Status check failed: {str(e)}")
 
 # ============================================================================
