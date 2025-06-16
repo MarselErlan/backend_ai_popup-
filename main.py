@@ -732,7 +732,6 @@ async def delete_user_resume(
 
 @app.post("/api/v1/personal-info/upload", response_model=DocumentUploadResponse)
 async def upload_personal_info(
-    title: str = Form(..., description="Title for the personal info (e.g., 'Contact Information')"),
     content: str = Form(..., description="Personal information content"),
     user_id: str = Depends(get_current_user_id)
 ):
@@ -758,7 +757,7 @@ async def upload_personal_info(
         
         # Save to database (this will automatically deactivate previous personal info)
         document_id = document_service.save_personal_info_document(
-            filename=title,  # Using title as filename
+            filename="personal_info.txt",  # Standard filename
             content=content,
             user_id=user_id
         )
@@ -766,17 +765,17 @@ async def upload_personal_info(
         end_time = datetime.now()
         processing_time = (end_time - start_time).total_seconds()
         
-        message = f"Personal info '{title}' uploaded successfully"
+        message = "Personal info uploaded successfully"
         if had_previous:
-            message += f" (replaced previous personal info)"
+            message += " (replaced previous personal info)"
         
-        logger.info(f"✅ Personal info uploaded successfully: {title} (ID: {document_id})")
+        logger.info(f"✅ Personal info uploaded successfully (ID: {document_id})")
         
         return DocumentUploadResponse(
             status="success",
             message=message,
             document_id=document_id,
-            filename=title,
+            filename="personal_info.txt",
             processing_time=processing_time,
             file_size=len(content.encode('utf-8')),
             replaced_previous=had_previous
@@ -802,7 +801,6 @@ async def get_user_personal_info(
         
         return {
             "id": document.id,
-            "title": document.filename,
             "content": document.content,
             "content_length": len(document.content) if document.content else 0,
             "processing_status": document.processing_status,
@@ -820,7 +818,6 @@ async def get_user_personal_info(
 
 @app.put("/api/v1/personal-info")
 async def update_user_personal_info(
-    title: str = Form(...),
     content: str = Form(...),
     user_id: str = Depends(get_current_user_id)
 ):
@@ -838,7 +835,6 @@ async def update_user_personal_info(
                 PersonalInfoDocument.user_id == user_id,
                 PersonalInfoDocument.is_active == True
             ).update({
-                "filename": title,
                 "content": content,
                 "updated_at": datetime.now(),
                 "processing_status": "pending"  # Reset to pending after update
@@ -931,7 +927,6 @@ async def get_user_documents_status(
         if personal_info_doc:
             status_data["personal_info"] = {
                 "id": personal_info_doc.id,
-                "title": personal_info_doc.filename,
                 "content_length": len(personal_info_doc.content) if personal_info_doc.content else 0,
                 "processing_status": personal_info_doc.processing_status,
                 "created_at": personal_info_doc.created_at.isoformat() if personal_info_doc.created_at else None,
@@ -1088,7 +1083,6 @@ async def demo_download_resume():
 
 @app.post("/api/demo/personal-info/upload", response_model=DocumentUploadResponse)
 async def demo_upload_personal_info(
-    title: str = Form(...),
     content: str = Form(...)
 ):
     """
@@ -1110,7 +1104,7 @@ async def demo_upload_personal_info(
         
         # Save to database with default user
         document_id = document_service.save_personal_info_document(
-            filename=title,
+            filename="personal_info.txt",
             content=content,
             user_id="default"  # Demo user
         )
@@ -1118,17 +1112,17 @@ async def demo_upload_personal_info(
         end_time = datetime.now()
         processing_time = (end_time - start_time).total_seconds()
         
-        message = f"Demo personal info '{title}' uploaded successfully"
+        message = "Demo personal info uploaded successfully"
         if had_previous:
             message += " (replaced previous demo personal info)"
         
-        logger.info(f"✅ DEMO: Personal info uploaded successfully: {title} (ID: {document_id})")
+        logger.info(f"✅ DEMO: Personal info uploaded successfully (ID: {document_id})")
         
         return DocumentUploadResponse(
             status="success",
             message=message,
             document_id=document_id,
-            filename=title,
+            filename="personal_info.txt",
             processing_time=processing_time,
             file_size=len(content.encode('utf-8')),
             replaced_previous=had_previous
@@ -1156,7 +1150,6 @@ async def demo_get_personal_info():
             "status": "success",
             "data": {
                 "id": document.id,
-                "title": document.filename,
                 "content": document.content,
                 "content_length": len(document.content) if document.content else 0,
                 "processing_status": document.processing_status,
@@ -1214,7 +1207,6 @@ async def demo_get_documents_status():
         if personal_info_doc:
             status_data["personal_info"] = {
                 "id": personal_info_doc.id,
-                "title": personal_info_doc.filename,
                 "content_length": len(personal_info_doc.content) if personal_info_doc.content else 0,
                 "processing_status": personal_info_doc.processing_status,
                 "created_at": personal_info_doc.created_at.isoformat() if personal_info_doc.created_at else None,

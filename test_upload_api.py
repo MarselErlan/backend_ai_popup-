@@ -233,7 +233,7 @@ def test_single_document_endpoints():
     print("📄 Testing resume replacement behavior...")
     
     # First upload
-    data1 = {'title': 'Personal Info v1', 'content': 'Original content for testing'}
+    data1 = {'content': 'Original content for testing - Contact Details, Work Authorization, Salary Expectations, etc.'}
     response1 = requests.post(f"{BASE_URL}/api/demo/personal-info/upload", data=data1)
     
     if response1.status_code == 200:
@@ -241,7 +241,7 @@ def test_single_document_endpoints():
         print(f"   📝 First upload: ID {result1['document_id']} (replaced: {result1['replaced_previous']})")
         
         # Second upload should replace the first
-        data2 = {'title': 'Personal Info v2', 'content': 'Updated content for testing replacement'}
+        data2 = {'content': 'Updated content for testing replacement - Updated Contact Details, New Work Authorization, Revised Salary Expectations, etc.'}
         response2 = requests.post(f"{BASE_URL}/api/demo/personal-info/upload", data=data2)
         
         if response2.status_code == 200:
@@ -318,7 +318,6 @@ def test_demo_get_documents():
         result = response.json()
         print("✅ Personal info retrieved successfully!")
         data = result['data']
-        print(f"   📝 Title: {data['title']}")
         print(f"   💾 Length: {data['content_length']} characters")
         print(f"   📊 Status: {data['processing_status']}")
         print(f"   📅 Created: {data['created_at']}")
@@ -354,7 +353,7 @@ def test_demo_documents_status():
         
         if data['personal_info']:
             personal_info = data['personal_info']
-            print(f"   📝 Personal Info: {personal_info['title']} ({personal_info['processing_status']})")
+            print(f"   📝 Personal Info: {personal_info['content_length']} chars ({personal_info['processing_status']})")
         
         # Verify "one per user" logic
         has_multiple_resumes = False  # We can't have multiple with our current logic
