@@ -23,7 +23,7 @@ import io
 
 # Import auth components
 from database import get_db
-from models import User
+from models import User, UserSession
 from auth import create_access_token, get_current_user, get_current_user_id
 
 # Import form filling services
@@ -428,6 +428,195 @@ async def simple_login_user(user_data: UserLogin, db: Session = Depends(get_db))
     except Exception as e:
         logger.error(f"❌ Simple login failed: {e}")
         raise HTTPException(status_code=500, detail="Login failed")
+
+# ============================================================================
+# ULTRA SIMPLE SESSION MANAGEMENT (Store session_id in DB)
+# ============================================================================
+
+class SessionCreateRequest(BaseModel):
+    user_id: str
+    device_info: Optional[str] = None
+
+class SessionResponse(BaseModel):
+    status: str
+    session_id: str
+    user_id: str
+    message: str
+
+class CurrentUserResponse(BaseModel):
+    status: str
+    user_id: str
+    email: str
+    session_id: str
+    device_info: Optional[str] = None
+    created_at: str
+    last_used_at: str
+
+@app.post("/api/session/create", response_model=SessionResponse)
+async def create_user_session(
+    session_request: SessionCreateRequest, 
+    db: Session = Depends(get_db)
+):
+    """
+    🔑 Create a simple session for user (stores session_id in DB)
+    Perfect for browser extensions - no JWT complexity!
+    
+    Usage:
+    1. Register/Login → get user_id
+    2. Create session → get session_id  
+    3. Store session_id locally
+    4. Use session_id to get current user info
+    """
+    try:
+        # Validate user exists and is active
+        user = db.query(User).filter(User.id == session_request.user_id, User.is_active == True).first()
+        if not user:
+            raise HTTPException(status_code=404, detail=f"User not found or inactive: {session_request.user_id}")
+        
+        # Create new session
+        new_session = UserSession(
+            user_id=session_request.user_id,
+            device_info=session_request.device_info
+        )
+        
+        db.add(new_session)
+        db.commit()
+        db.refresh(new_session)
+        
+        logger.info(f"✅ Session created for user: {user.email} (Session: {new_session.session_id})")
+        
+        return SessionResponse(
+            status="created",
+            session_id=new_session.session_id,
+            user_id=user.id,
+            message="Session created successfully - store this session_id"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Session creation failed: {e}")
+        raise HTTPException(status_code=500, detail="Session creation failed")
+
+@app.get("/api/session/current/{session_id}", response_model=CurrentUserResponse)
+async def get_current_user_by_session(
+    session_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    👤 Get current user info by session_id (stored in browser extension)
+    
+    Usage:
+    const sessionId = localStorage.getItem('session_id');
+    const response = await fetch(`/api/session/current/${sessionId}`);
+    const user = await response.json();
+    """
+    try:
+        # Find active session
+        session = db.query(UserSession).filter(
+            UserSession.session_id == session_id,
+            UserSession.is_active == True
+        ).first()
+        
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found or expired")
+        
+        # Get user details
+        user = db.query(User).filter(User.id == session.user_id, User.is_active == True).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found or inactive")
+        
+        # Update last used timestamp
+        from sqlalchemy import func
+        session.last_used_at = func.now()
+        db.commit()
+        
+        logger.info(f"✅ Session accessed: {user.email} (Session: {session_id})")
+        
+        return CurrentUserResponse(
+            status="active",
+            user_id=user.id,
+            email=user.email,
+            session_id=session.session_id,
+            device_info=session.device_info,
+            created_at=session.created_at.isoformat(),
+            last_used_at=session.last_used_at.isoformat()
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Session lookup failed: {e}")
+        raise HTTPException(status_code=500, detail="Session lookup failed")
+
+@app.delete("/api/session/{session_id}")
+async def delete_user_session(
+    session_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    🗑️ Delete/logout session (deactivate in DB)
+    """
+    try:
+        session = db.query(UserSession).filter(UserSession.session_id == session_id).first()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        # Deactivate session instead of deleting
+        session.is_active = False
+        db.commit()
+        
+        logger.info(f"✅ Session deactivated: {session_id}")
+        
+        return {"status": "deactivated", "message": "Session logged out successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Session deletion failed: {e}")
+        raise HTTPException(status_code=500, detail="Session deletion failed")
+
+@app.get("/api/session/list/{user_id}")
+async def list_user_sessions(
+    user_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    📋 List all active sessions for a user (for session management)
+    """
+    try:
+        # Validate user exists
+        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Get all active sessions
+        sessions = db.query(UserSession).filter(
+            UserSession.user_id == user_id,
+            UserSession.is_active == True
+        ).all()
+        
+        session_list = []
+        for session in sessions:
+            session_list.append({
+                "session_id": session.session_id,
+                "device_info": session.device_info,
+                "created_at": session.created_at.isoformat(),
+                "last_used_at": session.last_used_at.isoformat()
+            })
+        
+        return {
+            "status": "success",
+            "user_id": user_id,
+            "active_sessions": len(session_list),
+            "sessions": session_list
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ List sessions failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to list sessions")
 
 # ============================================================================
 # DEMO ENDPOINT (No Authentication Required)

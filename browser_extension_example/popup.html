@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Form Filler</title>
+  <style>
+    body {
+      width: 350px;
+      min-height: 400px;
+      margin: 0;
+      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .header p {
+      margin: 5px 0 0 0;
+      opacity: 0.8;
+      font-size: 14px;
+    }
+
+    .status {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .status.logged-in {
+      background: rgba(76, 175, 80, 0.3);
+    }
+
+    .status.logged-out {
+      background: rgba(244, 67, 54, 0.3);
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .form-group input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .form-group input:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 10px;
+    }
+
+    .btn-primary {
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+    }
+
+    .btn-primary:hover {
+      background: white;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-danger {
+      background: rgba(244, 67, 54, 0.8);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: rgba(244, 67, 54, 1);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .user-info {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 12px;
+    }
+
+    .user-info strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .error {
+      background: rgba(244, 67, 54, 0.2);
+      border: 1px solid rgba(244, 67, 54, 0.5);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .success {
+      background: rgba(76, 175, 80, 0.2);
+      border: 1px solid rgba(76, 175, 80, 0.5);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .instructions {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .instructions h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+    }
+
+    .instructions ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .instructions li {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🤖 Smart Form Filler</h1>
+      <p>AI-powered form filling</p>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="loading">
+      <p>⏳ Loading...</p>
+    </div>
+
+    <!-- Error/Success Messages -->
+    <div id="error-message" class="error hidden"></div>
+    <div id="success-message" class="success hidden"></div>
+
+    <!-- Logged Out State -->
+    <div id="logged-out-state" class="hidden">
+      <div class="status logged-out">
+        <p>🔐 Not logged in</p>
+        <p>Register or login to start filling forms</p>
+      </div>
+
+      <form id="register-form">
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" placeholder="password123" required>
+        </div>
+        <button type="submit" class="btn btn-primary">📝 Register & Login</button>
+      </form>
+
+      <div class="instructions">
+        <h3>🚀 How it works:</h3>
+        <ul>
+          <li>Register with email & password</li>
+          <li>Upload your resume & personal info</li>
+          <li>Click on any form field to auto-fill</li>
+          <li>Use Ctrl+Shift+F shortcut</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Logged In State -->
+    <div id="logged-in-state" class="hidden">
+      <div class="status logged-in">
+        <p>✅ Logged in successfully</p>
+      </div>
+
+      <div id="user-info" class="user-info">
+        <strong>👤 Current User:</strong>
+        <div id="user-email">Loading...</div>
+        <div id="session-info">Session: Loading...</div>
+      </div>
+
+      <button id="upload-docs-btn" class="btn btn-secondary">📄 Upload Documents</button>
+      <button id="test-fill-btn" class="btn btn-secondary">🧪 Test Form Fill</button>
+      <button id="logout-btn" class="btn btn-danger">🚪 Logout</button>
+
+      <div class="instructions">
+        <h3>✨ Ready to use:</h3>
+        <ul>
+          <li>Focus on any form field to auto-fill</li>
+          <li>Press Ctrl+Shift+F for manual fill</li>
+          <li>Upload docs for better accuracy</li>
+          <li>Works on all websites</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html> 

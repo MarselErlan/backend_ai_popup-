@@ -48,4 +48,25 @@ class UserToken(Base):
     token = Column(String, unique=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     expires_at = Column(DateTime(timezone=True), nullable=False)
-    is_active = Column(Boolean, default=True) 
+    is_active = Column(Boolean, default=True)
+
+# Simple Session Management (No JWT needed)
+class UserSession(Base):
+    """
+    🔑 ULTRA SIMPLE SESSION MODEL
+    
+    Store user sessions with simple session_id
+    Perfect for browser extensions!
+    """
+    __tablename__ = "user_sessions"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(String, unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String, nullable=False)
+    device_info = Column(String, nullable=True)  # Browser, extension info
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_used_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_active = Column(Boolean, default=True)
+    
+    def __repr__(self):
+        return f"<UserSession(session_id={self.session_id}, user_id={self.user_id})>" 
