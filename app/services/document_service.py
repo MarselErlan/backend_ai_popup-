@@ -35,25 +35,19 @@ class DocumentService:
     # RESUME DOCUMENT OPERATIONS
     # ============================================================================
     
-    def save_resume_document(self, filename: str, file_content: bytes, 
-                           content_type: str, user_id: str = None) -> int:
+    def save_resume_document(self, filename: str, user_id: str = None) -> int:
         """Save resume document to database"""
         try:
             with self.get_session() as session:
-                # Deactivate previous resume for this user
+                # Delete previous resume for this user
                 if user_id:
                     session.query(ResumeDocument).filter(
-                        ResumeDocument.user_id == user_id,
-                        ResumeDocument.is_active == True
-                    ).update({"is_active": False})
+                        ResumeDocument.user_id == user_id
+                    ).delete()
                 
                 resume_doc = ResumeDocument(
                     user_id=user_id,
                     filename=filename,
-                    file_content=file_content,
-                    content_type=content_type,
-                    file_size=len(file_content),
-                    is_active=True,
                     processing_status='pending'
                 )
                 
@@ -68,23 +62,21 @@ class DocumentService:
             logger.error(f"❌ Error saving resume document: {e}")
             raise
     
-    def get_active_resume_document(self, user_id: str = None) -> Optional[ResumeDocument]:
-        """Get the active resume document for a user"""
+    def get_user_resume(self, user_id: str = None) -> Optional[ResumeDocument]:
+        """Get the resume document for a user"""
         try:
             with self.get_session() as session:
-                query = session.query(ResumeDocument).filter(
-                    ResumeDocument.is_active == True
-                )
+                query = session.query(ResumeDocument)
                 
                 if user_id:
                     query = query.filter(ResumeDocument.user_id == user_id)
                 
-                resume_doc = query.order_by(desc(ResumeDocument.created_at)).first()
+                resume_doc = query.order_by(desc(ResumeDocument.id)).first()
                 
                 if resume_doc:
-                    logger.info(f"📄 Retrieved active resume: {resume_doc.filename} (ID: {resume_doc.id})")
+                    logger.info(f"📄 Retrieved resume: {resume_doc.filename} (ID: {resume_doc.id})")
                 else:
-                    logger.warning("⚠️ No active resume document found")
+                    logger.warning("⚠️ No resume document found")
                 
                 return resume_doc
                 
@@ -92,43 +84,21 @@ class DocumentService:
             logger.error(f"❌ Error retrieving resume document: {e}")
             raise
     
-    def get_resume_as_temp_file(self, user_id: str = None) -> Optional[Tuple[str, str]]:
-        """Get resume as temporary file for processing"""
-        try:
-            resume_doc = self.get_active_resume_document(user_id)
-            if not resume_doc:
-                return None
-            
-            # Create temporary file
-            suffix = Path(resume_doc.filename).suffix
-            with tempfile.NamedTemporaryFile(mode='wb', suffix=suffix, delete=False) as temp_file:
-                temp_file.write(resume_doc.file_content)
-                temp_path = temp_file.name
-            
-            logger.info(f"📂 Created temporary file for resume: {temp_path}")
-            return temp_path, resume_doc.filename
-            
-        except Exception as e:
-            logger.error(f"❌ Error creating temporary resume file: {e}")
-            raise
-    
-    def update_resume_processing_status(self, document_id: int, status: str, 
-                                      processed_at: datetime = None):
+    def update_resume_status(self, document_id: int, status: str):
         """Update resume processing status"""
         try:
             with self.get_session() as session:
                 session.query(ResumeDocument).filter(
                     ResumeDocument.id == document_id
                 ).update({
-                    "processing_status": status,
-                    "last_processed_at": processed_at or datetime.now()
+                    "processing_status": status
                 })
                 session.commit()
                 
-                logger.info(f"✅ Updated resume processing status: {status} (ID: {document_id})")
+                logger.info(f"✅ Updated resume status: {status} (ID: {document_id})")
                 
         except Exception as e:
-            logger.error(f"❌ Error updating resume processing status: {e}")
+            logger.error(f"❌ Error updating resume status: {e}")
             raise
     
     # ============================================================================
@@ -334,85 +304,20 @@ class DocumentService:
             raise
     
     def get_documents_status(self, user_id: str = None) -> Dict[str, Any]:
-        """⚡ OPTIMIZED: Get comprehensive documents status for a user"""
+        """Get document status for a user"""
         try:
-            with self.get_session() as session:
-                # Get resume documents
-                resume_query = session.query(ResumeDocument)
-                if user_id:
-                    resume_query = resume_query.filter(ResumeDocument.user_id == user_id)
-                resume_docs = resume_query.filter(ResumeDocument.is_active == True).all()
-                
-                # Get personal info documents
-                personal_query = session.query(PersonalInfoDocument)
-                if user_id:
-                    personal_query = personal_query.filter(PersonalInfoDocument.user_id == user_id)
-                personal_docs = personal_query.filter(PersonalInfoDocument.is_active == True).all()
-                
-                # Get recent processing logs
-                log_query = session.query(DocumentProcessingLog)
-                if user_id:
-                    log_query = log_query.filter(DocumentProcessingLog.user_id == user_id)
-                recent_logs = log_query.order_by(desc(DocumentProcessingLog.started_at)).limit(10).all()
-                
-                status_data = {
-                    "resume_documents": {
-                        "count": len(resume_docs),
-                        "documents": [
-                            {
-                                "id": doc.id,
-                                "filename": doc.filename,
-                                "file_size": doc.file_size,
-                                "processing_status": doc.processing_status,
-                                "uploaded_at": doc.created_at.isoformat() if doc.created_at else None,
-                                "last_processed": doc.last_processed_at.isoformat() if doc.last_processed_at else None
-                            } for doc in resume_docs
-                        ]
-                    },
-                    "personal_info_documents": {
-                        "count": len(personal_docs),
-                        "documents": [
-                            {
-                                "id": doc.id,
-                                "filename": doc.filename,
-                                "file_size": doc.file_size,
-                                "processing_status": doc.processing_status,
-                                "uploaded_at": doc.created_at.isoformat() if doc.created_at else None,
-                                "last_processed": doc.last_processed_at.isoformat() if doc.last_processed_at else None
-                            } for doc in personal_docs
-                        ]
-                    },
-                    "recent_processing_logs": [
-                        {
-                            "id": log.id,
-                            "document_type": log.document_type,
-                            "status": log.processing_status,
-                            "started_at": log.started_at.isoformat() if log.started_at else None,
-                            "completed_at": log.completed_at.isoformat() if log.completed_at else None,
-                            "processing_time": log.processing_time_seconds,
-                            "total_chunks": log.total_chunks,
-                            "model_used": log.model_used
-                        } for log in recent_logs
-                    ],
-                    "summary": {
-                        "total_active_documents": len(resume_docs) + len(personal_docs),
-                        "resume_status": "available" if resume_docs else "missing",
-                        "personal_info_status": "available" if personal_docs else "missing",
-                        "last_activity": max([
-                            doc.last_processed_at for doc in (resume_docs + personal_docs) 
-                            if doc.last_processed_at
-                        ], default=None)
-                    }
+            resume_doc = self.get_user_resume(user_id)
+            
+            return {
+                "resume": {
+                    "exists": resume_doc is not None,
+                    "filename": resume_doc.filename if resume_doc else None,
+                    "status": resume_doc.processing_status if resume_doc else None
                 }
-                
-                if status_data["summary"]["last_activity"]:
-                    status_data["summary"]["last_activity"] = status_data["summary"]["last_activity"].isoformat()
-                
-                logger.info(f"📋 Retrieved document status for user: {user_id or 'default'}")
-                return status_data
-                
+            }
+            
         except Exception as e:
-            logger.error(f"❌ Error getting documents status: {e}")
+            logger.error(f"❌ Error getting document status: {e}")
             raise
     
     def get_user_resume_documents(self, user_id: str = None) -> List[ResumeDocument]:

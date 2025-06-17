@@ -814,25 +814,10 @@ async def upload_resume(
                 detail="Invalid file type. Please upload a PDF, DOCX, DOC, or TXT file."
             )
         
-        # Read file content
-        file_content = await file.read()
-        file_size = len(file_content)
-        
-        # Determine content type based on file extension
-        content_type_map = {
-            '.pdf': 'application/pdf',
-            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            '.doc': 'application/msword',
-            '.txt': 'text/plain'
-        }
-        content_type = content_type_map[file_ext]
-        
         # Save document using DocumentService
         document_service = get_document_service()
         document_id = document_service.save_resume_document(
             filename=file.filename,
-            file_content=file_content,
-            content_type=content_type,
             user_id=user.id
         )
         
@@ -847,8 +832,8 @@ async def upload_resume(
             document_id=document_id,
             filename=file.filename,
             processing_time=processing_time,
-            file_size=file_size,
-            replaced_previous=True  # DocumentService.save_resume_document handles this
+            file_size=0,  # Not storing file size anymore
+            replaced_previous=True  # Always true since we delete previous
         )
         
     except Exception as e:

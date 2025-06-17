@@ -15,19 +15,8 @@ class ResumeDocument(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(100), nullable=True, index=True)  # For multi-user support
     filename = Column(String(255), nullable=False)
-    file_content = Column(LargeBinary, nullable=False)  # Store file binary data
-    content_type = Column(String(100), nullable=False)  # MIME type (e.g., 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-    file_size = Column(Integer, nullable=False)
-    is_active = Column(Boolean, default=True, nullable=False)  # For soft delete
-    
-    # Metadata
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    
-    # Processing status
-    last_processed_at = Column(DateTime(timezone=True), nullable=True)
     processing_status = Column(String(50), default='pending')  # pending, processing, completed, failed
-    
+
     def __repr__(self):
         return f"<ResumeDocument(id={self.id}, filename='{self.filename}', user_id='{self.user_id}')>"
 
