@@ -1064,10 +1064,14 @@ class OptimizedFormFiller:
         self._personal_cache.clear()
         logger.info("🧹 All caches cleared")
 
-    @lru_cache(maxsize=32)
     def _get_resume_extractor(self) -> ResumeExtractorOptimized:
-        """Cached resume extractor instance"""
-        return ResumeExtractorOptimized()
+        """Resume extractor instance (cache disabled for debugging)"""
+        if self.resume_extractor:
+            return self.resume_extractor
+        return ResumeExtractorOptimized(
+            openai_api_key=self.openai_api_key,
+            use_hf_fallback=True
+        )
     
     @lru_cache(maxsize=32)
     def _get_personal_info_extractor(self) -> PersonalInfoExtractorOptimized:

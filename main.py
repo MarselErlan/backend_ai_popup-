@@ -59,16 +59,17 @@ def get_document_service():
         _document_service = DocumentService(DATABASE_URL)
     return _document_service
 
-@lru_cache(maxsize=1)
 def get_resume_extractor():
-    """Cached resume extractor singleton"""
+    """Resume extractor singleton (cache disabled for debugging)"""
     global _resume_extractor
-    if _resume_extractor is None:
-        _resume_extractor = ResumeExtractorOptimized(
-            openai_api_key=OPENAI_API_KEY,
-            database_url=DATABASE_URL,
-            use_hf_fallback=True
-        )
+    # Force recreation for debugging
+    _resume_extractor = ResumeExtractorOptimized(
+        openai_api_key=OPENAI_API_KEY,
+        database_url=DATABASE_URL,
+        use_hf_fallback=True
+    )
+    # Clear any existing cache to ensure fresh start
+    _resume_extractor.clear_cache()
     return _resume_extractor
 
 @lru_cache(maxsize=1)

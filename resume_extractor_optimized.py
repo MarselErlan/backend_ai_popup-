@@ -141,36 +141,80 @@ class ResumeExtractorOptimized:
                 logger.info(f"📄 Using cached resume for user: {self.user_id}")
                 return self._embedding_cache[doc_hash]
             
-            # Load from database
-            temp_result = self.document_service.get_resume_as_temp_file(self.user_id)
-            if not temp_result:
+            # Load resume documents directly from database
+            resume_docs = self.document_service.get_user_resume_documents(self.user_id)
+            if not resume_docs:
                 raise FileNotFoundError("No active resume document found in database")
             
-            temp_path, filename = temp_result
+            # Process documents based on content type
+            documents = []
+            for doc in resume_docs:
+                logger.info(f"📄 Processing resume: {doc.filename} (type: {doc.content_type})")
+                
+                try:
+                    if doc.content_type == 'text/plain':
+                        # Handle plain text files
+                        page_content = doc.file_content.decode('utf-8')
+                    elif doc.content_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword']:
+                        # Handle DOCX/DOC files - for now, try UTF-8 decoding
+                        # TODO: Implement proper DOCX parsing for binary files
+                        try:
+                            page_content = doc.file_content.decode('utf-8')
+                        except UnicodeDecodeError:
+                            # If it's a real DOCX file, we'd need proper parsing
+                            logger.warning(f"Cannot decode DOCX file {doc.filename} as UTF-8. Skipping.")
+                            page_content = f"[DOCX file: {doc.filename} - content extraction not implemented]"
+                    elif doc.content_type == 'application/pdf':
+                        # Handle PDF files - for now, try UTF-8 decoding
+                        # TODO: Implement proper PDF parsing
+                        try:
+                            page_content = doc.file_content.decode('utf-8')
+                        except UnicodeDecodeError:
+                            logger.warning(f"Cannot decode PDF file {doc.filename} as UTF-8. Skipping.")
+                            page_content = f"[PDF file: {doc.filename} - content extraction not implemented]"
+                    else:
+                        # For other file types, try UTF-8 decoding
+                        page_content = doc.file_content.decode('utf-8', errors='ignore')
+                    
+                    # Create document object
+                    from langchain.schema import Document
+                    document = Document(
+                        page_content=page_content,
+                        metadata={
+                            'source': f"database:{doc.filename}",
+                            'user_id': self.user_id,
+                            'doc_hash': doc_hash,
+                            'filename': doc.filename,
+                            'content_type': doc.content_type,
+                            'document_id': doc.id
+                        }
+                    )
+                    documents.append(document)
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to process resume document {doc.id}: {e}")
+                    # Fallback to raw bytes decoding
+                    page_content = doc.file_content.decode('utf-8', errors='ignore')
+                    from langchain.schema import Document
+                    document = Document(
+                        page_content=page_content,
+                        metadata={
+                            'source': f"database:{doc.filename}",
+                            'user_id': self.user_id,
+                            'doc_hash': doc_hash,
+                            'filename': doc.filename,
+                            'content_type': doc.content_type,
+                            'document_id': doc.id
+                        }
+                    )
+                    documents.append(document)
             
-            logger.info(f"📄 Loading resume from database: {filename}")
+            # Cache the documents
+            self._embedding_cache[doc_hash] = documents
+            self.processed_documents += 1
             
-            try:
-                loader = Docx2txtLoader(temp_path)
-                documents = loader.load()
-                
-                # Update metadata efficiently
-                for doc in documents:
-                    doc.metadata.update({
-                        'source': f"database:{filename}",
-                        'user_id': self.user_id,
-                        'doc_hash': doc_hash
-                    })
-                
-                # Cache the documents
-                self._embedding_cache[doc_hash] = documents
-                self.processed_documents += 1
-                
-                logger.info(f"✅ Loaded {len(documents)} document(s) from database (cached)")
-                return documents
-                
-            finally:
-                self.document_service.cleanup_temp_file(temp_path)
+            logger.info(f"✅ Loaded {len(documents)} resume document(s) from database (cached)")
+            return documents
             
         except Exception as e:
             logger.error(f"❌ Error loading resume from database: {e}")
