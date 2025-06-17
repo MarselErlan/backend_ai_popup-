@@ -17,12 +17,12 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def create_tables():
-    """Create all tables"""
+    """Create all tables (only if they don't exist)"""
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("✅ Database tables created successfully")
+        logger.info("✅ Database tables verified/created successfully")
     except Exception as e:
-        logger.error(f"❌ Failed to create tables: {e}")
+        logger.error(f"❌ Failed to verify/create tables: {e}")
 
 def get_db():
     """Get database session"""
