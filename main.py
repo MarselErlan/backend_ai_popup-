@@ -45,6 +45,35 @@ POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is required")
 
+# Session-based authentication dependency
+def get_session_user(db: Session = Depends(get_db), session_id: str = Header(None, alias="Authorization")):
+    """
+    Dependency to get the current user based on session ID from Authorization header
+    Raises HTTPException if session is invalid or expired
+    """
+    if not session_id:
+        raise HTTPException(status_code=401, detail="No session ID provided")
+    
+    # Query the active session
+    session = db.query(UserSession).filter(
+        UserSession.session_id == session_id,
+        UserSession.is_active == True
+    ).first()
+    
+    if not session:
+        raise HTTPException(status_code=401, detail="Invalid or expired session")
+    
+    # Get the associated user
+    user = db.query(User).filter(User.id == session.user_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    # Update last_used_at timestamp
+    session.last_used_at = datetime.utcnow()
+    db.commit()
+    
+    return user
+
 # 🚀 PERFORMANCE OPTIMIZATION: Global singletons with proper lifecycle management
 _resume_extractor = None
 _personal_info_extractor = None
@@ -177,118 +206,59 @@ app.add_middleware(
 
 @app.post("/api/generate-field-answer", response_model=FieldAnswerResponse)
 async def generate_field_answer(
-    field_request: FieldAnswerRequest,
-    request: Request,
-    db: Session = Depends(get_db)
-) -> FieldAnswerResponse:
+    field_data: FieldAnswerRequest,
+    user: User = Depends(get_session_user)
+):
     """
-    ⚡ SIMPLIFIED: Generate intelligent answer for form field with backend authorization
-    Frontend only sends: question + user_id (no JWT tokens needed)
+    🤖 Generate AI answer for form field
+    
+    Uses resume and personal info to generate contextual answers
+    Auth: Requires valid session
     """
-    start_time = datetime.now()
-    
-    # Extract user_id from the request
-    user_id = field_request.user_id or "default"
-    
-    # Backend authorization - validate user exists and is active
-    if user_id != "default":
-        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
-        if not user:
-            raise HTTPException(status_code=401, detail=f"Invalid or inactive user: {user_id}")
-        logger.info(f"✅ User validated: {user.email} (ID: {user_id})")
-    else:
-        logger.info(f"🎯 Using demo user: default")
-    
-    # 🖥️  CONSOLE LOGGING - Frontend Request Data + Headers
-    print("=" * 80)
-    print("⚡ SIMPLIFIED REQUEST - /api/generate-field-answer")
-    print("=" * 80)
-    print(f"📥 Request Data:")
-    print(f"   • Field Label: '{field_request.label}'")
-    print(f"   • Page URL: '{field_request.url}'")
-    print(f"   • User ID: '{user_id}'")
-    print(f"   • Timestamp: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"🔒 Headers Debug:")
-    print(f"   • Content-Type: '{request.headers.get('content-type', 'NOT SENT')}'")
-    print(f"   • User-Agent: '{request.headers.get('user-agent', 'NOT SENT')}'")
-    print("=" * 80)
-    
     try:
-        form_filler = get_form_filler()
+        db = next(get_db())
         
-        logger.info(f"🎯 Generating answer for field: '{field_request.label}' on {field_request.url}")
-        logger.info(f"👤 Authorized user: {user_id}")
+        # Get user's documents
+        resume = db.query(ResumeDocument).filter(
+            ResumeDocument.user_id == user.id
+        ).first()
         
-        # Create a mock field object for the existing logic
-        mock_field = {
-            "field_purpose": field_request.label,
-            "name": field_request.label,
-            "selector": "#mock-field",
-            "field_type": "text"
+        personal_info = db.query(PersonalInfoDocument).filter(
+            PersonalInfoDocument.user_id == user.id
+        ).first()
+        
+        if not resume and not personal_info:
+            raise HTTPException(
+                status_code=400,
+                detail="No documents found. Please upload your resume and personal info."
+            )
+        
+        # Prepare context for AI
+        context = {
+            "field_type": field_data.field_type,
+            "field_name": field_data.field_name,
+            "field_id": field_data.field_id,
+            "field_class": field_data.field_class,
+            "field_label": field_data.field_label,
+            "field_placeholder": field_data.field_placeholder,
+            "surrounding_text": field_data.surrounding_text,
+            "resume_text": resume.content if resume else "",
+            "personal_info_text": personal_info.content if personal_info else ""
         }
         
-        # Use the validated user_id
-        result = await form_filler.generate_field_values_optimized([mock_field], {}, user_id)
+        # Generate answer using AI
+        answer = await generate_ai_answer(context)
         
-        if result["status"] != "success":
-            raise HTTPException(status_code=500, detail=f"Field generation failed: {result.get('error', 'Unknown error')}")
-        
-        # Extract the answer from the result
-        field_mappings = result.get("values", [])
-        if not field_mappings:
-            raise HTTPException(status_code=500, detail="No field mapping generated")
-        
-        field_mapping = field_mappings[0]
-        answer = field_mapping.get("value", "")
-        data_source = field_mapping.get("data_source", "unknown")
-        reasoning = field_mapping.get("reasoning", "No reasoning provided")
-        
-        # Handle skip actions
-        if field_mapping.get("action") == "skip" or not answer:
-            answer = ""
-            data_source = "skipped"
-            reasoning = "Field skipped - unable to generate appropriate answer"
-        
-        end_time = datetime.now()
-        processing_time = (end_time - start_time).total_seconds()
-        
-        logger.info(f"✅ Generated answer: '{answer}' (source: {data_source}) in {processing_time:.2f}s")
-        
-        # Performance metrics
-        performance_metrics = {
-            "processing_time_seconds": processing_time,
-            "optimization_enabled": True,
-            "cache_hits": result.get("cache_hits", 0),
-            "database_queries": result.get("database_queries", 0),
-            "backend_authorization": True
+        return {
+            "status": "success",
+            "answer": answer
         }
         
-        # 🖥️  CONSOLE LOGGING - Response Data
-        print("📤 SIMPLIFIED Response Data:")
-        print(f"   • Generated Answer: '{answer}'")
-        print(f"   • Data Source: {data_source}")
-        print(f"   • Processing Time: {processing_time:.2f}s")
-        print(f"   • Authorization: Backend Validated")
-        print(f"   • Reasoning: {reasoning}")
-        print("=" * 80)
-        
-        return FieldAnswerResponse(
-            answer=answer,
-            data_source=data_source,
-            reasoning=reasoning,
-            status="success",
-            performance_metrics=performance_metrics
-        )
-    
     except HTTPException:
         raise
     except Exception as e:
-        end_time = datetime.now()
-        processing_time = (end_time - start_time).total_seconds()
-        logger.error(f"❌ Field answer generation failed: {e} (in {processing_time:.2f}s)")
-        print(f"❌ ERROR: {str(e)} (in {processing_time:.2f}s)")
-        print("=" * 80)
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        logger.error(f"❌ Error generating field answer: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================================================
 # USER ID VALIDATION ENDPOINT (For Extension Setup)
@@ -838,84 +808,80 @@ class DocumentInfoResponse(BaseModel):
 @app.post("/api/v1/resume/upload", response_model=DocumentUploadResponse)
 async def upload_resume(
     file: UploadFile = File(...),
-    user_id: str = Query("default", description="User ID for simple auth")
+    user: User = Depends(get_session_user)
 ):
     """
     📄 Upload resume document to database (One per user - replaces existing)
     
     Supports: PDF, DOCX, DOC, TXT files
-    Auth: Only requires user_id, no token needed
+    Auth: Requires valid session
     """
     start_time = datetime.now()
     
-    # Validate user exists (if not default)
-    if user_id != "default":
-        db = next(get_db())
-        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
-        if not user:
-            raise HTTPException(status_code=401, detail=f"Invalid or inactive user: {user_id}")
+    # User is already validated by get_session_user dependency
     
     # Validate file type
-    allowed_types = {
-        'application/pdf': ['.pdf'],
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-        'application/msword': ['.doc'],
-        'text/plain': ['.txt']
-    }
-    
-    if file.content_type not in allowed_types:
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in ['.pdf', '.docx', '.doc', '.txt']:
         raise HTTPException(
-            status_code=400, 
-            detail=f"Unsupported file type: {file.content_type}. Supported: PDF, DOCX, DOC, TXT"
+            status_code=400,
+            detail="Invalid file type. Please upload a PDF, DOCX, DOC, or TXT file."
         )
     
     try:
-        # Check if user already has a resume
-        document_service = get_document_service()
-        existing_resume = document_service.get_active_resume_document(user_id)
-        had_previous = existing_resume is not None
-        
         # Read file content
-        file_content = await file.read()
+        content = await file.read()
         
-        if len(file_content) == 0:
-            raise HTTPException(status_code=400, detail="Empty file uploaded")
+        # Get text from file
+        text = await extract_text_from_file(content, file_ext)
         
-        if len(file_content) > 10 * 1024 * 1024:  # 10MB limit
-            raise HTTPException(status_code=400, detail="File too large. Maximum size: 10MB")
+        # Store in database
+        db = next(get_db())
         
-        # Save to database (this will automatically deactivate previous resume)
-        document_id = document_service.save_resume_document(
-            filename=file.filename,
-            file_content=file_content,
-            content_type=file.content_type,
-            user_id=user_id
+        # Check for existing resume
+        existing_resume = db.query(ResumeDocument).filter(
+            ResumeDocument.user_id == user.id
+        ).first()
+        
+        if existing_resume:
+            # Update existing
+            existing_resume.filename = file.filename
+            existing_resume.content = text
+            existing_resume.file_type = file_ext
+            existing_resume.last_updated = datetime.now()
+            existing_resume.processing_status = "processing"
+        else:
+            # Create new
+            resume_doc = ResumeDocument(
+                user_id=user.id,
+                filename=file.filename,
+                content=text,
+                file_type=file_ext,
+                processing_status="processing"
+            )
+            db.add(resume_doc)
+        
+        db.commit()
+        
+        # Queue embedding task
+        background_tasks.add_task(
+            embed_resume_text,
+            user_id=user.id,
+            text=text
         )
         
         end_time = datetime.now()
-        processing_time = (end_time - start_time).total_seconds()
+        logger.info(f"✅ Resume uploaded for user {user.id} ({(end_time - start_time).total_seconds():.2f}s)")
         
-        message = f"Resume '{file.filename}' uploaded successfully"
-        if had_previous:
-            message += f" (replaced previous resume)"
+        return {
+            "status": "success",
+            "message": "Resume uploaded successfully and queued for embedding",
+            "filename": file.filename
+        }
         
-        logger.info(f"✅ Resume uploaded successfully: {file.filename} (ID: {document_id})")
-        
-        return DocumentUploadResponse(
-            status="success",
-            message=message,
-            document_id=document_id,
-            filename=file.filename,
-            processing_time=processing_time,
-            file_size=len(file_content),
-            replaced_previous=had_previous
-        )
-        
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"❌ Resume upload failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+        logger.error(f"❌ Error uploading resume: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/resume")
 async def get_user_resume(
@@ -1003,77 +969,80 @@ async def delete_user_resume(
 @app.post("/api/v1/personal-info/upload", response_model=DocumentUploadResponse)
 async def upload_personal_info(
     file: UploadFile = File(...),
-    user_id: str = Query("default", description="User ID for simple auth")
+    user: User = Depends(get_session_user)
 ):
     """
-    📝 Upload personal information document to database (One per user - replaces existing)
+    👤 Upload personal info document to database (One per user - replaces existing)
     
     Supports: PDF, DOCX, DOC, TXT files
-    Examples: Contact details, work authorization, salary expectations, preferences
+    Auth: Requires valid session
     """
     start_time = datetime.now()
     
-    # Validate file type
-    allowed_types = {
-        'application/pdf': ['.pdf'],
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-        'application/msword': ['.doc'],
-        'text/plain': ['.txt']
-    }
+    # User is already validated by get_session_user dependency
     
-    if file.content_type not in allowed_types:
+    # Validate file type
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in ['.pdf', '.docx', '.doc', '.txt']:
         raise HTTPException(
-            status_code=400, 
-            detail=f"Unsupported file type: {file.content_type}. Supported: PDF, DOCX, DOC, TXT"
+            status_code=400,
+            detail="Invalid file type. Please upload a PDF, DOCX, DOC, or TXT file."
         )
     
     try:
-        # Check if user already has personal info
-        document_service = get_document_service()
-        existing_info = document_service.get_active_personal_info_document(user_id)
-        had_previous = existing_info is not None
-        
         # Read file content
-        file_content = await file.read()
+        content = await file.read()
         
-        if len(file_content) == 0:
-            raise HTTPException(status_code=400, detail="Empty file uploaded")
+        # Get text from file
+        text = await extract_text_from_file(content, file_ext)
         
-        if len(file_content) > 10 * 1024 * 1024:  # 10MB limit
-            raise HTTPException(status_code=400, detail="File too large. Maximum size: 10MB")
+        # Store in database
+        db = next(get_db())
         
-        # Save to database (this will automatically deactivate previous personal info)
-        document_id = document_service.save_personal_info_document(
-            filename=file.filename,
-            file_content=file_content,
-            content_type=file.content_type,
-            user_id=user_id
+        # Check for existing personal info
+        existing_info = db.query(PersonalInfoDocument).filter(
+            PersonalInfoDocument.user_id == user.id
+        ).first()
+        
+        if existing_info:
+            # Update existing
+            existing_info.filename = file.filename
+            existing_info.content = text
+            existing_info.file_type = file_ext
+            existing_info.last_updated = datetime.now()
+            existing_info.processing_status = "processing"
+        else:
+            # Create new
+            info_doc = PersonalInfoDocument(
+                user_id=user.id,
+                filename=file.filename,
+                content=text,
+                file_type=file_ext,
+                processing_status="processing"
+            )
+            db.add(info_doc)
+        
+        db.commit()
+        
+        # Queue embedding task
+        background_tasks.add_task(
+            embed_personal_info_text,
+            user_id=user.id,
+            text=text
         )
         
         end_time = datetime.now()
-        processing_time = (end_time - start_time).total_seconds()
+        logger.info(f"✅ Personal info uploaded for user {user.id} ({(end_time - start_time).total_seconds():.2f}s)")
         
-        message = f"Personal info '{file.filename}' uploaded successfully"
-        if had_previous:
-            message += f" (replaced previous personal info)"
+        return {
+            "status": "success",
+            "message": "Personal info uploaded successfully and queued for embedding",
+            "filename": file.filename
+        }
         
-        logger.info(f"✅ Personal info uploaded successfully: {file.filename} (ID: {document_id})")
-        
-        return DocumentUploadResponse(
-            status="success",
-            message=message,
-            document_id=document_id,
-            filename=file.filename,
-            processing_time=processing_time,
-            file_size=len(file_content),
-            replaced_previous=had_previous
-        )
-        
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"❌ Personal info upload failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+        logger.error(f"❌ Error uploading personal info: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/personal-info")
 async def get_user_personal_info(
@@ -1160,18 +1129,18 @@ async def delete_user_personal_info(
 
 @app.get("/api/v1/documents/status")
 async def get_user_documents_status(
-    user_id: str = Query("default", description="User ID for simple auth")
+    user: User = Depends(get_session_user)
 ):
     """📊 Get user's document status (One resume + One personal info per user)"""
     try:
         document_service = get_document_service()
         
         # Get user's documents
-        resume_doc = document_service.get_active_resume_document(user_id)
-        personal_info_doc = document_service.get_active_personal_info_document(user_id)
+        resume_doc = document_service.get_active_resume_document(user.id)
+        personal_info_doc = document_service.get_active_personal_info_document(user.id)
         
         status_data = {
-            "user_id": user_id,
+            "user_id": user.id,
             "resume": None,
             "personal_info": None,
             "summary": {
@@ -1290,49 +1259,6 @@ async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> Field
 # ============================================================================
 # FULL JWT AUTHENTICATION ENDPOINTS (Optional)
 # ============================================================================
-
-def get_session_user(db: Session = Depends(get_db), session_id: str = Header(None, alias="Authorization")):
-    """
-    🔐 Validate session and return user
-    Used as a dependency for protected endpoints
-    """
-    if not session_id or not session_id.startswith("Session "):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid session format"
-        )
-    
-    session_id = session_id.split("Session ")[1]
-    
-    # Find active session
-    session = db.query(UserSession).filter(
-        UserSession.session_id == session_id,
-        UserSession.is_active == True
-    ).first()
-    
-    if not session:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired session"
-        )
-    
-    # Update last used timestamp
-    session.last_used_at = func.now()
-    db.commit()
-    
-    # Get associated user
-    user = db.query(User).filter(
-        User.id == session.user_id,
-        User.is_active == True
-    ).first()
-    
-    if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="User not found or inactive"
-        )
-    
-    return user
 
 @app.get("/api/auth/validate")
 async def validate_session(user: User = Depends(get_session_user)):
