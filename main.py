@@ -309,7 +309,6 @@ class SimpleRegisterResponse(BaseModel):
     status: str
     user_id: str
     email: str
-    session_id: str
     message: str
 
 @app.post("/api/simple/register", response_model=SimpleRegisterResponse)
@@ -327,7 +326,6 @@ async def simple_register_user(user_data: UserRegister, db: Session = Depends(ge
                     status="exists",
                     user_id=existing_user.id,
                     email=existing_user.email,
-                    session_id="",
                     message="User already exists - you can use this user_id"
                 )
             else:
@@ -339,7 +337,6 @@ async def simple_register_user(user_data: UserRegister, db: Session = Depends(ge
                     status="reactivated",
                     user_id=existing_user.id,
                     email=existing_user.email,
-                    session_id="",
                     message="User reactivated successfully"
                 )
         
@@ -357,7 +354,6 @@ async def simple_register_user(user_data: UserRegister, db: Session = Depends(ge
             status="registered",
             user_id=new_user.id,
             email=new_user.email,
-            session_id="",
             message="User registered successfully - save this user_id for future requests"
         )
     
@@ -368,15 +364,14 @@ async def simple_register_user(user_data: UserRegister, db: Session = Depends(ge
         raise HTTPException(status_code=500, detail="Registration failed")
 
 # ============================================================================
-# SIMPLIFIED USER LOGIN (Returns User ID and Session ID)
+# SIMPLIFIED USER LOGIN (Returns User ID)
 # ============================================================================
 
 @app.post("/api/simple/login", response_model=SimpleRegisterResponse)
 async def simple_login_user(user_data: UserLogin, db: Session = Depends(get_db)):
     """
-    🔐 Simplified Login: Returns user_id and session_id
-    Extension can store these and use them for all requests
-    Reuses existing active session if available
+    🔐 Simplified Login: Returns user_id
+    Extension should then call check-and-update endpoint to get/create session
     """
     try:
         # Find user by email
@@ -384,35 +379,13 @@ async def simple_login_user(user_data: UserLogin, db: Session = Depends(get_db))
         if not user or not user.verify_password(user_data.password):
             raise HTTPException(status_code=401, detail="Invalid email or password")
         
-        # Find existing active session for user
-        existing_session = db.query(UserSession).filter(
-            UserSession.user_id == user.id,
-            UserSession.is_active == True
-        ).first()
-        
-        if existing_session:
-            # Update last_used_at timestamp
-            existing_session.last_used_at = datetime.utcnow()
-            db.commit()
-            session = existing_session
-        else:
-            # Create a new session only if no active session exists
-            session = UserSession(
-                user_id=user.id,
-                device_info="Optional Device Info"
-            )
-            db.add(session)
-            db.commit()
-            db.refresh(session)
-        
-        logger.info(f"✅ User logged in: {user_data.email} (ID: {user.id}, Session: {session.session_id})")
+        logger.info(f"✅ User authenticated: {user_data.email} (ID: {user.id})")
         
         return SimpleRegisterResponse(
             status="authenticated",
             user_id=user.id,
             email=user.email,
-            session_id=session.session_id,
-            message="Login successful - save these IDs for future requests"
+            message="Authentication successful - use check-and-update endpoint for session"
         )
     except Exception as e:
         logger.error(f"❌ Login failed for {user_data.email}: {str(e)}")
@@ -1380,6 +1353,7 @@ async def check_and_update_session(
 ):
     """
     Check if user has any existing sessions and update/create as needed
+    Ensures only one active session per user
     """
     try:
         # Validate user exists and is active
@@ -1391,13 +1365,23 @@ async def check_and_update_session(
         if not user:
             raise HTTPException(status_code=404, detail="User not found or inactive")
         
-        # Find any existing session (active or inactive)
+        # Deactivate all existing sessions for this user
+        db.query(UserSession).filter(
+            UserSession.user_id == user_id,
+            UserSession.is_active == True
+        ).update({
+            "is_active": False,
+            "last_used_at": datetime.utcnow()
+        })
+        db.commit()
+        
+        # Find most recent session
         existing_session = db.query(UserSession).filter(
             UserSession.user_id == user_id
-        ).first()
+        ).order_by(UserSession.last_used_at.desc()).first()
         
         if existing_session:
-            # Update existing session
+            # Reactivate most recent session
             existing_session.last_used_at = datetime.utcnow()
             existing_session.is_active = True
             db.commit()
