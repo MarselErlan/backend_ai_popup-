@@ -376,6 +376,7 @@ async def simple_login_user(user_data: UserLogin, db: Session = Depends(get_db))
     """
     🔐 Simplified Login: Returns user_id and session_id
     Extension can store these and use them for all requests
+    Reuses existing active session if available
     """
     try:
         # Find user by email
@@ -383,14 +384,26 @@ async def simple_login_user(user_data: UserLogin, db: Session = Depends(get_db))
         if not user or not user.verify_password(user_data.password):
             raise HTTPException(status_code=401, detail="Invalid email or password")
         
-        # Create a new session
-        session = UserSession(
-            user_id=user.id,
-            device_info="Optional Device Info"
-        )
-        db.add(session)
-        db.commit()
-        db.refresh(session)
+        # Find existing active session for user
+        existing_session = db.query(UserSession).filter(
+            UserSession.user_id == user.id,
+            UserSession.is_active == True
+        ).first()
+        
+        if existing_session:
+            # Update last_used_at timestamp
+            existing_session.last_used_at = datetime.utcnow()
+            db.commit()
+            session = existing_session
+        else:
+            # Create a new session only if no active session exists
+            session = UserSession(
+                user_id=user.id,
+                device_info="Optional Device Info"
+            )
+            db.add(session)
+            db.commit()
+            db.refresh(session)
         
         logger.info(f"✅ User logged in: {user_data.email} (ID: {user.id}, Session: {session.session_id})")
         
