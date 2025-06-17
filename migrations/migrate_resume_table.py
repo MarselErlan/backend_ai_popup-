@@ -1,5 +1,5 @@
 """
-Migration script to simplify resume_documents table
+Migration script to restore file content columns in resume_documents table
 """
 import os
 from sqlalchemy import create_engine, text, inspect
@@ -13,7 +13,7 @@ def table_exists(conn, table_name):
     return inspect(conn).has_table(table_name)
 
 def migrate():
-    """Migrate resume_documents table to simplified schema"""
+    """Migrate resume_documents table to include file content"""
     try:
         # Create engine
         engine = create_engine(DATABASE_URL)
@@ -24,52 +24,51 @@ def migrate():
             with conn.begin():
                 logger.info("🔄 Starting resume_documents table migration...")
                 
-                # Check if the original table exists
-                has_original_table = table_exists(conn, "resume_documents")
-                
-                if has_original_table:
-                    # 1. Backup existing data
+                # Check if table exists
+                if table_exists(conn, "resume_documents"):
+                    # Backup existing data
                     logger.info("📦 Backing up existing data...")
                     conn.execute(text("""
                         CREATE TABLE IF NOT EXISTS resume_documents_backup AS 
-                        SELECT id, user_id, filename, processing_status 
-                        FROM resume_documents;
+                        SELECT * FROM resume_documents;
                     """))
                     
-                    # 2. Drop existing table
+                    # Drop existing table
                     logger.info("🗑️ Dropping existing table...")
-                    conn.execute(text("DROP TABLE IF EXISTS resume_documents CASCADE;"))
-                else:
-                    logger.info("📝 No existing table found, creating new one...")
+                    conn.execute(text("DROP TABLE resume_documents;"))
                 
-                # 3. Create new table with simplified schema
-                logger.info("📝 Creating new table...")
+                # Create new table with file content columns
+                logger.info("📝 Creating new table structure...")
                 conn.execute(text("""
                     CREATE TABLE resume_documents (
                         id SERIAL PRIMARY KEY,
                         user_id VARCHAR(100),
-                        filename VARCHAR(255) NOT NULL,
+                        filename VARCHAR(255),
+                        file_content BYTEA,
+                        content_type VARCHAR(100),
+                        file_size INTEGER,
                         processing_status VARCHAR(50) DEFAULT 'pending'
                     );
                 """))
                 
-                # 4. Create index on user_id
-                logger.info("📇 Creating index...")
+                # Create index on user_id
+                logger.info("📊 Creating index on user_id...")
                 conn.execute(text("""
-                    CREATE INDEX ix_resume_documents_user_id ON resume_documents (user_id);
+                    CREATE INDEX idx_resume_documents_user_id 
+                    ON resume_documents(user_id);
                 """))
                 
-                if has_original_table:
-                    # 5. Restore data from backup
-                    logger.info("♻️ Restoring data...")
+                # Restore data if backup exists
+                if table_exists(conn, "resume_documents_backup"):
+                    logger.info("♻️ Restoring data from backup...")
                     conn.execute(text("""
                         INSERT INTO resume_documents (id, user_id, filename, processing_status)
-                        SELECT id, user_id, filename, processing_status 
+                        SELECT id, user_id, filename, processing_status
                         FROM resume_documents_backup;
                     """))
                     
-                    # 6. Reset sequence to max id
-                    logger.info("🔄 Resetting sequence...")
+                    # Reset sequence
+                    logger.info("🔄 Resetting ID sequence...")
                     conn.execute(text("""
                         SELECT setval(
                             'resume_documents_id_seq', 
@@ -77,12 +76,12 @@ def migrate():
                         );
                     """))
                     
-                    # 7. Drop backup table
+                    # Drop backup table
                     logger.info("🗑️ Cleaning up backup...")
                     conn.execute(text("DROP TABLE resume_documents_backup;"))
                 
-            logger.info("✅ Migration completed successfully!")
-            
+                logger.info("✅ Migration completed successfully!")
+                
     except Exception as e:
         logger.error(f"❌ Migration failed: {str(e)}")
         raise

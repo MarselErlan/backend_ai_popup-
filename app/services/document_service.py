@@ -35,7 +35,13 @@ class DocumentService:
     # RESUME DOCUMENT OPERATIONS
     # ============================================================================
     
-    def save_resume_document(self, filename: str, user_id: str = None) -> int:
+    def save_resume_document(
+        self, 
+        filename: str, 
+        file_content: bytes,
+        content_type: str,
+        user_id: str = None
+    ) -> int:
         """Save resume document to database"""
         try:
             with self.get_session() as session:
@@ -48,6 +54,9 @@ class DocumentService:
                 resume_doc = ResumeDocument(
                     user_id=user_id,
                     filename=filename,
+                    file_content=file_content,
+                    content_type=content_type,
+                    file_size=len(file_content),
                     processing_status='pending'
                 )
                 
@@ -55,7 +64,7 @@ class DocumentService:
                 session.commit()
                 session.refresh(resume_doc)
                 
-                logger.info(f"💾 Saved resume document: {filename} (ID: {resume_doc.id})")
+                logger.info(f"💾 Saved resume document: {filename} (ID: {resume_doc.id}, Size: {resume_doc.file_size} bytes)")
                 return resume_doc.id
                 
         except Exception as e:
@@ -74,7 +83,7 @@ class DocumentService:
                 resume_doc = query.order_by(desc(ResumeDocument.id)).first()
                 
                 if resume_doc:
-                    logger.info(f"📄 Retrieved resume: {resume_doc.filename} (ID: {resume_doc.id})")
+                    logger.info(f"📄 Retrieved resume: {resume_doc.filename} (ID: {resume_doc.id}, Size: {resume_doc.file_size} bytes)")
                 else:
                     logger.warning("⚠️ No resume document found")
                 
@@ -205,51 +214,46 @@ class DocumentService:
     # PROCESSING LOG OPERATIONS
     # ============================================================================
     
-    def log_processing_start(self, document_type: str, document_id: int, 
-                           user_id: str = None) -> int:
-        """Log start of document processing"""
+    def log_processing_start(self, document_type: str, document_id: int, user_id: str = None) -> int:
+        """Log the start of document processing"""
         try:
             with self.get_session() as session:
-                processing_log = DocumentProcessingLog(
+                log = DocumentProcessingLog(
                     document_type=document_type,
                     document_id=document_id,
                     user_id=user_id,
-                    processing_status='started'
+                    status="started",
+                    started_at=datetime.now()
                 )
-                
-                session.add(processing_log)
+                session.add(log)
                 session.commit()
-                session.refresh(processing_log)
-                
-                logger.info(f"📝 Started processing log for {document_type} (Log ID: {processing_log.id})")
-                return processing_log.id
+                session.refresh(log)
+                return log.id
                 
         except Exception as e:
-            logger.error(f"❌ Error creating processing log: {e}")
+            logger.error(f"❌ Error logging processing start: {e}")
             raise
     
     def log_processing_complete(self, log_id: int, processing_time: int = None,
                               total_chunks: int = None, embedding_dimension: int = None,
                               model_used: str = None):
-        """Log completion of document processing"""
+        """Log successful completion of document processing"""
         try:
             with self.get_session() as session:
                 session.query(DocumentProcessingLog).filter(
                     DocumentProcessingLog.id == log_id
                 ).update({
-                    "processing_status": "completed",
+                    "status": "completed",
                     "completed_at": datetime.now(),
-                    "processing_time_seconds": processing_time,
+                    "processing_time": processing_time,
                     "total_chunks": total_chunks,
                     "embedding_dimension": embedding_dimension,
                     "model_used": model_used
                 })
                 session.commit()
                 
-                logger.info(f"✅ Completed processing log (Log ID: {log_id})")
-                
         except Exception as e:
-            logger.error(f"❌ Error updating processing log: {e}")
+            logger.error(f"❌ Error logging processing completion: {e}")
             raise
     
     def log_processing_error(self, log_id: int, error_message: str):
@@ -259,16 +263,14 @@ class DocumentService:
                 session.query(DocumentProcessingLog).filter(
                     DocumentProcessingLog.id == log_id
                 ).update({
-                    "processing_status": "failed",
+                    "status": "failed",
                     "completed_at": datetime.now(),
                     "error_message": error_message
                 })
                 session.commit()
                 
-                logger.error(f"❌ Failed processing log (Log ID: {log_id}): {error_message}")
-                
         except Exception as e:
-            logger.error(f"❌ Error updating processing log with error: {e}")
+            logger.error(f"❌ Error logging processing error: {e}")
             raise
     
     # ============================================================================
@@ -304,20 +306,26 @@ class DocumentService:
             raise
     
     def get_documents_status(self, user_id: str = None) -> Dict[str, Any]:
-        """Get document status for a user"""
+        """Get status of user's documents"""
         try:
             resume_doc = self.get_user_resume(user_id)
+            personal_info_doc = self.get_active_personal_info_document(user_id)
             
             return {
                 "resume": {
-                    "exists": resume_doc is not None,
                     "filename": resume_doc.filename if resume_doc else None,
-                    "status": resume_doc.processing_status if resume_doc else None
-                }
+                    "file_size": resume_doc.file_size if resume_doc else None,
+                    "processing_status": resume_doc.processing_status if resume_doc else None
+                } if resume_doc else None,
+                "personal_info": {
+                    "filename": personal_info_doc.filename if personal_info_doc else None,
+                    "file_size": personal_info_doc.file_size if personal_info_doc else None,
+                    "processing_status": personal_info_doc.processing_status if personal_info_doc else None
+                } if personal_info_doc else None
             }
             
         except Exception as e:
-            logger.error(f"❌ Error getting document status: {e}")
+            logger.error(f"❌ Error getting documents status: {e}")
             raise
     
     def get_user_resume_documents(self, user_id: str = None) -> List[ResumeDocument]:
@@ -366,11 +374,11 @@ class DocumentService:
             logger.warning(f"⚠️ Error cleaning up temporary file {temp_path}: {e}") 
     
     def _get_file_extension(self, content_type: str) -> str:
-        """Get file extension based on content type"""
-        extension_map = {
+        """Get file extension from content type"""
+        content_type_map = {
             'application/pdf': '.pdf',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
             'application/msword': '.doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
             'text/plain': '.txt'
         }
-        return extension_map.get(content_type, '.txt')
+        return content_type_map.get(content_type, '')

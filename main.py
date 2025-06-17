@@ -21,6 +21,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 import io
 from sqlalchemy import func
+import time
 
 # Import auth components
 from database import get_db
@@ -773,19 +774,17 @@ class DocumentUploadResponse(BaseModel):
     message: str
     document_id: int
     filename: str
-    processing_time: float
     file_size: int
+    content_type: str
+    processing_time: float
     replaced_previous: bool  # Indicates if a previous document was replaced
 
 class DocumentInfoResponse(BaseModel):
     id: int
     filename: str
-    file_size: Optional[int] = None
-    content_length: Optional[int] = None
+    file_size: int
+    content_type: str
     processing_status: str
-    is_active: bool
-    created_at: str
-    last_processed_at: Optional[str] = None
     user_id: Optional[str] = None
 
 # ============================================================================
@@ -800,113 +799,53 @@ async def upload_resume(
     """
     📄 Upload resume document to database (One per user - replaces existing)
     
-    Supports: PDF, DOCX, DOC, TXT files
-    Auth: Requires valid session
+    Supports:
+    - PDF (.pdf)
+    - Word (.doc, .docx)
+    - Text (.txt)
     """
-    start_time = datetime.now()
+    start_time = time.time()
     
     try:
-        # Validate file type
-        file_ext = os.path.splitext(file.filename)[1].lower()
-        if file_ext not in ['.pdf', '.docx', '.doc', '.txt']:
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid file type. Please upload a PDF, DOCX, DOC, or TXT file."
-            )
+        # Read file content
+        file_content = await file.read()
         
-        # Save document using DocumentService
-        document_service = get_document_service()
+        # Save document
         document_id = document_service.save_resume_document(
             filename=file.filename,
-            user_id=user.id
+            file_content=file_content,
+            content_type=file.content_type,
+            user_id=user.id if user else None
         )
         
-        end_time = datetime.now()
-        processing_time = (end_time - start_time).total_seconds()
+        processing_time = time.time() - start_time
         
-        logger.info(f"✅ Resume uploaded for user {user.id} ({processing_time:.2f}s)")
-        
-        return DocumentUploadResponse(
-            status="success",
-            message="Resume uploaded successfully",
-            document_id=document_id,
-            filename=file.filename,
-            processing_time=processing_time,
-            file_size=0,  # Not storing file size anymore
-            replaced_previous=True  # Always true since we delete previous
-        )
+        return {
+            "status": "success",
+            "message": "Resume uploaded successfully",
+            "document_id": document_id,
+            "filename": file.filename,
+            "file_size": len(file_content),
+            "content_type": file.content_type,
+            "processing_time": round(processing_time, 3),
+            "replaced_previous": True  # Since we always replace previous resume
+        }
         
     except Exception as e:
         logger.error(f"❌ Error uploading resume: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-async def process_resume_document(
-    user_id: str,
-    document_id: int
-):
-    """Background task to process resume document"""
-    try:
-        # Get services
-        document_service = get_document_service()
-        resume_extractor = get_resume_extractor()
-        resume_extractor.user_id = user_id  # Set user ID for processing
-        
-        # Log processing start
-        log_id = document_service.log_processing_start(
-            document_type="resume",
-            document_id=document_id,
-            user_id=user_id
-        )
-        
-        # Update status to processing
-        document_service.update_resume_processing_status(
-            document_id=document_id,
-            status="processing"
-        )
-        
-        # Process the resume
-        start_time = datetime.now()
-        result = resume_extractor.process_resume_optimized()
-        processing_time = int((datetime.now() - start_time).total_seconds())
-        
-        # Log successful processing
-        document_service.log_processing_complete(
-            log_id=log_id,
-            processing_time=processing_time,
-            total_chunks=result.get("total_chunks"),
-            embedding_dimension=result.get("embedding_dimension"),
-            model_used=result.get("model_used")
-        )
-        
-        # Update status to completed
-        document_service.update_resume_processing_status(
-            document_id=document_id,
-            status="completed"
-        )
-        
-        logger.info(f"✅ Resume processing completed for document {document_id}")
-        
-    except Exception as e:
-        logger.error(f"❌ Resume processing failed: {str(e)}")
-        
-        # Log error
-        if 'log_id' in locals():
-            document_service.log_processing_error(log_id, str(e))
-        
-        # Update status to failed
-        document_service.update_resume_processing_status(
-            document_id=document_id,
-            status="failed"
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error uploading resume: {str(e)}"
         )
 
 @app.get("/api/v1/resume")
 async def get_user_resume(
-    user_id: str = Query("default", description="User ID for simple auth")
+    user: User = Depends(get_session_user)
 ):
-    """📄 Get user's resume document info (One per user)"""
+    """📄 Get user's resume document info"""
     try:
         document_service = get_document_service()
-        document = document_service.get_active_resume_document(user_id)
+        document = document_service.get_user_resume(user.id)
         
         if not document:
             raise HTTPException(status_code=404, detail="No resume found for this user")
@@ -914,11 +853,9 @@ async def get_user_resume(
         return DocumentInfoResponse(
             id=document.id,
             filename=document.filename,
-            file_size=document.file_size,
+            file_size=len(document.file_content),
+            content_type=document.content_type,
             processing_status=document.processing_status,
-            is_active=document.is_active,
-            created_at=document.created_at.isoformat() if document.created_at else "",
-            last_processed_at=document.last_processed_at.isoformat() if document.last_processed_at else None,
             user_id=document.user_id
         )
         
@@ -928,42 +865,17 @@ async def get_user_resume(
         logger.error(f"❌ Failed to get resume document: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get document: {str(e)}")
 
-@app.get("/api/v1/resume/download")
-async def download_user_resume(
-    user_id: str = Query("default", description="User ID for simple auth")
-):
-    """⬇️ Download user's resume document"""
-    try:
-        document_service = get_document_service()
-        document = document_service.get_active_resume_document(user_id)
-        
-        if not document:
-            raise HTTPException(status_code=404, detail="No resume found for this user")
-        
-        return StreamingResponse(
-            io.BytesIO(document.file_content),
-            media_type=document.content_type,
-            headers={"Content-Disposition": f"attachment; filename={document.filename}"}
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Failed to download resume: {e}")
-        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
-
 @app.delete("/api/v1/resume")
 async def delete_user_resume(
-    user_id: str = Query("default", description="User ID for simple auth")
+    user: User = Depends(get_session_user)
 ):
     """🗑️ Delete user's resume document"""
     try:
         document_service = get_document_service()
         with document_service.get_session() as session:
             result = session.query(ResumeDocument).filter(
-                ResumeDocument.user_id == user_id,
-                ResumeDocument.is_active == True
-            ).update({"is_active": False})
+                ResumeDocument.user_id == user.id
+            ).delete()
             
             if result == 0:
                 raise HTTPException(status_code=404, detail="No resume found for this user")
@@ -977,6 +889,24 @@ async def delete_user_resume(
     except Exception as e:
         logger.error(f"❌ Failed to delete resume: {e}")
         raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
+
+@app.get("/api/v1/documents/status")
+async def get_user_documents_status(
+    user: User = Depends(get_session_user)
+):
+    """📊 Get status of user's documents"""
+    try:
+        document_service = get_document_service()
+        status = document_service.get_documents_status(user.id)
+        
+        return {
+            "status": "success",
+            "data": status
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to get documents status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================================================
 # PERSONAL INFO DOCUMENT ENDPOINTS (ONE PER USER)
@@ -1075,11 +1005,9 @@ async def get_user_personal_info(
         return DocumentInfoResponse(
             id=document.id,
             filename=document.filename,
-            file_size=document.file_size,
+            file_size=len(document.file_content),
+            content_type=document.content_type,
             processing_status=document.processing_status,
-            is_active=document.is_active,
-            created_at=document.created_at.isoformat() if document.created_at else "",
-            last_processed_at=document.last_processed_at.isoformat() if document.last_processed_at else None,
             user_id=document.user_id
         )
         
@@ -1138,139 +1066,6 @@ async def delete_user_personal_info(
     except Exception as e:
         logger.error(f"❌ Failed to delete personal info: {e}")
         raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
-
-# ============================================================================
-# USER DOCUMENT STATUS ENDPOINT
-# ============================================================================
-
-@app.get("/api/v1/documents/status")
-async def get_user_documents_status(
-    user: User = Depends(get_session_user)
-):
-    """📊 Get user's document status (One resume + One personal info per user)"""
-    try:
-        document_service = get_document_service()
-        
-        # Get user's documents
-        resume_doc = document_service.get_active_resume_document(user.id)
-        personal_info_doc = document_service.get_active_personal_info_document(user.id)
-        
-        status_data = {
-            "user_id": user.id,
-            "resume": None,
-            "personal_info": None,
-            "summary": {
-                "has_resume": resume_doc is not None,
-                "has_personal_info": personal_info_doc is not None,
-                "documents_ready": False,
-                "resume_status": "none",
-                "personal_info_status": "none"
-            }
-        }
-        
-        # Add resume info if exists
-        if resume_doc:
-            status_data["resume"] = {
-                "id": resume_doc.id,
-                "filename": resume_doc.filename,
-                "file_size": resume_doc.file_size,
-                "processing_status": resume_doc.processing_status,
-                "created_at": resume_doc.created_at.isoformat() if resume_doc.created_at else None,
-                "last_processed_at": resume_doc.last_processed_at.isoformat() if resume_doc.last_processed_at else None
-            }
-            status_data["summary"]["resume_status"] = resume_doc.processing_status
-        
-        # Add personal info if exists
-        if personal_info_doc:
-            status_data["personal_info"] = {
-                "id": personal_info_doc.id,
-                "filename": personal_info_doc.filename,
-                "file_size": personal_info_doc.file_size,
-                "processing_status": personal_info_doc.processing_status,
-                "created_at": personal_info_doc.created_at.isoformat() if personal_info_doc.created_at else None,
-                "last_processed_at": personal_info_doc.last_processed_at.isoformat() if personal_info_doc.last_processed_at else None
-            }
-            status_data["summary"]["personal_info_status"] = personal_info_doc.processing_status
-        
-        # Determine if documents are ready
-        resume_ready = resume_doc and resume_doc.processing_status == "completed"
-        personal_info_ready = personal_info_doc and personal_info_doc.processing_status == "completed"
-        status_data["summary"]["documents_ready"] = resume_ready and personal_info_ready
-        
-        return {
-            "status": "success",
-            "timestamp": datetime.now().isoformat(),
-            "data": status_data
-        }
-    
-    except Exception as e:
-        logger.error(f"❌ Status check failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Status check failed: {str(e)}")
-
-# ============================================================================
-# DEMO ENDPOINT (No Authentication Required)
-# ============================================================================
-
-@app.post("/api/demo/generate-field-answer", response_model=FieldAnswerResponse)
-async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> FieldAnswerResponse:
-    """
-    🎯 DEMO: Generate field answer without authentication (uses default user data)
-    
-    This endpoint is for testing/demo purposes only.
-    For production use, users should register and use the main endpoint.
-    """
-    try:
-        logger.info(f"🎯 DEMO: Generating answer for field: '{field_request.label}' on {field_request.url}")
-        logger.info(f"👤 Using demo user: default")
-        
-        # Get the form filler service
-        form_filler = get_form_filler()
-        
-        # Create a mock field object for the existing logic
-        mock_field = {
-            "field_purpose": field_request.label,
-            "name": field_request.label,
-            "selector": "#mock-field",
-            "field_type": "text"
-        }
-        
-        # Use default user for demo
-        result = await form_filler.generate_field_values_optimized([mock_field], {}, "default")
-        
-        if result["status"] != "success":
-            raise HTTPException(status_code=500, detail=f"Form filling failed: {result.get('error', 'Unknown error')}")
-        
-        # Extract the answer from the result
-        field_answer = result["values"][0] if result.get("values") else {}
-        answer = field_answer.get("value", "Unable to generate answer")
-        data_source = field_answer.get("data_source", "unknown")
-        reasoning = field_answer.get("reasoning", "No reasoning provided")
-        
-        # Get performance metrics
-        performance_metrics = {
-            "processing_time_seconds": result.get("processing_time", 0),
-            "optimization_enabled": True,
-            "cache_hits": result.get("cache_analytics", {}).get("cache_hit_rate", 0),
-            "early_exit": result.get("early_exit", False),
-            "tier_exit": result.get("tier_exit", 3),
-            "tiers_used": result.get("tiers_used", 3)
-        }
-        
-        logger.info(f"✅ DEMO Generated answer: '{answer}' (source: {data_source}) in {performance_metrics.get('processing_time_seconds', 0):.2f}s")
-        
-        return FieldAnswerResponse(
-            answer=answer,
-            data_source=data_source,
-            reasoning=reasoning,
-            status="success",
-            performance_metrics=performance_metrics
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ DEMO Error generating field answer: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 # ============================================================================
 # FULL JWT AUTHENTICATION ENDPOINTS (Optional)
