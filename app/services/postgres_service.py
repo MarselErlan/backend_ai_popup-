@@ -12,12 +12,12 @@ from datetime import datetime, date
 from typing import Dict, List, Optional, Any
 from loguru import logger
 
-from db.models import FormDb, SupabaseResult
+from db.models import FormDb, PostgresResult
 from db.schemas import FormResponse
 
 # Load environment variables
 load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
+POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
 
 # Create SQLAlchemy base
 Base = declarative_base()
@@ -40,7 +40,7 @@ class PostgresService:
     def __init__(self):
         """Initialize the PostgreSQL connection"""
         try:
-            self.engine = create_engine(DATABASE_URL)
+            self.engine = create_engine(POSTGRES_DB_URL)
             SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
             self.SessionLocal = SessionLocal
             
@@ -73,7 +73,7 @@ class PostgresService:
             
             if existing:
                 # URL already exists
-                result = SupabaseResult(
+                result = PostgresResult(
                     status="success",
                     message="URL already exists in database",
                     id=str(existing.id)
@@ -93,7 +93,7 @@ class PostgresService:
             session.commit()
             session.refresh(new_form)
             
-            return SupabaseResult(
+            return PostgresResult(
                 status="success",
                 message="URL added successfully",
                 id=str(new_form.id)
@@ -102,7 +102,7 @@ class PostgresService:
         except Exception as e:
             session.rollback()
             logger.error(f"Error adding form URL: {e}")
-            return SupabaseResult(
+            return PostgresResult(
                 status="error", 
                 message=str(e)
             ).model_dump()
@@ -159,12 +159,12 @@ class PostgresService:
                 form.analyzed = analyzed
                 session.commit()
                 
-                return SupabaseResult(
+                return PostgresResult(
                     status="success", 
                     message="Form status updated"
                 ).model_dump()
             else:
-                return SupabaseResult(
+                return PostgresResult(
                     status="error", 
                     message="Form not found"
                 ).model_dump()
@@ -172,7 +172,7 @@ class PostgresService:
         except Exception as e:
             session.rollback()
             logger.error(f"Error updating form status: {e}")
-            return SupabaseResult(
+            return PostgresResult(
                 status="error", 
                 message=str(e)
             ).model_dump()
@@ -198,7 +198,7 @@ class PostgresService:
             form = session.query(FormTable).filter(FormTable.url == url).first()
             
             if not form:
-                return SupabaseResult(
+                return PostgresResult(
                     status="error",
                     message="Form URL not found"
                 ).model_dump()
@@ -216,7 +216,7 @@ class PostgresService:
             
             session.commit()
             
-            return SupabaseResult(
+            return PostgresResult(
                 status="success",
                 message=f"Form marked as applied (attempt #{new_counter} today)"
             ).model_dump()
@@ -224,7 +224,7 @@ class PostgresService:
         except Exception as e:
             session.rollback()
             logger.error(f"Error marking form as applied: {e}")
-            return SupabaseResult(
+            return PostgresResult(
                 status="error",
                 message=str(e)
             ).model_dump()

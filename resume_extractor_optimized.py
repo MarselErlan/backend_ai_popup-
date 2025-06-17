@@ -36,7 +36,7 @@ class ResumeExtractorOptimized:
     
     def __init__(self, openai_api_key: str = None, database_url: str = None, user_id: str = None, use_hf_fallback: bool = True):
         self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
-        self.database_url = database_url or os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/smart_form_filler")
+        self.database_url = database_url or os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup/smart_form_filler")
         self.user_id = user_id
         self.use_hf_fallback = use_hf_fallback
         
@@ -175,7 +175,7 @@ class ResumeExtractorOptimized:
                     else:
                         # For other file types, try UTF-8 decoding
                         page_content = doc.file_content.decode('utf-8', errors='ignore')
-                    
+                
                     # Create document object
                     from langchain.schema import Document
                     document = Document(
@@ -200,7 +200,7 @@ class ResumeExtractorOptimized:
                         page_content=page_content,
                         metadata={
                             'source': f"database:{doc.filename}",
-                            'user_id': self.user_id,
+                        'user_id': self.user_id,
                             'doc_hash': doc_hash,
                             'filename': doc.filename,
                             'content_type': doc.content_type,
@@ -208,14 +208,12 @@ class ResumeExtractorOptimized:
                         }
                     )
                     documents.append(document)
-            
-            # Cache the documents
-            self._embedding_cache[doc_hash] = documents
-            self.processed_documents += 1
-            
+                
+                # Cache the documents
+                self._embedding_cache[doc_hash] = documents
+                self.processed_documents += 1
             logger.info(f"✅ Loaded {len(documents)} resume document(s) from database (cached)")
             return documents
-            
         except Exception as e:
             logger.error(f"❌ Error loading resume from database: {e}")
             raise
@@ -243,7 +241,6 @@ class ResumeExtractorOptimized:
             
             logger.info(f"✅ Created {len(chunks)} chunks (cached)")
             return chunks
-            
         except Exception as e:
             logger.error(f"❌ Error splitting documents: {e}")
             raise
@@ -303,7 +300,6 @@ class ResumeExtractorOptimized:
             
             logger.info(f"✅ Created {len(embeddings_list)} embeddings (cached)")
             return embedding_data
-            
         except Exception as e:
             logger.error(f"❌ Optimized embedding creation failed: {e}")
             return {"error": str(e)}

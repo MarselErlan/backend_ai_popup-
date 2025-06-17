@@ -36,7 +36,7 @@ class ResumeExtractorDB:
     def __init__(self, openai_api_key: str = None, database_url: str = None, user_id: str = None, use_hf_fallback: bool = True):
         # API setup
         self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
-        self.database_url = database_url or os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/smart_form_filler")
+        self.database_url = database_url or os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
         self.user_id = user_id
         self.use_hf_fallback = use_hf_fallback
         

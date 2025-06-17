@@ -8,19 +8,19 @@ from models import Base, User, UserToken, UserSession
 from loguru import logger
 
 # Database URL
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
+POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
 
 def create_tables():
     """Create all database tables"""
     try:
         # Create engine
-        engine = create_engine(DATABASE_URL)
+        engine = create_engine(POSTGRES_DB_URL)
         
         # Create all tables
         Base.metadata.create_all(bind=engine)
         
         logger.info("✅ Database tables created successfully!")
-        logger.info(f"   📊 Database: {DATABASE_URL}")
+        logger.info(f"   📊 Database: {POSTGRES_DB_URL}")
         logger.info(f"   📋 Tables created:")
         logger.info(f"      • users (User authentication)")
         logger.info(f"      • user_tokens (JWT tokens)")

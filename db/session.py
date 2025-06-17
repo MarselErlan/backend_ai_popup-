@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL")
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(POSTGRES_DB_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Dependency for FastAPI

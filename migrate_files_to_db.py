@@ -106,7 +106,7 @@ def main():
         logger.info("🚀 Starting file to database migration...")
         
         # Get database URL
-        database_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/smart_form_filler")
+        database_url = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
         
         # Initialize document service
         document_service = DocumentService(database_url)

@@ -48,7 +48,7 @@ class UserToken(Base):
     token = Column(String, unique=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     expires_at = Column(DateTime(timezone=True), nullable=False)
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True) 
 
 # Simple Session Management (No JWT needed)
 class UserSession(Base):

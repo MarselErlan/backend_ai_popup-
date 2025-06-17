@@ -1,6 +1,6 @@
 """
 Database models for the Smart Form Fill API
-These represent the data structures as they are stored in Supabase.
+These represent the data structures as they are stored in PostgreSQL.
 """
 
 from pydantic import BaseModel, HttpUrl, Field
@@ -29,25 +29,8 @@ class FormField(BaseModel):
     validation: Optional[str] = None
 
 
-class SupabaseResult(BaseModel):
-    """Result model for Supabase operations"""
+class PostgresResult(BaseModel):
+    """Result model for PostgreSQL operations"""
     status: str
     message: str
-    id: Optional[str] = None 
-
-def mark_form_applied(self, url: str):
-    today = date.today().isoformat()
-    form = self.supabase.table("forms").select("*").eq("url", url).execute()
-    if form.data and len(form.data) > 0:
-        entry = form.data[0]
-        if entry.get("applied_date") == today:
-            new_counter = entry.get("applied_counter", 0) + 1
-        else:
-            new_counter = 1
-        self.supabase.table("forms").update({
-            "status": "applied",
-            "applied_counter": new_counter,
-            "applied_date": today
-        }).eq("url", url).execute()
-        return True
-    return False 
+    id: Optional[str] = None
