@@ -794,7 +794,6 @@ class DocumentInfoResponse(BaseModel):
 
 @app.post("/api/v1/resume/upload", response_model=DocumentUploadResponse)
 async def upload_resume(
-    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     user: User = Depends(get_session_user)
 ):
@@ -828,9 +827,6 @@ async def upload_resume(
         }
         content_type = content_type_map[file_ext]
         
-        # Extract text from file (for processing)
-        text = await extract_text_from_file(file_content, file_ext)
-        
         # Save document using DocumentService
         document_service = get_document_service()
         document_id = document_service.save_resume_document(
@@ -840,13 +836,6 @@ async def upload_resume(
             user_id=user.id
         )
         
-        # Start processing in background
-        background_tasks.add_task(
-            process_resume_document,
-            user_id=user.id,
-            document_id=document_id
-        )
-        
         end_time = datetime.now()
         processing_time = (end_time - start_time).total_seconds()
         
@@ -854,7 +843,7 @@ async def upload_resume(
         
         return DocumentUploadResponse(
             status="success",
-            message="Resume uploaded successfully and queued for processing",
+            message="Resume uploaded successfully",
             document_id=document_id,
             filename=file.filename,
             processing_time=processing_time,
