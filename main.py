@@ -24,7 +24,6 @@ import io
 # Import auth components
 from database import get_db
 from models import User, UserSession
-from auth import create_access_token, get_current_user, get_current_user_id
 
 # Import form filling services
 from app.services.form_filler_optimized import OptimizedFormFiller
@@ -150,16 +149,7 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
-class UserResponse(BaseModel):
-    id: str
-    email: str
-    created_at: datetime
-    is_active: bool
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str
-    user: UserResponse
+# Note: UserResponse and TokenResponse models removed since JWT auth is disabled
 
 # Initialize FastAPI app with lifecycle management
 app = FastAPI(
@@ -684,172 +674,6 @@ async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> Field
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 # ============================================================================
-# FULL JWT AUTHENTICATION ENDPOINTS (Optional)
-# ============================================================================
-
-@app.post("/api/auth/register", response_model=TokenResponse)
-async def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
-    """🔐 Full JWT Registration (for users who want JWT tokens)"""
-    try:
-        # Check if user already exists
-        existing_user = db.query(User).filter(User.email == user_data.email).first()
-        if existing_user:
-            raise HTTPException(status_code=400, detail="Email already registered")
-        
-        # Create new user
-        new_user = User(email=user_data.email)
-        new_user.set_password(user_data.password)
-        
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        
-        # Create access token
-        access_token = create_access_token(new_user.id)
-        
-        logger.info(f"✅ New user registered: {user_data.email}")
-        
-        return TokenResponse(
-            access_token=access_token,
-            token_type="bearer",
-            user=UserResponse(
-                id=new_user.id,
-                email=new_user.email,
-                created_at=new_user.created_at,
-                is_active=new_user.is_active
-            )
-        )
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Registration failed: {e}")
-        raise HTTPException(status_code=500, detail="Registration failed")
-
-@app.post("/api/auth/login", response_model=TokenResponse)
-async def login_user(user_data: UserLogin, db: Session = Depends(get_db)):
-    """🔐 Full JWT Login (for users who want JWT tokens)"""
-    try:
-        # Find user by email
-        user = db.query(User).filter(User.email == user_data.email, User.is_active == True).first()
-        if not user or not user.verify_password(user_data.password):
-            raise HTTPException(status_code=401, detail="Invalid email or password")
-        
-        # Create access token
-        access_token = create_access_token(user.id)
-        
-        logger.info(f"✅ User logged in: {user_data.email}")
-        
-        return TokenResponse(
-            access_token=access_token,
-            token_type="bearer",
-            user=UserResponse(
-                id=user.id,
-                email=user.email,
-                created_at=user.created_at,
-                is_active=user.is_active
-            )
-        )
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Login failed: {e}")
-        raise HTTPException(status_code=500, detail="Login failed")
-
-@app.get("/api/auth/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
-    """👤 Get current user info (JWT-based)"""
-    return UserResponse(
-        id=current_user.id,
-        email=current_user.email,
-        created_at=current_user.created_at,
-        is_active=current_user.is_active
-    )
-
-# ============================================================================
-# JWT-BASED AUTHENTICATED ENDPOINT (For Full Auth Users)
-# ============================================================================
-
-@app.post("/api/auth/generate-field-answer", response_model=FieldAnswerResponse)
-async def auth_generate_field_answer(
-    field_request: FieldAnswerRequest,
-    request: Request,
-    user_id: str = Depends(get_current_user_id)
-) -> FieldAnswerResponse:
-    """
-    🔐 JWT-AUTHENTICATED: Generate field answer with full JWT authentication
-    For users who prefer the complete JWT token-based authentication system
-    """
-    start_time = datetime.now()
-    
-    try:
-        form_filler = get_form_filler()
-        
-        logger.info(f"🔐 JWT AUTH: Generating answer for field: '{field_request.label}' on {field_request.url}")
-        logger.info(f"👤 JWT Authenticated user: {user_id}")
-        
-        # Create a mock field object for the existing logic
-        mock_field = {
-            "field_purpose": field_request.label,
-            "name": field_request.label,
-            "selector": "#mock-field",
-            "field_type": "text"
-        }
-        
-        # Use the JWT-authenticated user_id
-        result = await form_filler.generate_field_values_optimized([mock_field], {}, user_id)
-        
-        if result["status"] != "success":
-            raise HTTPException(status_code=500, detail=f"Field generation failed: {result.get('error', 'Unknown error')}")
-        
-        # Extract the answer from the result
-        field_mappings = result.get("values", [])
-        if not field_mappings:
-            raise HTTPException(status_code=500, detail="No field mapping generated")
-        
-        field_mapping = field_mappings[0]
-        answer = field_mapping.get("value", "")
-        data_source = field_mapping.get("data_source", "unknown")
-        reasoning = field_mapping.get("reasoning", "No reasoning provided")
-        
-        # Handle skip actions
-        if field_mapping.get("action") == "skip" or not answer:
-            answer = ""
-            data_source = "skipped"
-            reasoning = "Field skipped - unable to generate appropriate answer"
-        
-        end_time = datetime.now()
-        processing_time = (end_time - start_time).total_seconds()
-        
-        logger.info(f"✅ JWT AUTH Generated answer: '{answer}' (source: {data_source}) in {processing_time:.2f}s")
-        
-        # Performance metrics
-        performance_metrics = {
-            "processing_time_seconds": processing_time,
-            "optimization_enabled": True,
-            "cache_hits": result.get("cache_hits", 0),
-            "database_queries": result.get("database_queries", 0),
-            "jwt_authentication": True
-        }
-        
-        return FieldAnswerResponse(
-            answer=answer,
-            data_source=data_source,
-            reasoning=reasoning,
-            status="success",
-            performance_metrics=performance_metrics
-        )
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        end_time = datetime.now()
-        processing_time = (end_time - start_time).total_seconds()
-        logger.error(f"❌ JWT AUTH Field answer generation failed: {e} (in {processing_time:.2f}s)")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
-# ============================================================================
 # OPTIMIZED VECTOR DATABASE ENDPOINTS
 # ============================================================================
 
@@ -999,7 +823,7 @@ class DocumentInfoResponse(BaseModel):
 @app.post("/api/v1/resume/upload", response_model=DocumentUploadResponse)
 async def upload_resume(
     file: UploadFile = File(...),
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Query("default", description="User ID for simple auth")
 ):
     """
     📄 Upload resume document to database (One per user - replaces existing)
@@ -1072,7 +896,7 @@ async def upload_resume(
 
 @app.get("/api/v1/resume")
 async def get_user_resume(
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Query("default", description="User ID for simple auth")
 ):
     """📄 Get user's resume document info (One per user)"""
     try:
@@ -1101,7 +925,7 @@ async def get_user_resume(
 
 @app.get("/api/v1/resume/download")
 async def download_user_resume(
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Query("default", description="User ID for simple auth")
 ):
     """⬇️ Download user's resume document"""
     try:
@@ -1125,7 +949,7 @@ async def download_user_resume(
 
 @app.delete("/api/v1/resume")
 async def delete_user_resume(
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Query("default", description="User ID for simple auth")
 ):
     """🗑️ Delete user's resume document"""
     try:
@@ -1156,7 +980,7 @@ async def delete_user_resume(
 @app.post("/api/v1/personal-info/upload", response_model=DocumentUploadResponse)
 async def upload_personal_info(
     file: UploadFile = File(...),
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Query("default", description="User ID for simple auth")
 ):
     """
     📝 Upload personal information document to database (One per user - replaces existing)
@@ -1230,7 +1054,7 @@ async def upload_personal_info(
 
 @app.get("/api/v1/personal-info")
 async def get_user_personal_info(
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Query("default", description="User ID for simple auth")
 ):
     """📝 Get user's personal info document info (One per user)"""
     try:
@@ -1259,7 +1083,7 @@ async def get_user_personal_info(
 
 @app.get("/api/v1/personal-info/download")
 async def download_user_personal_info(
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Query("default", description="User ID for simple auth")
 ):
     """⬇️ Download user's personal info document"""
     try:
@@ -1283,7 +1107,7 @@ async def download_user_personal_info(
 
 @app.delete("/api/v1/personal-info")
 async def delete_user_personal_info(
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Query("default", description="User ID for simple auth")
 ):
     """🗑️ Delete user's personal info document"""
     try:
@@ -1313,7 +1137,7 @@ async def delete_user_personal_info(
 
 @app.get("/api/v1/documents/status")
 async def get_user_documents_status(
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Query("default", description="User ID for simple auth")
 ):
     """📊 Get user's document status (One resume + One personal info per user)"""
     try:
@@ -1443,168 +1267,6 @@ async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> Field
 # ============================================================================
 # FULL JWT AUTHENTICATION ENDPOINTS (Optional)
 # ============================================================================
-
-@app.post("/api/auth/register", response_model=TokenResponse)
-async def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
-    """🔐 Full JWT Registration (for users who want JWT tokens)"""
-    try:
-        # Check if user already exists
-        existing_user = db.query(User).filter(User.email == user_data.email).first()
-        if existing_user:
-            raise HTTPException(status_code=400, detail="Email already registered")
-        
-        # Create new user
-        new_user = User(email=user_data.email)
-        new_user.set_password(user_data.password)
-        
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        
-        # Create access token
-        access_token = create_access_token(new_user.id)
-        
-        logger.info(f"✅ New user registered: {user_data.email}")
-        
-        return TokenResponse(
-            access_token=access_token,
-            token_type="bearer",
-            user=UserResponse(
-                id=new_user.id,
-                email=new_user.email,
-                created_at=new_user.created_at,
-                is_active=new_user.is_active
-            )
-        )
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Registration failed: {e}")
-        raise HTTPException(status_code=500, detail="Registration failed")
-
-@app.post("/api/auth/login", response_model=TokenResponse)
-async def login_user(user_data: UserLogin, db: Session = Depends(get_db)):
-    """🔐 Full JWT Login (for users who want JWT tokens)"""
-    try:
-        # Find user by email
-        user = db.query(User).filter(User.email == user_data.email, User.is_active == True).first()
-        if not user or not user.verify_password(user_data.password):
-            raise HTTPException(status_code=401, detail="Invalid email or password")
-        
-        # Create access token
-        access_token = create_access_token(user.id)
-        
-        logger.info(f"✅ User logged in: {user_data.email}")
-        
-        return TokenResponse(
-            access_token=access_token,
-            token_type="bearer",
-            user=UserResponse(
-                id=user.id,
-                email=user.email,
-                created_at=user.created_at,
-                is_active=user.is_active
-            )
-        )
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Login failed: {e}")
-        raise HTTPException(status_code=500, detail="Login failed")
-
-@app.get("/api/auth/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
-    """👤 Get current user info (JWT-based)"""
-    return UserResponse(
-        id=current_user.id,
-        email=current_user.email,
-        created_at=current_user.created_at,
-        is_active=current_user.is_active
-    )
-
-# ============================================================================
-# JWT-BASED AUTHENTICATED ENDPOINT (For Full Auth Users)
-# ============================================================================
-
-@app.post("/api/auth/generate-field-answer", response_model=FieldAnswerResponse)
-async def auth_generate_field_answer(
-    field_request: FieldAnswerRequest,
-    request: Request,
-    user_id: str = Depends(get_current_user_id)
-) -> FieldAnswerResponse:
-    """
-    🔐 JWT-AUTHENTICATED: Generate field answer with full JWT authentication
-    For users who prefer the complete JWT token-based authentication system
-    """
-    start_time = datetime.now()
-    
-    try:
-        form_filler = get_form_filler()
-        
-        logger.info(f"🔐 JWT AUTH: Generating answer for field: '{field_request.label}' on {field_request.url}")
-        logger.info(f"👤 JWT Authenticated user: {user_id}")
-        
-        # Create a mock field object for the existing logic
-        mock_field = {
-            "field_purpose": field_request.label,
-            "name": field_request.label,
-            "selector": "#mock-field",
-            "field_type": "text"
-        }
-        
-        # Use the JWT-authenticated user_id
-        result = await form_filler.generate_field_values_optimized([mock_field], {}, user_id)
-        
-        if result["status"] != "success":
-            raise HTTPException(status_code=500, detail=f"Field generation failed: {result.get('error', 'Unknown error')}")
-        
-        # Extract the answer from the result
-        field_mappings = result.get("values", [])
-        if not field_mappings:
-            raise HTTPException(status_code=500, detail="No field mapping generated")
-        
-        field_mapping = field_mappings[0]
-        answer = field_mapping.get("value", "")
-        data_source = field_mapping.get("data_source", "unknown")
-        reasoning = field_mapping.get("reasoning", "No reasoning provided")
-        
-        # Handle skip actions
-        if field_mapping.get("action") == "skip" or not answer:
-            answer = ""
-            data_source = "skipped"
-            reasoning = "Field skipped - unable to generate appropriate answer"
-        
-        end_time = datetime.now()
-        processing_time = (end_time - start_time).total_seconds()
-        
-        logger.info(f"✅ JWT AUTH Generated answer: '{answer}' (source: {data_source}) in {processing_time:.2f}s")
-        
-        # Performance metrics
-        performance_metrics = {
-            "processing_time_seconds": processing_time,
-            "optimization_enabled": True,
-            "cache_hits": result.get("cache_hits", 0),
-            "database_queries": result.get("database_queries", 0),
-            "jwt_authentication": True
-        }
-        
-        return FieldAnswerResponse(
-            answer=answer,
-            data_source=data_source,
-            reasoning=reasoning,
-            status="success",
-            performance_metrics=performance_metrics
-        )
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        end_time = datetime.now()
-        processing_time = (end_time - start_time).total_seconds()
-        logger.error(f"❌ JWT AUTH Field answer generation failed: {e} (in {processing_time:.2f}s)")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 # ============================================================================
 # HEALTH CHECK ENDPOINTS
