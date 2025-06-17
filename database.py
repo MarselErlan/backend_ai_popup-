@@ -4,8 +4,8 @@ from sqlalchemy.orm import sessionmaker
 from models import Base
 from loguru import logger
 
-# Database URL - use SQLite for simple deployment
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./users.db")
+# Database URL - use PostgreSQL for production
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
 
 # Create engine
 engine = create_engine(

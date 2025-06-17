@@ -8,7 +8,7 @@ from models import Base, User, UserToken, UserSession
 from loguru import logger
 
 # Database URL
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./users.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
 
 def create_tables():
     """Create all database tables"""

@@ -1,8 +1,22 @@
-# 🚀 AI Form Filler - Simple Deployment Guide
+# 🚀 AI Form Filler - PostgreSQL Deployment Guide
 
 ## Quick Start (5 minutes)
 
-### 1. Setup
+### 1. Setup PostgreSQL Database
+
+```bash
+# Create PostgreSQL role and database
+sudo -u postgres psql
+CREATE ROLE ai_popup WITH LOGIN PASSWORD 'Erlan1824';
+ALTER ROLE ai_popup CREATEDB;
+CREATE DATABASE ai_popup OWNER ai_popup;
+\q
+
+# Test connection
+psql -U ai_popup -d ai_popup -h localhost
+```
+
+### 2. Setup Application
 
 ```bash
 # Clone and setup
@@ -13,25 +27,33 @@ cd backend_ai_popup
 python deploy.py
 ```
 
-### 2. Configure API Keys
+### 3. Configure API Keys
 
 Edit `.env` file:
 
 ```env
 OPENAI_API_KEY=sk-your-actual-openai-key
 JWT_SECRET_KEY=your-super-secret-jwt-key-change-this
-DATABASE_URL=sqlite:///./users.db
-SUPABASE_URL=your-supabase-url
-SUPABASE_KEY=your-supabase-key
+DATABASE_URL=postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup
 ```
 
-### 3. Run Server
+### 4. Initialize Database Tables
+
+```bash
+# Test PostgreSQL connection and create tables
+python test_postgres_connection.py
+
+# Or manually create tables
+python create_tables.py
+```
+
+### 5. Run Server
 
 ```bash
 python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-### 4. Test API
+### 6. Test API
 
 - **API Docs**: http://localhost:8000/docs
 - **Health Check**: http://localhost:8000/health
@@ -73,38 +95,58 @@ curl -X POST "http://localhost:8000/api/demo/generate-field-answer" \
   -d '{"label": "Your Name:", "url": "https://example.com"}'
 ```
 
+## 🗄️ Database Schema
+
+The application creates the following PostgreSQL tables:
+
+- **users** - User authentication and profiles
+- **user_tokens** - JWT token management
+- **user_sessions** - Simple session management
+- **resume_documents** - Resume file storage (binary + metadata)
+- **personal_info_documents** - Personal info file storage
+- **document_processing_logs** - Processing history and logs
+- **forms** - Form URL tracking and application status
+
 ## 🌐 Production Deployment
 
-### Option 1: Railway
+### Option 1: Railway with PostgreSQL
 
 1. Connect GitHub repo to Railway
-2. Set environment variables in Railway dashboard
-3. Deploy automatically
+2. Add PostgreSQL database addon
+3. Set environment variables in Railway dashboard
+4. Deploy automatically
 
-### Option 2: Heroku
+### Option 2: Heroku with PostgreSQL
 
 1. Create Heroku app
-2. Set config vars (environment variables)
-3. Deploy with Git
+2. Add Heroku Postgres addon
+3. Set config vars (environment variables)
+4. Deploy with Git
 
 ### Option 3: DigitalOcean App Platform
 
 1. Connect GitHub repo
-2. Configure environment variables
-3. Deploy
+2. Add PostgreSQL database
+3. Configure environment variables
+4. Deploy
 
-### Option 4: VPS (Ubuntu)
+### Option 4: VPS (Ubuntu) with PostgreSQL
 
 ```bash
-# Install Python 3.9+
+# Install PostgreSQL
 sudo apt update
-sudo apt install python3 python3-pip
+sudo apt install postgresql postgresql-contrib python3 python3-pip
 
-# Clone repo
+# Setup PostgreSQL
+sudo -u postgres psql
+CREATE ROLE ai_popup WITH LOGIN PASSWORD 'your-secure-password';
+ALTER ROLE ai_popup CREATEDB;
+CREATE DATABASE ai_popup OWNER ai_popup;
+\q
+
+# Clone and setup app
 git clone <your-repo>
 cd backend_ai_popup
-
-# Setup
 python3 deploy.py
 
 # Install PM2 for process management
@@ -120,25 +162,43 @@ sudo apt install nginx
 
 ## 📊 Features
 
-✅ **User Authentication** (JWT tokens)
-✅ **Smart Form Filling** (3-tier AI system)
-✅ **Performance Optimization** (caching, early exit)
-✅ **Multi-user Support** (isolated data per user)
-✅ **Simple Database** (SQLite for easy deployment)
-✅ **Professional Answers** (job-focused AI responses)
+✅ **User Authentication** (JWT tokens + simple sessions)  
+✅ **Smart Form Filling** (3-tier AI system)  
+✅ **Performance Optimization** (caching, early exit)  
+✅ **Multi-user Support** (isolated data per user)  
+✅ **PostgreSQL Database** (production-ready)  
+✅ **Professional Answers** (job-focused AI responses)  
+✅ **File Upload System** (resume + personal info)  
+✅ **Vector Embeddings** (AI-powered document search)
 
 ## 🔧 Environment Variables
 
-| Variable         | Description                     | Required                |
-| ---------------- | ------------------------------- | ----------------------- |
-| `OPENAI_API_KEY` | OpenAI API key for AI responses | Yes                     |
-| `JWT_SECRET_KEY` | Secret key for JWT tokens       | Yes                     |
-| `DATABASE_URL`   | Database connection string      | No (defaults to SQLite) |
-| `SUPABASE_URL`   | Supabase project URL            | Yes                     |
-| `SUPABASE_KEY`   | Supabase API key                | Yes                     |
+| Variable         | Description                     | Required | Default                                                   |
+| ---------------- | ------------------------------- | -------- | --------------------------------------------------------- |
+| `OPENAI_API_KEY` | OpenAI API key for AI responses | Yes      | -                                                         |
+| `JWT_SECRET_KEY` | Secret key for JWT tokens       | Yes      | -                                                         |
+| `DATABASE_URL`   | PostgreSQL connection string    | Yes      | `postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup` |
 
 ## 🚀 Ready for Production!
 
-This system is designed to be **simple to deploy** while being **powerful enough for real users**. The authentication system is minimal but secure, and the AI form filling is optimized for speed and accuracy.
+This system is designed to be **production-ready** with PostgreSQL as the database backend. The migration from Supabase to PostgreSQL provides:
+
+- **Better Performance** - Local database queries
+- **Full Control** - No external service dependencies
+- **Cost Effective** - No monthly Supabase fees
+- **Scalable** - PostgreSQL handles high loads well
+- **Reliable** - Battle-tested database system
 
 **Start getting users immediately!** 🎯
+
+## 🔄 Migration from Supabase
+
+If you're migrating from Supabase:
+
+1. **Backup your Supabase data** (if any)
+2. **Update environment variables** to use PostgreSQL
+3. **Run migration script**: `python test_postgres_connection.py`
+4. **Test all endpoints** to ensure everything works
+5. **Update deployment configurations** to use PostgreSQL
+
+The application now uses **PostgreSQL natively** instead of Supabase's REST API, providing better performance and control.

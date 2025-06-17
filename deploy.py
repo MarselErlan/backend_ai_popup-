@@ -28,9 +28,10 @@ def setup_environment():
             f.write("# AI Form Filler Environment Variables\n")
             f.write("OPENAI_API_KEY=your-openai-api-key-here\n")
             f.write("JWT_SECRET_KEY=your-super-secret-jwt-key-change-this-in-production\n")
-            f.write("DATABASE_URL=sqlite:///./users.db\n")
-            f.write("SUPABASE_URL=your-supabase-url\n")
-            f.write("SUPABASE_KEY=your-supabase-key\n")
+            f.write("DATABASE_URL=postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup\n")
+            # Removed Supabase - using PostgreSQL instead
+            # f.write("SUPABASE_URL=your-supabase-url\n")
+            # f.write("SUPABASE_KEY=your-supabase-key\n")
         
         logger.info("✅ Created .env file - PLEASE UPDATE WITH YOUR API KEYS!")
         logger.warning("⚠️  IMPORTANT: Update .env file with your actual API keys before running!")
