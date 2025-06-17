@@ -315,29 +315,29 @@ class SimpleRegisterResponse(BaseModel):
 async def simple_register_user(user_data: UserRegister, db: Session = Depends(get_db)):
     """
     🔐 Simplified Registration: Returns user_id directly (no JWT tokens)
-    Extension can store the user_id and use it for all requests
+    Handles existing users appropriately
     """
     try:
         # Check if user already exists
         existing_user = db.query(User).filter(User.email == user_data.email).first()
         if existing_user:
             if existing_user.is_active:
-                return SimpleRegisterResponse(
-                    status="exists",
-                    user_id=existing_user.id,
-                    email=existing_user.email,
-                    message="User already exists - you can use this user_id"
+                logger.info(f"❌ Registration failed: User already exists - {user_data.email}")
+                raise HTTPException(
+                    status_code=409,
+                    detail="User already exists. Please login instead."
                 )
             else:
                 # Reactivate inactive user
                 existing_user.is_active = True
                 existing_user.set_password(user_data.password)
                 db.commit()
+                logger.info(f"✅ Reactivated user: {user_data.email} (ID: {existing_user.id})")
                 return SimpleRegisterResponse(
                     status="reactivated",
                     user_id=existing_user.id,
                     email=existing_user.email,
-                    message="User reactivated successfully"
+                    message="Account reactivated successfully. Please login."
                 )
         
         # Create new user
@@ -354,14 +354,14 @@ async def simple_register_user(user_data: UserRegister, db: Session = Depends(ge
             status="registered",
             user_id=new_user.id,
             email=new_user.email,
-            message="User registered successfully - save this user_id for future requests"
+            message="Registration successful. Please login to continue."
         )
     
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Simple registration failed: {e}")
-        raise HTTPException(status_code=500, detail="Registration failed")
+        logger.error(f"❌ Registration failed: {e}")
+        raise HTTPException(status_code=500, detail="Registration failed. Please try again.")
 
 # ============================================================================
 # SIMPLIFIED USER LOGIN (Returns User ID)
