@@ -10,7 +10,7 @@ from functools import lru_cache
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query, Depends, Request, UploadFile, File, Form, Header
-from fastapi import Request
+from fastapi import Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from httpcore import request
@@ -34,6 +34,7 @@ from resume_extractor_optimized import ResumeExtractorOptimized
 from personal_info_extractor_optimized import PersonalInfoExtractorOptimized
 from app.services.document_service import DocumentService
 from app.models.document_models import ResumeDocument, PersonalInfoDocument
+from app.utils.text_extractor import extract_text_from_file
 
 # Load environment variables
 load_dotenv()
@@ -793,6 +794,7 @@ class DocumentInfoResponse(BaseModel):
 
 @app.post("/api/v1/resume/upload", response_model=DocumentUploadResponse)
 async def upload_resume(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     user: User = Depends(get_session_user)
 ):
@@ -804,70 +806,124 @@ async def upload_resume(
     """
     start_time = datetime.now()
     
-    # User is already validated by get_session_user dependency
-    
-    # Validate file type
-    file_ext = os.path.splitext(file.filename)[1].lower()
-    if file_ext not in ['.pdf', '.docx', '.doc', '.txt']:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid file type. Please upload a PDF, DOCX, DOC, or TXT file."
-        )
-    
     try:
-        # Read file content
-        content = await file.read()
-        
-        # Get text from file
-        text = await extract_text_from_file(content, file_ext)
-        
-        # Store in database
-        db = next(get_db())
-        
-        # Check for existing resume
-        existing_resume = db.query(ResumeDocument).filter(
-            ResumeDocument.user_id == user.id
-        ).first()
-        
-        if existing_resume:
-            # Update existing
-            existing_resume.filename = file.filename
-            existing_resume.content = text
-            existing_resume.file_type = file_ext
-            existing_resume.last_updated = datetime.now()
-            existing_resume.processing_status = "processing"
-        else:
-            # Create new
-            resume_doc = ResumeDocument(
-                user_id=user.id,
-                filename=file.filename,
-                content=text,
-                file_type=file_ext,
-                processing_status="processing"
+        # Validate file type
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext not in ['.pdf', '.docx', '.doc', '.txt']:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid file type. Please upload a PDF, DOCX, DOC, or TXT file."
             )
-            db.add(resume_doc)
         
-        db.commit()
+        # Read file content
+        file_content = await file.read()
+        file_size = len(file_content)
         
-        # Queue embedding task
+        # Determine content type based on file extension
+        content_type_map = {
+            '.pdf': 'application/pdf',
+            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            '.doc': 'application/msword',
+            '.txt': 'text/plain'
+        }
+        content_type = content_type_map[file_ext]
+        
+        # Extract text from file (for processing)
+        text = await extract_text_from_file(file_content, file_ext)
+        
+        # Save document using DocumentService
+        document_service = get_document_service()
+        document_id = document_service.save_resume_document(
+            filename=file.filename,
+            file_content=file_content,
+            content_type=content_type,
+            user_id=user.id
+        )
+        
+        # Start processing in background
         background_tasks.add_task(
-            embed_resume_text,
+            process_resume_document,
             user_id=user.id,
-            text=text
+            document_id=document_id
         )
         
         end_time = datetime.now()
-        logger.info(f"✅ Resume uploaded for user {user.id} ({(end_time - start_time).total_seconds():.2f}s)")
+        processing_time = (end_time - start_time).total_seconds()
         
-        return {
-            "status": "success",
-            "message": "Resume uploaded successfully and queued for embedding",
-            "filename": file.filename
-        }
+        logger.info(f"✅ Resume uploaded for user {user.id} ({processing_time:.2f}s)")
+        
+        return DocumentUploadResponse(
+            status="success",
+            message="Resume uploaded successfully and queued for processing",
+            document_id=document_id,
+            filename=file.filename,
+            processing_time=processing_time,
+            file_size=file_size,
+            replaced_previous=True  # DocumentService.save_resume_document handles this
+        )
         
     except Exception as e:
         logger.error(f"❌ Error uploading resume: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+async def process_resume_document(
+    user_id: str,
+    document_id: int
+):
+    """Background task to process resume document"""
+    try:
+        # Get services
+        document_service = get_document_service()
+        resume_extractor = get_resume_extractor()
+        resume_extractor.user_id = user_id  # Set user ID for processing
+        
+        # Log processing start
+        log_id = document_service.log_processing_start(
+            document_type="resume",
+            document_id=document_id,
+            user_id=user_id
+        )
+        
+        # Update status to processing
+        document_service.update_resume_processing_status(
+            document_id=document_id,
+            status="processing"
+        )
+        
+        # Process the resume
+        start_time = datetime.now()
+        result = resume_extractor.process_resume_optimized()
+        processing_time = int((datetime.now() - start_time).total_seconds())
+        
+        # Log successful processing
+        document_service.log_processing_complete(
+            log_id=log_id,
+            processing_time=processing_time,
+            total_chunks=result.get("total_chunks"),
+            embedding_dimension=result.get("embedding_dimension"),
+            model_used=result.get("model_used")
+        )
+        
+        # Update status to completed
+        document_service.update_resume_processing_status(
+            document_id=document_id,
+            status="completed"
+        )
+        
+        logger.info(f"✅ Resume processing completed for document {document_id}")
+        
+    except Exception as e:
+        logger.error(f"❌ Resume processing failed: {str(e)}")
+        
+        # Log error
+        if 'log_id' in locals():
+            document_service.log_processing_error(log_id, str(e))
+        
+        # Update status to failed
+        document_service.update_resume_processing_status(
+            document_id=document_id,
+            status="failed"
+        )
 
 @app.get("/api/v1/resume")
 async def get_user_resume(
