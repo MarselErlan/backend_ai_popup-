@@ -9,7 +9,7 @@ import asyncio
 from functools import lru_cache
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query, Depends, Request, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Query, Depends, Request, UploadFile, File, Form, Header
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -20,6 +20,7 @@ from datetime import datetime
 from loguru import logger
 from sqlalchemy.orm import Session
 import io
+from sqlalchemy import func
 
 # Import auth components
 from database import get_db
@@ -331,9 +332,14 @@ async def validate_user_id(user_id: str, db: Session = Depends(get_db)):
 # ============================================================================
 
 class SimpleRegisterResponse(BaseModel):
+    """
+    📝 Simple response for register/login
+    Includes user_id and session_id for authentication
+    """
     status: str
     user_id: str
     email: str
+    session_id: str
     message: str
 
 @app.post("/api/simple/register", response_model=SimpleRegisterResponse)
@@ -351,6 +357,7 @@ async def simple_register_user(user_data: UserRegister, db: Session = Depends(ge
                     status="exists",
                     user_id=existing_user.id,
                     email=existing_user.email,
+                    session_id="",
                     message="User already exists - you can use this user_id"
                 )
             else:
@@ -362,6 +369,7 @@ async def simple_register_user(user_data: UserRegister, db: Session = Depends(ge
                     status="reactivated",
                     user_id=existing_user.id,
                     email=existing_user.email,
+                    session_id="",
                     message="User reactivated successfully"
                 )
         
@@ -379,6 +387,7 @@ async def simple_register_user(user_data: UserRegister, db: Session = Depends(ge
             status="registered",
             user_id=new_user.id,
             email=new_user.email,
+            session_id="",
             message="User registered successfully - save this user_id for future requests"
         )
     
@@ -389,14 +398,14 @@ async def simple_register_user(user_data: UserRegister, db: Session = Depends(ge
         raise HTTPException(status_code=500, detail="Registration failed")
 
 # ============================================================================
-# SIMPLIFIED USER LOGIN (Returns User ID)  
+# SIMPLIFIED USER LOGIN (Returns User ID and Session ID)
 # ============================================================================
 
 @app.post("/api/simple/login", response_model=SimpleRegisterResponse)
 async def simple_login_user(user_data: UserLogin, db: Session = Depends(get_db)):
     """
-    🔐 Simplified Login: Returns user_id directly (no JWT tokens)
-    Extension can store the user_id and use it for all requests
+    🔐 Simplified Login: Returns user_id and session_id
+    Extension can store these and use them for all requests
     """
     try:
         # Find user by email
@@ -404,20 +413,27 @@ async def simple_login_user(user_data: UserLogin, db: Session = Depends(get_db))
         if not user or not user.verify_password(user_data.password):
             raise HTTPException(status_code=401, detail="Invalid email or password")
         
-        logger.info(f"✅ User logged in: {user_data.email} (ID: {user.id})")
+        # Create a new session
+        session = UserSession(
+            user_id=user.id,
+            device_info="Optional Device Info"
+        )
+        db.add(session)
+        db.commit()
+        db.refresh(session)
+        
+        logger.info(f"✅ User logged in: {user_data.email} (ID: {user.id}, Session: {session.session_id})")
         
         return SimpleRegisterResponse(
             status="authenticated",
             user_id=user.id,
             email=user.email,
-            message="Login successful - save this user_id for future requests"
+            session_id=session.session_id,
+            message="Login successful - save these IDs for future requests"
         )
-    
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"❌ Simple login failed: {e}")
-        raise HTTPException(status_code=500, detail="Login failed")
+        logger.error(f"❌ Login failed for {user_data.email}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================================================
 # ULTRA SIMPLE SESSION MANAGEMENT (Store session_id in DB)
@@ -517,7 +533,6 @@ async def get_current_user_by_session(
             raise HTTPException(status_code=404, detail="User not found or inactive")
         
         # Update last used timestamp
-        from sqlalchemy import func
         session.last_used_at = func.now()
         db.commit()
         
@@ -1276,6 +1291,61 @@ async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> Field
 # FULL JWT AUTHENTICATION ENDPOINTS (Optional)
 # ============================================================================
 
+def get_session_user(db: Session = Depends(get_db), session_id: str = Header(None, alias="Authorization")):
+    """
+    🔐 Validate session and return user
+    Used as a dependency for protected endpoints
+    """
+    if not session_id or not session_id.startswith("Session "):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid session format"
+        )
+    
+    session_id = session_id.split("Session ")[1]
+    
+    # Find active session
+    session = db.query(UserSession).filter(
+        UserSession.session_id == session_id,
+        UserSession.is_active == True
+    ).first()
+    
+    if not session:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired session"
+        )
+    
+    # Update last used timestamp
+    session.last_used_at = func.now()
+    db.commit()
+    
+    # Get associated user
+    user = db.query(User).filter(
+        User.id == session.user_id,
+        User.is_active == True
+    ).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="User not found or inactive"
+        )
+    
+    return user
+
+@app.get("/api/auth/validate")
+async def validate_session(user: User = Depends(get_session_user)):
+    """
+    🔍 Validate current session
+    Returns user info if session is valid
+    """
+    return {
+        "valid": True,
+        "user_id": user.id,
+        "email": user.email
+    }
+
 # ============================================================================
 # HEALTH CHECK ENDPOINTS
 # ============================================================================
@@ -1324,6 +1394,36 @@ async def health_check():
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }
+
+@app.post("/api/logout")
+async def logout_user(session_data: dict, db: Session = Depends(get_db)):
+    """
+    🔓 Logout: Deactivate user session
+    """
+    try:
+        session_id = session_data.get("session_id")
+        if not session_id:
+            raise HTTPException(status_code=400, detail="Session ID is required")
+            
+        # Find and deactivate session
+        session = db.query(UserSession).filter(
+            UserSession.session_id == session_id,
+            UserSession.is_active == True
+        ).first()
+        
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+            
+        session.is_active = False
+        db.commit()
+        
+        logger.info(f"✅ User logged out (Session: {session_id})")
+        
+        return {"status": "success", "message": "Logged out successfully"}
+        
+    except Exception as e:
+        logger.error(f"❌ Logout failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
