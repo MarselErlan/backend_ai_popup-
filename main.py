@@ -1364,6 +1364,78 @@ async def logout_user(session_data: dict, db: Session = Depends(get_db)):
         logger.error(f"❌ Logout failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+class UpdateSessionResponse(BaseModel):
+    """
+    Response for session update/creation
+    """
+    status: str
+    session_id: str
+    user_id: str
+    message: str
+
+@app.post("/api/session/check-and-update/{user_id}", response_model=UpdateSessionResponse)
+async def check_and_update_session(
+    user_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Check if user has any existing sessions and update/create as needed
+    """
+    try:
+        # Validate user exists and is active
+        user = db.query(User).filter(
+            User.id == user_id,
+            User.is_active == True
+        ).first()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found or inactive")
+        
+        # Find any existing session (active or inactive)
+        existing_session = db.query(UserSession).filter(
+            UserSession.user_id == user_id
+        ).first()
+        
+        if existing_session:
+            # Update existing session
+            existing_session.last_used_at = datetime.utcnow()
+            existing_session.is_active = True
+            db.commit()
+            
+            logger.info(f"✅ Session reactivated for user: {user.email} (Session: {existing_session.session_id})")
+            
+            return UpdateSessionResponse(
+                status="updated",
+                session_id=existing_session.session_id,
+                user_id=user_id,
+                message="Existing session reactivated"
+            )
+        else:
+            # Create new session
+            new_session = UserSession(
+                user_id=user_id,
+                device_info="Optional Device Info",
+                is_active=True
+            )
+            db.add(new_session)
+            db.commit()
+            db.refresh(new_session)
+            
+            logger.info(f"✅ New session created for user: {user.email} (Session: {new_session.session_id})")
+            
+            return UpdateSessionResponse(
+                status="created",
+                session_id=new_session.session_id,
+                user_id=user_id,
+                message="New session created"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Session check/update failed: {e}")
+        raise HTTPException(status_code=500, detail="Session check/update failed")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)  # Disable reload for better performance
