@@ -39,7 +39,7 @@ load_dotenv()
 
 # Get environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/smart_form_filler")
+POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
 
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is required")
@@ -55,7 +55,7 @@ def get_document_service():
     """Cached document service singleton"""
     global _document_service
     if _document_service is None:
-        _document_service = DocumentService(DATABASE_URL)
+        _document_service = DocumentService(POSTGRES_DB_URL)
     return _document_service
 
 def get_resume_extractor():
@@ -64,7 +64,7 @@ def get_resume_extractor():
     # Force recreation for debugging
     _resume_extractor = ResumeExtractorOptimized(
         openai_api_key=OPENAI_API_KEY,
-        database_url=DATABASE_URL,
+        database_url=POSTGRES_DB_URL,
         use_hf_fallback=True
     )
     # Clear any existing cache to ensure fresh start
@@ -78,7 +78,7 @@ def get_personal_info_extractor():
     if _personal_info_extractor is None:
         _personal_info_extractor = PersonalInfoExtractorOptimized(
             openai_api_key=OPENAI_API_KEY,
-            database_url=DATABASE_URL,
+            database_url=POSTGRES_DB_URL,
             use_hf_fallback=True
         )
     return _personal_info_extractor
@@ -829,8 +829,16 @@ async def upload_resume(
     📄 Upload resume document to database (One per user - replaces existing)
     
     Supports: PDF, DOCX, DOC, TXT files
+    Auth: Only requires user_id, no token needed
     """
     start_time = datetime.now()
+    
+    # Validate user exists (if not default)
+    if user_id != "default":
+        db = next(get_db())
+        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+        if not user:
+            raise HTTPException(status_code=401, detail=f"Invalid or inactive user: {user_id}")
     
     # Validate file type
     allowed_types = {

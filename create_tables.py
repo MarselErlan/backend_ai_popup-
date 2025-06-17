@@ -4,7 +4,7 @@ Create database tables for Smart Form Fill API
 """
 import os
 from sqlalchemy import create_engine
-from models import Base, User, UserToken, UserSession
+from db.models import Base, User
 from loguru import logger
 
 # Database URL
@@ -23,8 +23,6 @@ def create_tables():
         logger.info(f"   📊 Database: {POSTGRES_DB_URL}")
         logger.info(f"   📋 Tables created:")
         logger.info(f"      • users (User authentication)")
-        logger.info(f"      • user_tokens (JWT tokens)")
-        logger.info(f"      • user_sessions (Simple sessions)")
         
         return True
         
