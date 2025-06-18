@@ -22,6 +22,8 @@ from sqlalchemy.orm import Session
 import io
 from sqlalchemy import func
 import time
+import PyPDF2
+import docx2txt
 
 # Import auth components
 from database import get_db
@@ -37,12 +39,16 @@ from app.services.document_service import DocumentService
 from app.models.document_models import ResumeDocument, PersonalInfoDocument
 from app.utils.text_extractor import extract_text_from_file
 
+# Import embedding service
+from app.services.embedding_service import EmbeddingService
+
 # Load environment variables
 load_dotenv()
 
 # Get environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is required")
@@ -204,7 +210,12 @@ app.add_middleware(
 
 # Initialize services
 DATABASE_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 document_service = DocumentService(DATABASE_URL)
+embedding_service = EmbeddingService(
+    redis_url=REDIS_URL,
+    openai_api_key=OPENAI_API_KEY
+)
 
 # ============================================================================
 # SIMPLIFIED MAIN FIELD ANSWER ENDPOINT (Backend Authorization)
@@ -654,62 +665,81 @@ async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> Field
 # OPTIMIZED VECTOR DATABASE ENDPOINTS
 # ============================================================================
 
-@app.post("/api/v1/resume/reembed", response_model=ReembedResponse)
-async def reembed_resume_from_database(user_id: str = Query("default", description="User ID for multi-user support")):
-    """⚡ OPTIMIZED: Re-embed resume from database using cached extractor"""
-    start_time = datetime.now()
+@app.post("/api/v1/resume/reembed")
+async def reembed_resume(
+    document_id: int,
+    user: User = Depends(get_session_user)
+):
+    """
+    🔄 Re-process resume document into vector embeddings
     
-    print("=" * 80)
-    print("⚡ OPTIMIZED REQUEST - /api/v1/resume/reembed")
-    print("=" * 80)
-    print(f"📥 Request Data:")
-    print(f"   • User ID: '{user_id}'")
-    print(f"   • Timestamp: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 80)
-    
+    This will:
+    1. Load document from database
+    2. Extract text content
+    3. Generate chunks
+    4. Create OpenAI embeddings
+    5. Store in Redis vector store
+    """
     try:
-        resume_extractor = get_resume_extractor()
-        resume_extractor.user_id = user_id  # Set user context
+        # Get document
+        document = document_service.get_user_resume(user.id if user else None)
+        if not document:
+            raise HTTPException(
+                status_code=404,
+                detail="No resume document found"
+            )
         
-        logger.info(f"🔄 Re-embedding resume from database for user: {user_id}")
+        # Extract text from file content
+        text = extract_text_from_bytes(document.file_content, document.content_type)
         
-        # Process resume using optimized extractor
-        result = resume_extractor.process_resume_optimized()
+        # Process document
+        success = embedding_service.process_document(
+            document_id=str(document.id),
+            text=text,
+            document_service=document_service
+        )
         
-        end_time = datetime.now()
-        processing_time = (end_time - start_time).total_seconds()
+        return {
+            "status": "success",
+            "message": "Resume document processed successfully",
+            "document_id": document.id
+        }
         
-        if result.get("status") == "success":
-            logger.info(f"✅ Resume re-embedding completed successfully in {processing_time:.2f}s")
-            
-            response_data = {
-                "status": "success",
-                "message": f"Resume re-embedded successfully from database in {processing_time:.2f}s",
-                "processing_time": processing_time,
-                "database_info": {
-                    "user_id": user_id,
-                    "chunks_processed": result.get("chunks", 0),
-                    "embeddings_created": result.get("embeddings", 0),
-                    "vector_dimension": result.get("dimension", 0),
-                    "optimization_enabled": True
-                }
-            }
-            
-            print("📤 Response Data:")
-            print(f"   • Status: SUCCESS")
-            print(f"   • Processing Time: {processing_time:.2f}s")
-            print(f"   • Chunks: {result.get('chunks', 0)}")
-            print("=" * 80)
-            
-            return ReembedResponse(**response_data)
-        else:
-            raise HTTPException(status_code=500, detail=result.get("error", "Re-embedding failed"))
-    
     except Exception as e:
-        end_time = datetime.now()
-        processing_time = (end_time - start_time).total_seconds()
-        logger.error(f"❌ Resume re-embedding failed: {e} (in {processing_time:.2f}s)")
-        raise HTTPException(status_code=500, detail=f"Re-embedding failed: {str(e)}")
+        logger.error(f"❌ Error processing resume: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing resume: {str(e)}"
+        )
+
+def extract_text_from_bytes(file_content: bytes, content_type: str) -> str:
+    """Extract text from file bytes based on content type"""
+    try:
+        if content_type == "application/pdf":
+            # PDF
+            with io.BytesIO(file_content) as file_obj:
+                reader = PyPDF2.PdfReader(file_obj)
+                text = ""
+                for page in reader.pages:
+                    text += page.extract_text() + "\n"
+                return text
+                
+        elif content_type in ["application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
+            # Word document
+            with io.BytesIO(file_content) as file_obj:
+                text = docx2txt.process(file_obj)
+                return text
+                
+        elif content_type == "text/plain":
+            # Plain text
+            return file_content.decode("utf-8")
+            
+        else:
+            raise ValueError(f"Unsupported content type: {content_type}")
+            
+    except Exception as e:
+        logger.error(f"❌ Error extracting text: {str(e)}")
+        raise
 
 @app.post("/api/v1/personal-info/reembed", response_model=ReembedResponse)
 async def reembed_personal_info_from_database(user_id: str = Query("default", description="User ID for multi-user support")):
