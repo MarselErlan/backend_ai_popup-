@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   redis:
-    image: redis/redis-stack-server:7.2.0-v0
+    image: redis/redis-stack:latest
     platform: linux/arm64/v8
     ports:
       - "6379:6379"  # Redis port
@@ -11,6 +11,7 @@ services:
       - redis_data:/data
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_ARGS="--loadmodule /opt/redis-stack/lib/redisearch.so"
     restart: unless-stopped
 
 volumes:

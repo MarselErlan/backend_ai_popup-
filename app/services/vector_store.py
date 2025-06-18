@@ -3,7 +3,7 @@ Redis Vector Store Service for managing document embeddings
 """
 from typing import List, Dict, Any, Optional
 import numpy as np
-from redis.commands.search.field import VectorField, TextField
+from redis.commands.search.field import VectorField, TextField, NumericField
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis import Redis
 from redis.commands.search.query import Query
@@ -28,15 +28,15 @@ class RedisVectorStore:
         try:
             # Define schema
             schema = (
-                TextField("$.document_id", as_name="document_id"),
-                TextField("$.chunk_id", as_name="chunk_id"),
-                TextField("$.text", as_name="text"),
-                VectorField("$.embedding", 
-                          "HNSW", {
+                TextField("document_id"),
+                TextField("chunk_id"),
+                TextField("text"),
+                VectorField("embedding", 
+                          "FLAT", {
                               "TYPE": "FLOAT32",
                               "DIM": self.vector_dim,
                               "DISTANCE_METRIC": "COSINE"
-                          }, as_name="embedding")
+                          })
             )
             
             # Create index
@@ -44,7 +44,7 @@ class RedisVectorStore:
                 fields=schema,
                 definition=IndexDefinition(
                     prefix=["doc:"],
-                    index_type=IndexType.JSON
+                    index_type=IndexType.HASH
                 )
             )
             logger.info(f"Created Redis search index: {self.index_name}")
@@ -78,7 +78,7 @@ class RedisVectorStore:
                 "text": chunk["text"],
                 "embedding": chunk["embedding"].astype(np.float32).tobytes()
             }
-            pipe.json().set(key, "$", data)
+            pipe.hset(key, mapping=data)
         
         pipe.execute()
         logger.info(f"Stored {len(chunks)} embeddings for document {document_id}")
