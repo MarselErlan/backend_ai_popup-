@@ -42,6 +42,9 @@ from app.utils.text_extractor import extract_text_from_file
 # Import embedding service
 from app.services.embedding_service import EmbeddingService
 
+# Import LLM service
+from app.services.llm_service import RedisLLMService
+
 # Load environment variables
 load_dotenv()
 
@@ -134,6 +137,11 @@ def get_form_filler():
         )
     return _form_filler
 
+@lru_cache(maxsize=1)
+def get_redis_llm_service():
+    """Get Redis-enabled LLM service instance"""
+    return RedisLLMService()
+
 # Lifecycle management
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -147,6 +155,7 @@ async def lifespan(app: FastAPI):
         get_resume_extractor()
         get_personal_info_extractor()
         get_form_filler()
+        get_redis_llm_service()
         logger.info("✅ All services pre-warmed successfully")
     except Exception as e:
         logger.error(f"❌ Service pre-warming failed: {e}")
@@ -227,84 +236,36 @@ async def generate_field_answer(
     user: User = Depends(get_session_user)
 ):
     """
-    🤖 Generate AI answer for form field
+    🧠 Generate AI answer for form field using Redis Vector Store
     
-    Uses resume and personal info to generate contextual answers
+    Uses 3-tier system: Resume Redis → Personal Info Redis → LLM Generation
     Auth: Requires valid session
     """
     try:
-        db = next(get_db())
+        # Get Redis-enabled LLM service
+        llm_service = get_redis_llm_service()
         
-        # Get user's documents
-        resume = db.query(ResumeDocument).filter(
-            ResumeDocument.user_id == user.id
-        ).first()
-        
-        personal_info = db.query(PersonalInfoDocument).filter(
-            PersonalInfoDocument.user_id == user.id
-        ).first()
-        
-        if not resume and not personal_info:
-            raise HTTPException(
-                status_code=400,
-                detail="No documents found. Please upload your resume and personal info."
-            )
-        
-        # Prepare context for AI
-        context = {
-            "field_type": field_data.field_type,
-            "field_name": field_data.field_name,
-            "field_id": field_data.field_id,
-            "field_class": field_data.field_class,
-            "field_label": field_data.field_label,
-            "field_placeholder": field_data.field_placeholder,
-            "surrounding_text": field_data.surrounding_text,
-            "resume_text": resume.content if resume else "",
-            "personal_info_text": personal_info.content if personal_info else ""
-        }
-        
-        # Get the form filler service
-        form_filler = get_form_filler()
-        
-        # Create a mock field object
-        mock_field = {
-            "field_purpose": field_data.label,
-            "name": field_data.label,
-            "selector": "#mock-field",
-            "field_type": "text"
-        }
-        
-        # Generate answer using form filler
-        result = await form_filler.generate_field_values_optimized([mock_field], {}, user.id)
-        
-        # Extract the answer
-        field_answer = result["values"][0] if result.get("values") else {}
-        answer = field_answer.get("value", "Unable to generate answer")
-        data_source = field_answer.get("data_source", "unknown")
-        reasoning = field_answer.get("reasoning", "No reasoning provided")
-        
-        # Get performance metrics
-        performance_metrics = {
-            "processing_time_seconds": result.get("processing_time", 0),
-            "optimization_enabled": True,
-            "cache_hits": result.get("cache_analytics", {}).get("cache_hit_rate", 0),
-            "early_exit": result.get("early_exit", False),
-            "tier_exit": result.get("tier_exit", 3),
-            "tiers_used": result.get("tiers_used", 3)
-        }
-        
-        logger.info(f"✅ Generated answer: '{answer}' (source: {data_source}) in {performance_metrics.get('processing_time_seconds', 0):.2f}s")
-        
-        return FieldAnswerResponse(
-            answer=answer,
-            data_source=data_source,
-            reasoning=reasoning,
-            status="success",
-            performance_metrics=performance_metrics
+        # Generate answer using Redis-powered system
+        result = await llm_service.generate_field_answer(
+            field_label=field_data.label,
+            user_id=user.id,
+            field_context={
+                "url": field_data.url,
+                "field_type": getattr(field_data, 'field_type', None),
+                "field_name": getattr(field_data, 'field_name', None)
+            }
         )
         
-    except HTTPException:
-        raise
+        logger.info(f"✅ Generated answer: '{result['answer']}' (source: {result['data_source']}) in {result['performance_metrics']['processing_time_seconds']:.2f}s")
+        
+        return FieldAnswerResponse(
+            answer=result["answer"],
+            data_source=result["data_source"],
+            reasoning=result["reasoning"],
+            status=result["status"],
+            performance_metrics=result["performance_metrics"]
+        )
+        
     except Exception as e:
         logger.error(f"❌ Error generating field answer: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
