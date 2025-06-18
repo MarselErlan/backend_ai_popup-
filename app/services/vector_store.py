@@ -188,9 +188,9 @@ class RedisVectorStore:
             logger.error(f"❌ Error searching vectors: {e}")
             return []
     
-    def search_similar_by_document_type(self, query_embedding: np.ndarray, user_id: str, document_type: str, top_k: int = 5) -> List[Dict[str, Any]]:
+    def search_similar_by_document_type(self, query_embedding: np.ndarray, user_id: str, document_type: str, top_k: int = 5, min_score: float = 0.7) -> List[Dict[str, Any]]:
         """Search for similar vectors filtered by document type"""
-        return self.search_similar(query_embedding, user_id, top_k, document_type=document_type)
+        return self.search_similar(query_embedding, user_id, top_k, min_score, document_type=document_type)
     
     def delete_document(self, document_id: str, user_id: str):
         """Delete all chunks for a document"""
