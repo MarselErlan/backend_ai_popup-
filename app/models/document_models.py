@@ -29,10 +29,7 @@ class PersonalInfoDocument(Base):
     file_content = Column(LargeBinary)
     content_type = Column(String(100))
     file_size = Column(Integer)
-    is_active = Column(Boolean, default=True)
     processing_status = Column(String(50), default="pending")
-    created_at = Column(DateTime, default=datetime.utcnow)
-    last_processed_at = Column(DateTime, nullable=True)
 
 class DocumentProcessingLog(Base):
     """Log for document processing operations"""

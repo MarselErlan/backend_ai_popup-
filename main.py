@@ -202,6 +202,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Initialize services
+DATABASE_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
+document_service = DocumentService(DATABASE_URL)
+
 # ============================================================================
 # SIMPLIFIED MAIN FIELD ANSWER ENDPOINT (Backend Authorization)
 # ============================================================================
