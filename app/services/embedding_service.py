@@ -131,7 +131,7 @@ class EmbeddingService:
         query: str,
         user_id: str,
         top_k: int = 5,
-        min_score: float = 0.7
+        min_score: float = 0.3  # Lowered from 0.7 to 0.3 for better recall
     ) -> List[Dict[str, Any]]:
         """
         Search for similar document chunks
@@ -166,7 +166,7 @@ class EmbeddingService:
         user_id: str,
         document_type: str,  # "resume" or "personal_info"
         top_k: int = 5,
-        min_score: float = 0.7
+        min_score: float = 0.3  # Lowered from 0.7 to 0.3 for better recall
     ) -> List[Dict[str, Any]]:
         """
         Search for similar chunks within a specific document type
