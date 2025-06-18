@@ -263,13 +263,45 @@ async def generate_field_answer(
             "personal_info_text": personal_info.content if personal_info else ""
         }
         
-        # Generate answer using AI
-        answer = await generate_ai_answer(context)
+        # Get the form filler service
+        form_filler = get_form_filler()
         
-        return {
-            "status": "success",
-            "answer": answer
+        # Create a mock field object
+        mock_field = {
+            "field_purpose": field_data.label,
+            "name": field_data.label,
+            "selector": "#mock-field",
+            "field_type": "text"
         }
+        
+        # Generate answer using form filler
+        result = await form_filler.generate_field_values_optimized([mock_field], {}, user.id)
+        
+        # Extract the answer
+        field_answer = result["values"][0] if result.get("values") else {}
+        answer = field_answer.get("value", "Unable to generate answer")
+        data_source = field_answer.get("data_source", "unknown")
+        reasoning = field_answer.get("reasoning", "No reasoning provided")
+        
+        # Get performance metrics
+        performance_metrics = {
+            "processing_time_seconds": result.get("processing_time", 0),
+            "optimization_enabled": True,
+            "cache_hits": result.get("cache_analytics", {}).get("cache_hit_rate", 0),
+            "early_exit": result.get("early_exit", False),
+            "tier_exit": result.get("tier_exit", 3),
+            "tiers_used": result.get("tiers_used", 3)
+        }
+        
+        logger.info(f"✅ Generated answer: '{answer}' (source: {data_source}) in {performance_metrics.get('processing_time_seconds', 0):.2f}s")
+        
+        return FieldAnswerResponse(
+            answer=answer,
+            data_source=data_source,
+            reasoning=reasoning,
+            status="success",
+            performance_metrics=performance_metrics
+        )
         
     except HTTPException:
         raise
