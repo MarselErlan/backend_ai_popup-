@@ -699,14 +699,13 @@ async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> Field
 
 @app.post("/api/v1/resume/reembed")
 async def reembed_resume(
-    document_id: int,
     user: User = Depends(get_session_user)
 ):
     """
     🔄 Re-process resume document into vector embeddings and store in Redis
     
     This will:
-    1. Load document from database
+    1. Load user's resume document from database
     2. Extract text content
     3. Generate chunks
     4. Create OpenAI embeddings
