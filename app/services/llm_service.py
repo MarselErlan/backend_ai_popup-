@@ -179,8 +179,7 @@ class RedisLLMService:
                 query=query,
                 user_id=user_id,
                 document_type="resume",
-                top_k=3,
-                min_score=0.7
+                top_k=3
             )
             logger.info(f"📄 Resume search: {len(results)} results found")
             return results
@@ -195,8 +194,7 @@ class RedisLLMService:
                 query=query,
                 user_id=user_id,
                 document_type="personal_info",
-                top_k=3,
-                min_score=0.7
+                top_k=3
             )
             logger.info(f"📝 Personal info search: {len(results)} results found")
             return results
@@ -363,7 +361,7 @@ Provide only the answer, no explanation.
 """
 
         try:
-            response = await openai.chat.completions.acreate(
+            response = openai.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are a professional form filling assistant. Provide concise, accurate answers based on the available data."},
