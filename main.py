@@ -17,6 +17,10 @@ from httpcore import request
 from pydantic import BaseModel, HttpUrl
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+# Configure logger first
+from app.utils.logger import configure_logger
+configure_logger()
+
 from loguru import logger
 from sqlalchemy.orm import Session
 import io
