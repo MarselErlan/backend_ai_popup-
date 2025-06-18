@@ -96,6 +96,9 @@ class EmbeddingService:
             if reprocess:
                 self.vector_store.delete_document(document_id, user_id)
             
+            # Determine document type from document_id
+            document_type = "resume" if document_id.startswith("resume_") else "personal_info"
+            
             # Split into chunks
             chunks = self._chunk_text(content)
             if not chunks:
@@ -114,10 +117,10 @@ class EmbeddingService:
                     "embedding": embedding
                 })
             
-            # Store in Redis
-            self.vector_store.store_embeddings(document_id, user_id, chunk_data)
+            # Store in Redis with correct document type
+            self.vector_store.store_embeddings(document_id, user_id, chunk_data, document_type)
             
-            logger.info(f"Successfully processed document {document_id} into {len(chunks)} chunks (user: {user_id})")
+            logger.info(f"Successfully processed document {document_id} into {len(chunks)} chunks (user: {user_id}, type: {document_type})")
             
         except Exception as e:
             logger.error(f"Error processing document {document_id}: {e}")
