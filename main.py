@@ -922,89 +922,60 @@ async def upload_personal_info(
     user: User = Depends(get_session_user)
 ):
     """
-    👤 Upload personal info document to database (One per user - replaces existing)
+    📄 Upload personal info document to database (One per user - replaces existing)
     
-    Supports: PDF, DOCX, DOC, TXT files
-    Auth: Requires valid session
+    Supports:
+    - PDF (.pdf)
+    - Word (.doc, .docx)
+    - Text (.txt)
     """
-    start_time = datetime.now()
-    
-    # User is already validated by get_session_user dependency
-    
-    # Validate file type
-    file_ext = os.path.splitext(file.filename)[1].lower()
-    if file_ext not in ['.pdf', '.docx', '.doc', '.txt']:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid file type. Please upload a PDF, DOCX, DOC, or TXT file."
-        )
+    start_time = time.time()
     
     try:
         # Read file content
-        content = await file.read()
+        file_content = await file.read()
         
-        # Get text from file
-        text = await extract_text_from_file(content, file_ext)
-        
-        # Store in database
-        db = next(get_db())
-        
-        # Check for existing personal info
-        existing_info = db.query(PersonalInfoDocument).filter(
-            PersonalInfoDocument.user_id == user.id
-        ).first()
-        
-        if existing_info:
-            # Update existing
-            existing_info.filename = file.filename
-            existing_info.content = text
-            existing_info.file_type = file_ext
-            existing_info.last_updated = datetime.now()
-            existing_info.processing_status = "processing"
-        else:
-            # Create new
-            info_doc = PersonalInfoDocument(
-                user_id=user.id,
-                filename=file.filename,
-                content=text,
-                file_type=file_ext,
-                processing_status="processing"
-            )
-            db.add(info_doc)
-        
-        db.commit()
-        
-        # Queue embedding task
-        background_tasks.add_task(
-            embed_personal_info_text,
-            user_id=user.id,
-            text=text
+        # Save document
+        document_id = document_service.save_personal_info_document(
+            filename=file.filename,
+            file_content=file_content,
+            content_type=file.content_type,
+            user_id=user.id if user else None
         )
         
-        end_time = datetime.now()
-        logger.info(f"✅ Personal info uploaded for user {user.id} ({(end_time - start_time).total_seconds():.2f}s)")
+        processing_time = time.time() - start_time
         
         return {
             "status": "success",
-            "message": "Personal info uploaded successfully and queued for embedding",
-            "filename": file.filename
+            "message": "Personal info document uploaded successfully",
+            "document_id": document_id,
+            "filename": file.filename,
+            "file_size": len(file_content),
+            "content_type": file.content_type,
+            "processing_time": round(processing_time, 3),
+            "replaced_previous": True  # Since we always replace previous document
         }
         
     except Exception as e:
         logger.error(f"❌ Error uploading personal info: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error uploading personal info: {str(e)}"
+        )
 
-@app.get("/api/v1/personal-info")
-async def get_user_personal_info(
-    user_id: str = Query("default", description="User ID for simple auth")
-):
-    """📝 Get user's personal info document info (One per user)"""
+@app.get("/api/v1/personal-info", response_model=DocumentInfoResponse)
+async def get_personal_info(user: User = Depends(get_session_user)):
+    """Get personal info document info"""
     try:
-        document_service = get_document_service()
-        document = document_service.get_active_personal_info_document(user_id)
+        document = document_service.get_personal_info_document(
+            user_id=user.id if user else None
+        )
         
         if not document:
-            raise HTTPException(status_code=404, detail="No personal info found for this user")
+            raise HTTPException(
+                status_code=404,
+                detail="No personal info document found"
+            )
         
         return DocumentInfoResponse(
             id=document.id,
@@ -1018,8 +989,11 @@ async def get_user_personal_info(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Failed to get personal info document: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get document: {str(e)}")
+        logger.error(f"❌ Error retrieving personal info: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving personal info: {str(e)}"
+        )
 
 @app.get("/api/v1/personal-info/download")
 async def download_user_personal_info(

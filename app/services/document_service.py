@@ -114,17 +114,21 @@ class DocumentService:
     # PERSONAL INFO DOCUMENT OPERATIONS
     # ============================================================================
     
-    def save_personal_info_document(self, filename: str, file_content: bytes, 
-                                  content_type: str, user_id: str = None) -> int:
+    def save_personal_info_document(
+        self, 
+        filename: str, 
+        file_content: bytes,
+        content_type: str,
+        user_id: str = None
+    ) -> int:
         """Save personal info document to database"""
         try:
             with self.get_session() as session:
-                # Deactivate previous personal info for this user
+                # Delete previous personal info for this user
                 if user_id:
                     session.query(PersonalInfoDocument).filter(
-                        PersonalInfoDocument.user_id == user_id,
-                        PersonalInfoDocument.is_active == True
-                    ).update({"is_active": False})
+                        PersonalInfoDocument.user_id == user_id
+                    ).delete()
                 
                 personal_info_doc = PersonalInfoDocument(
                     user_id=user_id,
@@ -132,7 +136,6 @@ class DocumentService:
                     file_content=file_content,
                     content_type=content_type,
                     file_size=len(file_content),
-                    is_active=True,
                     processing_status='pending'
                 )
                 
@@ -140,30 +143,28 @@ class DocumentService:
                 session.commit()
                 session.refresh(personal_info_doc)
                 
-                logger.info(f"💾 Saved personal info document: {filename} (ID: {personal_info_doc.id})")
+                logger.info(f"💾 Saved personal info document: {filename} (ID: {personal_info_doc.id}, Size: {personal_info_doc.file_size} bytes)")
                 return personal_info_doc.id
                 
         except Exception as e:
             logger.error(f"❌ Error saving personal info document: {e}")
             raise
     
-    def get_active_personal_info_document(self, user_id: str = None) -> Optional[PersonalInfoDocument]:
-        """Get the active personal info document for a user"""
+    def get_personal_info_document(self, user_id: str = None) -> Optional[PersonalInfoDocument]:
+        """Get the personal info document for a user"""
         try:
             with self.get_session() as session:
-                query = session.query(PersonalInfoDocument).filter(
-                    PersonalInfoDocument.is_active == True
-                )
+                query = session.query(PersonalInfoDocument)
                 
                 if user_id:
                     query = query.filter(PersonalInfoDocument.user_id == user_id)
                 
-                personal_info_doc = query.order_by(desc(PersonalInfoDocument.created_at)).first()
+                personal_info_doc = query.order_by(desc(PersonalInfoDocument.id)).first()
                 
                 if personal_info_doc:
-                    logger.info(f"📄 Retrieved active personal info: {personal_info_doc.filename} (ID: {personal_info_doc.id})")
+                    logger.info(f"📄 Retrieved personal info: {personal_info_doc.filename} (ID: {personal_info_doc.id}, Size: {personal_info_doc.file_size} bytes)")
                 else:
-                    logger.warning("⚠️ No active personal info document found")
+                    logger.warning("⚠️ No personal info document found")
                 
                 return personal_info_doc
                 
@@ -171,43 +172,21 @@ class DocumentService:
             logger.error(f"❌ Error retrieving personal info document: {e}")
             raise
     
-    def get_personal_info_as_temp_file(self, user_id: str = None) -> Optional[Tuple[str, str]]:
-        """Get personal info as temporary file for processing"""
-        try:
-            personal_info_doc = self.get_active_personal_info_document(user_id)
-            if not personal_info_doc:
-                return None
-            
-            # Create temporary file
-            file_extension = self._get_file_extension(personal_info_doc.content_type)
-            with tempfile.NamedTemporaryFile(mode='wb', suffix=file_extension, delete=False) as temp_file:
-                temp_file.write(personal_info_doc.file_content)
-                temp_path = temp_file.name
-            
-            logger.info(f"📂 Created temporary file for personal info: {temp_path}")
-            return temp_path, personal_info_doc.filename
-            
-        except Exception as e:
-            logger.error(f"❌ Error creating temporary personal info file: {e}")
-            raise
-    
-    def update_personal_info_processing_status(self, document_id: int, status: str, 
-                                             processed_at: datetime = None):
+    def update_personal_info_status(self, document_id: int, status: str):
         """Update personal info processing status"""
         try:
             with self.get_session() as session:
                 session.query(PersonalInfoDocument).filter(
                     PersonalInfoDocument.id == document_id
                 ).update({
-                    "processing_status": status,
-                    "last_processed_at": processed_at or datetime.now()
+                    "processing_status": status
                 })
                 session.commit()
                 
-                logger.info(f"✅ Updated personal info processing status: {status} (ID: {document_id})")
+                logger.info(f"✅ Updated personal info status: {status} (ID: {document_id})")
                 
         except Exception as e:
-            logger.error(f"❌ Error updating personal info processing status: {e}")
+            logger.error(f"❌ Error updating personal info status: {e}")
             raise
     
     # ============================================================================
@@ -309,7 +288,7 @@ class DocumentService:
         """Get status of user's documents"""
         try:
             resume_doc = self.get_user_resume(user_id)
-            personal_info_doc = self.get_active_personal_info_document(user_id)
+            personal_info_doc = self.get_personal_info_document(user_id)
             
             return {
                 "resume": {
