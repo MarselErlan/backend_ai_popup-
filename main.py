@@ -596,7 +596,7 @@ async def list_user_sessions(
 @app.post("/api/demo/generate-field-answer", response_model=FieldAnswerResponse)
 async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> FieldAnswerResponse:
     """
-    🎯 DEMO: Generate field answer without authentication (uses default user data)
+    🎯 DEMO: Generate field answer using Redis Vector Store (no authentication)
     
     This endpoint is for testing/demo purposes only.
     For production use, users should register and use the main endpoint.

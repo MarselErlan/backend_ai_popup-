@@ -1,11 +1,10 @@
-/**
- * 🔑 Smart Form Filler - Background Service Worker
- * Handles session management and API communication
- */
-
 // API Configuration
-const API_BASE_URL = 'http://localhost:8000'; // Change to your production URL
+const API_BASE_URL = 'http://localhost:8000';
 
+/**
+ * 🔑 Session Management Class
+ * Handles user authentication and session management
+ */
 class SessionManager {
   static async getStoredData() {
     return new Promise((resolve) => {
@@ -21,7 +20,7 @@ class SessionManager {
 
   static async clearStoredData() {
     return new Promise((resolve) => {
-      chrome.storage.local.remove(['session_id', 'user_id', 'user_email'], resolve);
+      chrome.storage.local.clear(resolve);
     });
   }
 
@@ -149,31 +148,31 @@ class SessionManager {
   }
 
   /**
-   * 🎯 Generate field answer
+   * 🎯 Generate field answer - FIXED to use demo endpoint
    */
   static async generateFieldAnswer(label, url) {
     try {
-      const { user_id } = await this.getStoredData();
+      console.log('🎯 Generating field answer for:', label);
       
-      if (!user_id) {
-        throw new Error('User not logged in');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/generate-field-answer`, {
+      // ✅ FIXED: Use demo endpoint (no authentication required)
+      const response = await fetch(`${API_BASE_URL}/api/demo/generate-field-answer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           label,
           url,
-          user_id
+          user_id: 'default'  // Demo user
         })
       });
 
       if (!response.ok) {
-        throw new Error(`Field answer failed: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`Field answer failed: ${response.status} - ${errorText}`);
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('✅ Field answer generated:', result);
+      return result;
 
     } catch (error) {
       console.error('❌ Generate field answer failed:', error);
