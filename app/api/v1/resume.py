@@ -7,8 +7,8 @@ from loguru import logger
 
 from app.services.document_service import DocumentService
 from app.services.embedding_service import EmbeddingService
-from app.core.auth import get_session_user
-from app.models.user import User
+from main import get_session_user
+from models import User
 
 router = APIRouter()
 

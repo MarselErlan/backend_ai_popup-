@@ -175,7 +175,7 @@ class ReembedResponse(BaseModel):
 class FieldAnswerRequest(BaseModel):
     label: str
     url: str
-    user_id: Optional[str] = "default"
+    # Note: user_id is now determined from session authentication, not request body
 
 class FieldAnswerResponse(BaseModel):
     answer: str
@@ -281,14 +281,6 @@ async def validate_user_id(user_id: str, db: Session = Depends(get_db)):
     Extension can use this to verify user before sending requests
     """
     try:
-        if user_id == "default":
-            return {
-                "status": "valid",
-                "user_id": "default",
-                "user_type": "demo",
-                "message": "Demo user - no registration required"
-            }
-        
         user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
         if not user:
             raise HTTPException(status_code=404, detail="User not found or inactive")
@@ -1460,6 +1452,45 @@ async def check_and_update_session(
     except Exception as e:
         logger.error(f"❌ Session check/update failed: {e}")
         raise HTTPException(status_code=500, detail="Session check/update failed")
+
+@app.post("/api/test/redis-field-answer")
+async def test_redis_field_answer(field_request: FieldAnswerRequest):
+    """🧪 Test Redis vector search directly for field answers"""
+    try:
+        from app.services.vector_store import VectorStore
+        
+        # Initialize Redis vector store
+        vector_store = VectorStore()
+        
+        # Search for relevant information
+        search_results = vector_store.search_similar_by_document_type(
+            query=field_request.label,
+            user_id="1eeb606f-f098-4a04-a5c7-5ff373e61903",  # Your user ID
+            document_type="resume",
+            top_k=3
+        )
+        
+        # Extract answer from search results
+        if search_results:
+            answer = search_results[0].get('text', 'No answer found')[:100]  # First 100 chars
+        else:
+            answer = "No relevant information found"
+        
+        return FieldAnswerResponse(
+            answer=answer,
+            data_source="redis_vector_store",
+            reasoning="Direct Redis search test",
+            status="success",
+            performance_metrics={"search_results_count": len(search_results)}
+        )
+        
+    except Exception as e:
+        return FieldAnswerResponse(
+            answer="Error occurred",
+            data_source="error",
+            reasoning=str(e),
+            status="error"
+        )
 
 if __name__ == "__main__":
     import uvicorn
