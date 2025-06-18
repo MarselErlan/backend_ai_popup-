@@ -22,7 +22,7 @@ async def reembed_resume(
     user: User = Depends(get_session_user)
 ) -> Dict[str, Any]:
     """
-    Re-process resume document into vector embeddings
+    Re-process resume document into vector embeddings and store in Redis
     """
     try:
         # Get document content
@@ -34,9 +34,10 @@ async def reembed_resume(
         document_service.update_resume_status(document_id, "processing")
         
         try:
-            # Process document
+            # Process document with Redis storage
             embedding_service.process_document(
-                document_id=str(document_id),
+                document_id=f"resume_{document_id}",
+                user_id=user.id,
                 content=document.file_content.decode(),
                 reprocess=True
             )
@@ -46,7 +47,9 @@ async def reembed_resume(
             
             return {
                 "status": "success",
-                "message": "Document re-processed successfully"
+                "message": "Resume re-processed and stored in Redis successfully",
+                "user_id": user.id,
+                "document_id": document_id
             }
             
         except Exception as e:
@@ -73,11 +76,13 @@ async def search_resume(
     user: User = Depends(get_session_user)
 ) -> List[Dict[str, Any]]:
     """
-    Search resume content using vector similarity
+    Search resume content using vector similarity from Redis
     """
     try:
-        results = embedding_service.search_similar(
+        results = embedding_service.search_similar_by_document_type(
             query=query,
+            user_id=user.id,
+            document_type="resume",
             top_k=top_k,
             min_score=min_score
         )
@@ -87,4 +92,43 @@ async def search_resume(
         raise HTTPException(
             status_code=500,
             detail=f"Error searching documents: {str(e)}"
+        )
+
+@router.get("/stats")
+async def get_resume_stats(
+    user: User = Depends(get_session_user)
+) -> Dict[str, Any]:
+    """
+    Get statistics about stored resume embeddings for the user
+    """
+    try:
+        stats = embedding_service.get_document_stats(user.id)
+        return {
+            "status": "success",
+            "user_id": user.id,
+            "stats": stats
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error getting document stats: {str(e)}"
+        )
+
+@router.get("/health")
+async def health_check() -> Dict[str, Any]:
+    """
+    Check Redis connection and vector store health
+    """
+    try:
+        health = embedding_service.health_check()
+        return {
+            "status": "success",
+            "health": health
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error checking health: {str(e)}"
         ) 

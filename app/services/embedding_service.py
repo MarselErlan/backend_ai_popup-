@@ -31,7 +31,7 @@ class EmbeddingService:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         
-        logger.info("Initialized Embedding Service")
+        logger.info("Initialized Embedding Service with Redis Vector Store")
     
     def _chunk_text(self, text: str) -> List[str]:
         """Split text into overlapping chunks"""
@@ -78,21 +78,23 @@ class EmbeddingService:
     def process_document(
         self,
         document_id: str,
+        user_id: str,
         content: str,
         reprocess: bool = False
     ) -> None:
         """
-        Process document content into vector embeddings
+        Process document content into vector embeddings and store in Redis
         
         Args:
             document_id: Unique identifier for the document
+            user_id: User identifier
             content: Text content to process
             reprocess: Whether to reprocess existing embeddings
         """
         try:
             # Delete existing embeddings if reprocessing
             if reprocess:
-                self.vector_store.delete_document(document_id)
+                self.vector_store.delete_document(document_id, user_id)
             
             # Split into chunks
             chunks = self._chunk_text(content)
@@ -113,9 +115,9 @@ class EmbeddingService:
                 })
             
             # Store in Redis
-            self.vector_store.store_embeddings(document_id, chunk_data)
+            self.vector_store.store_embeddings(document_id, user_id, chunk_data)
             
-            logger.info(f"Successfully processed document {document_id} into {len(chunks)} chunks")
+            logger.info(f"Successfully processed document {document_id} into {len(chunks)} chunks (user: {user_id})")
             
         except Exception as e:
             logger.error(f"Error processing document {document_id}: {e}")
@@ -124,6 +126,7 @@ class EmbeddingService:
     def search_similar(
         self,
         query: str,
+        user_id: str,
         top_k: int = 5,
         min_score: float = 0.7
     ) -> List[Dict[str, Any]]:
@@ -132,6 +135,7 @@ class EmbeddingService:
         
         Args:
             query: Text query to search for
+            user_id: User identifier
             top_k: Number of results to return
             min_score: Minimum similarity score (0-1)
         """
@@ -142,6 +146,7 @@ class EmbeddingService:
             # Search vector store
             results = self.vector_store.search_similar(
                 query_embedding,
+                user_id=user_id,
                 top_k=top_k,
                 min_score=min_score
             )
@@ -150,4 +155,49 @@ class EmbeddingService:
             
         except Exception as e:
             logger.error(f"Error searching similar chunks: {e}")
-            raise 
+            raise
+    
+    def search_similar_by_document_type(
+        self,
+        query: str,
+        user_id: str,
+        document_type: str,  # "resume" or "personal_info"
+        top_k: int = 5,
+        min_score: float = 0.7
+    ) -> List[Dict[str, Any]]:
+        """
+        Search for similar chunks within a specific document type
+        
+        Args:
+            query: Text query to search for
+            user_id: User identifier
+            document_type: Type of document to search ("resume" or "personal_info")
+            top_k: Number of results to return
+            min_score: Minimum similarity score (0-1)
+        """
+        try:
+            # Get query embedding
+            query_embedding = self._get_embeddings([query])[0]
+            
+            # Search vector store by document type
+            results = self.vector_store.search_similar_by_document_type(
+                query_embedding,
+                user_id=user_id,
+                document_type=document_type,
+                top_k=top_k,
+                min_score=min_score
+            )
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error searching similar chunks by document type: {e}")
+            raise
+    
+    def get_document_stats(self, user_id: str) -> Dict[str, Any]:
+        """Get statistics about stored documents for a user"""
+        return self.vector_store.get_document_stats(user_id)
+    
+    def health_check(self) -> Dict[str, Any]:
+        """Check Redis connection and service health"""
+        return self.vector_store.health_check() 

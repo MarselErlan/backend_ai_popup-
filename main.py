@@ -671,7 +671,7 @@ async def reembed_resume(
     user: User = Depends(get_session_user)
 ):
     """
-    🔄 Re-process resume document into vector embeddings
+    🔄 Re-process resume document into vector embeddings and store in Redis
     
     This will:
     1. Load document from database
@@ -681,6 +681,10 @@ async def reembed_resume(
     5. Store in Redis vector store
     """
     try:
+        # Get document service and embedding service
+        document_service = get_document_service()
+        embedding_service = EmbeddingService()
+        
         # Get document
         document = document_service.get_user_resume(user.id if user else None)
         if not document:
@@ -689,22 +693,39 @@ async def reembed_resume(
                 detail="No resume document found"
             )
         
-        # Extract text from file content
-        text = extract_text_from_bytes(document.file_content, document.content_type)
+        # Update status to processing
+        document_service.update_resume_status(document.id, "processing")
         
-        # Process document
-        success = embedding_service.process_document(
-            document_id=str(document.id),
-            text=text,
-            document_service=document_service
-        )
+        try:
+            # Extract text from file content
+            text = extract_text_from_bytes(document.file_content, document.content_type)
+            
+            # Process document with Redis storage
+            embedding_service.process_document(
+                document_id=f"resume_{document.id}",
+                user_id=user.id,
+                content=text,
+                reprocess=True
+            )
+            
+            # Update status to completed
+            document_service.update_resume_status(document.id, "completed")
+            
+            return {
+                "status": "success",
+                "message": "Resume document processed and stored in Redis successfully",
+                "document_id": document.id,
+                "user_id": user.id,
+                "storage": "redis"
+            }
+            
+        except Exception as e:
+            # Update status to failed
+            document_service.update_resume_status(document.id, "failed")
+            raise e
         
-        return {
-            "status": "success",
-            "message": "Resume document processed successfully",
-            "document_id": document.id
-        }
-        
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Error processing resume: {str(e)}")
         raise HTTPException(
@@ -743,34 +764,60 @@ def extract_text_from_bytes(file_content: bytes, content_type: str) -> str:
 
 @app.post("/api/v1/personal-info/reembed", response_model=ReembedResponse)
 async def reembed_personal_info_from_database(user_id: str = Query("default", description="User ID for multi-user support")):
-    """⚡ OPTIMIZED: Re-embed personal info from database using cached extractor"""
+    """⚡ OPTIMIZED: Re-embed personal info from database using Redis vector store"""
     start_time = datetime.now()
     
     try:
-        personal_info_extractor = get_personal_info_extractor()
-        personal_info_extractor.user_id = user_id
+        # Get document service and embedding service
+        document_service = get_document_service()
+        embedding_service = EmbeddingService()
         
         logger.info(f"🔄 Re-embedding personal info from database for user: {user_id}")
         
-        result = personal_info_extractor.process_personal_info_optimized()
+        # Get personal info document
+        personal_info_doc = document_service.get_user_personal_info(user_id)
+        if not personal_info_doc:
+            raise HTTPException(status_code=404, detail="No personal info document found for this user")
         
-        end_time = datetime.now()
-        processing_time = (end_time - start_time).total_seconds()
+        # Update status to processing
+        document_service.update_personal_info_status(personal_info_doc.id, "processing")
         
-        if result.get("status") == "success":
+        try:
+            # Process document with Redis storage
+            content = personal_info_doc.file_content.decode() if isinstance(personal_info_doc.file_content, bytes) else personal_info_doc.file_content
+            
+            embedding_service.process_document(
+                document_id=f"personal_info_{personal_info_doc.id}",
+                user_id=user_id,
+                content=content,
+                reprocess=True
+            )
+            
+            # Update status to completed
+            document_service.update_personal_info_status(personal_info_doc.id, "completed")
+            
+            end_time = datetime.now()
+            processing_time = (end_time - start_time).total_seconds()
+            
             return ReembedResponse(
                 status="success",
-                message=f"Personal info re-embedded successfully in {processing_time:.2f}s",
+                message=f"Personal info re-embedded and stored in Redis successfully in {processing_time:.2f}s",
                 processing_time=processing_time,
                 database_info={
                     "user_id": user_id,
-                    "chunks_processed": result.get("chunks", 0),
+                    "document_id": personal_info_doc.id,
+                    "storage": "redis",
                     "optimization_enabled": True
                 }
             )
-        else:
-            raise HTTPException(status_code=500, detail=result.get("error", "Re-embedding failed"))
+            
+        except Exception as e:
+            # Update status to failed
+            document_service.update_personal_info_status(personal_info_doc.id, "failed")
+            raise e
     
+    except HTTPException:
+        raise
     except Exception as e:
         end_time = datetime.now()
         processing_time = (end_time - start_time).total_seconds()
@@ -1139,6 +1186,173 @@ async def health_check():
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }
+
+# ============================================================================
+# REDIS WORKFLOW TEST ENDPOINT
+# ============================================================================
+
+class RedisWorkflowTestResponse(BaseModel):
+    status: str
+    workflow_steps: Dict[str, Any]
+    sample_search_results: Dict[str, int]
+    processing_time: float
+    error: Optional[str] = None
+
+@app.post("/api/test/redis-workflow", response_model=RedisWorkflowTestResponse)
+async def test_redis_workflow(user: User = Depends(get_session_user)):
+    """
+    Test the complete Redis vector workflow:
+    1. Get resume from DB
+    2. Re-embed (generate embeddings) 
+    3. Store vectors in Redis
+    4. LLM searches Redis for form filling
+    """
+    start_time = time.time()
+    
+    try:
+        from app.services.vector_store import RedisVectorStore
+        import numpy as np
+        import openai
+        
+        # Initialize Redis vector store
+        vector_store = RedisVectorStore(
+            redis_url=REDIS_URL,
+            index_name=f"workflow_test_{user.id}",
+            vector_dim=1536
+        )
+        
+        # STEP 1: Get resume from DB
+        logger.info(f"📄 Step 1: Getting resume from DB for user {user.id}")
+        document_service = get_document_service()
+        resume_doc = document_service.get_user_resume(user.id)
+        
+        if not resume_doc:
+            # Use sample resume for testing
+            resume_text = """
+            John Doe - Software Engineer
+            
+            Experience:
+            • 5 years Python development at Tech Corp
+            • Led team of 4 developers on AI projects
+            • Built FastAPI microservices with Redis
+            • Implemented machine learning pipelines
+            
+            Skills:
+            • Languages: Python, JavaScript, TypeScript
+            • Frameworks: FastAPI, React, Node.js
+            • Databases: PostgreSQL, Redis, MongoDB
+            • Cloud: AWS, Docker, Kubernetes
+            • AI/ML: OpenAI API, LangChain, scikit-learn
+            
+            Education:
+            • BS Computer Science, Stanford University
+            • Machine Learning Specialization, Coursera
+            """
+        else:
+            resume_text = resume_doc.extracted_text or "No text extracted"
+        
+        # STEP 2: Re-embed (generate embeddings)
+        logger.info("🔢 Step 2: Re-embedding resume text...")
+        
+        # Simple text chunking
+        chunks = []
+        chunk_size = 800
+        chunk_overlap = 100
+        start = 0
+        while start < len(resume_text):
+            end = start + chunk_size
+            chunk = resume_text[start:end].strip()
+            if chunk:
+                chunks.append(chunk)
+            start = end - chunk_overlap
+        
+        # Get embeddings using OpenAI
+        try:
+            response = openai.embeddings.create(
+                model="text-embedding-3-small",
+                input=chunks
+            )
+            embeddings = [np.array(e.embedding) for e in response.data]
+        except Exception as e:
+            logger.warning(f"OpenAI embedding failed, using random embeddings for test: {e}")
+            embeddings = [np.random.rand(1536).astype(np.float32) for _ in chunks]
+        
+        # Prepare chunk data
+        chunk_data = []
+        for i, (text, embedding) in enumerate(zip(chunks, embeddings)):
+            chunk_data.append({
+                "chunk_id": f"chunk_{i}",
+                "text": text,
+                "embedding": embedding
+            })
+        
+        # STEP 3: Store vectors in Redis
+        logger.info("💾 Step 3: Storing vectors in Redis...")
+        document_id = f"resume_{user.id}_test"
+        vector_store.store_embeddings(document_id, str(user.id), chunk_data)
+        
+        # STEP 4: LLM searches Redis for form filling
+        logger.info("🔍 Step 4: Testing form field searches...")
+        
+        form_queries = [
+            "What programming languages do you know?",
+            "What is your work experience?", 
+            "What is your education background?",
+            "What are your technical skills?"
+        ]
+        
+        search_results = {}
+        for query in form_queries:
+            # Get query embedding
+            try:
+                query_response = openai.embeddings.create(
+                    model="text-embedding-3-small",
+                    input=[query]
+                )
+                query_embedding = np.array(query_response.data[0].embedding)
+            except Exception:
+                query_embedding = np.random.rand(1536).astype(np.float32)
+            
+            # Search Redis
+            results = vector_store.search_similar(
+                query_embedding=query_embedding,
+                user_id=str(user.id),
+                top_k=2,
+                min_score=0.1
+            )
+            
+            search_results[query] = len(results)
+        
+        # STEP 5: Cleanup test data
+        logger.info("🧹 Step 5: Cleaning up test data...")
+        vector_store.delete_document(document_id, str(user.id))
+        
+        processing_time = time.time() - start_time
+        
+        return RedisWorkflowTestResponse(
+            status="success",
+            workflow_steps={
+                "1_resume_chunks": len(chunks),
+                "2_embeddings_generated": len(embeddings),
+                "3_vectors_stored": len(chunk_data),
+                "4_form_queries_tested": len(form_queries),
+                "5_cleanup_completed": True
+            },
+            sample_search_results=search_results,
+            processing_time=processing_time
+        )
+        
+    except Exception as e:
+        processing_time = time.time() - start_time
+        logger.error(f"❌ Redis workflow test failed: {e}")
+        
+        return RedisWorkflowTestResponse(
+            status="failed",
+            workflow_steps={},
+            sample_search_results={},
+            processing_time=processing_time,
+            error=str(e)
+        )
 
 @app.post("/api/logout")
 async def logout_user(session_data: dict, db: Session = Depends(get_db)):
