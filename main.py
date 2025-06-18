@@ -794,7 +794,9 @@ def extract_text_from_bytes(file_content: bytes, content_type: str) -> str:
         raise
 
 @app.post("/api/v1/personal-info/reembed", response_model=ReembedResponse)
-async def reembed_personal_info_from_database(user_id: str = Query("default", description="User ID for multi-user support")):
+async def reembed_personal_info_from_database(
+    user: User = Depends(get_session_user)
+):
     """⚡ OPTIMIZED: Re-embed personal info from database using Redis vector store"""
     start_time = datetime.now()
     
@@ -803,10 +805,10 @@ async def reembed_personal_info_from_database(user_id: str = Query("default", de
         document_service = get_document_service()
         embedding_service = EmbeddingService()
         
-        logger.info(f"🔄 Re-embedding personal info from database for user: {user_id}")
+        logger.info(f"🔄 Re-embedding personal info from database for user: {user.id}")
         
-        # Get personal info document
-        personal_info_doc = document_service.get_user_personal_info(user_id)
+        # Get personal info document (✅ FIXED: correct method name)
+        personal_info_doc = document_service.get_personal_info_document(user.id)
         if not personal_info_doc:
             raise HTTPException(status_code=404, detail="No personal info document found for this user")
         
@@ -819,7 +821,7 @@ async def reembed_personal_info_from_database(user_id: str = Query("default", de
             
             embedding_service.process_document(
                 document_id=f"personal_info_{personal_info_doc.id}",
-                user_id=user_id,
+                user_id=user.id,
                 content=content,
                 reprocess=True
             )
@@ -835,7 +837,7 @@ async def reembed_personal_info_from_database(user_id: str = Query("default", de
                 message=f"Personal info re-embedded and stored in Redis successfully in {processing_time:.2f}s",
                 processing_time=processing_time,
                 database_info={
-                    "user_id": user_id,
+                    "user_id": user.id,
                     "document_id": personal_info_doc.id,
                     "storage": "redis",
                     "optimization_enabled": True
