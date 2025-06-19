@@ -49,6 +49,9 @@ from app.services.embedding_service import EmbeddingService
 # Import LLM service
 from app.services.llm_service import RedisLLMService
 
+# Import URL tracking endpoints
+from app.api.url_tracking_endpoints import router as url_tracking_router
+
 # Load environment variables
 load_dotenv()
 
@@ -220,6 +223,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include URL tracking router
+app.include_router(url_tracking_router)
 
 # Initialize services
 DATABASE_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
