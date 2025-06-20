@@ -764,11 +764,14 @@ async def reembed_personal_info_from_database(
     start_time = datetime.now()
     
     try:
-        # Get document service and embedding service
+        # Get document service and embedding service with smaller chunks for personal info
         document_service = get_document_service()
-        embedding_service = EmbeddingService()
+        embedding_service = EmbeddingService(
+            chunk_size=200,  # Much smaller chunks for personal info (was 800)
+            chunk_overlap=30  # Smaller overlap (was 100)
+        )
         
-        logger.info(f"🔄 Re-embedding personal info from database for user: {user.id}")
+        logger.info(f"🔄 Re-embedding personal info from database for user: {user.id} with smaller chunks")
         
         # Get personal info document (✅ FIXED: correct method name)
         personal_info_doc = document_service.get_personal_info_document(user.id)
