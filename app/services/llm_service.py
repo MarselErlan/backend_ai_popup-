@@ -357,7 +357,18 @@ INSTRUCTIONS:
 5. For experience/skills, summarize from resume data
 6. For preferences/authorization, use personal info data
 
-Provide only the answer, no explanation.
+CRITICAL: Provide ONLY the raw answer value. Do NOT include:
+- "FIELD ANSWER:" prefix
+- "Answer:" prefix  
+- Any labels or explanations
+- Any formatting markers
+
+EXAMPLES:
+- If asked "First Name", respond: "John" (NOT "FIELD ANSWER: John")
+- If asked "Email", respond: "john@example.com" (NOT "Answer: john@example.com")
+- If asked "Phone", respond: "555-123-4567" (NOT "Phone: 555-123-4567")
+
+Just the raw value that should go directly into the form field.
 """
 
         try:
@@ -372,6 +383,27 @@ Provide only the answer, no explanation.
             )
             
             answer = response.choices[0].message.content.strip()
+            
+            # Clean up any remaining prefixes that LLM might add
+            prefixes_to_remove = [
+                "FIELD ANSWER:",
+                "Answer:",
+                "Response:",
+                "Field Answer:",
+                "Value:",
+                "Result:",
+                field_label + ":",
+                field_label.replace("?", "") + ":",
+            ]
+            
+            for prefix in prefixes_to_remove:
+                if answer.startswith(prefix):
+                    answer = answer[len(prefix):].strip()
+                    break
+            
+            # Remove quotes if the entire answer is wrapped in quotes
+            if (answer.startswith('"') and answer.endswith('"')) or (answer.startswith("'") and answer.endswith("'")):
+                answer = answer[1:-1].strip()
             
             # Determine data source
             data_source = "generated"
