@@ -1,0 +1,157 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Integrated Usage Analysis Report</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+                .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+                .header h1 { margin: 0; font-size: 2.5em; }
+                .header p { margin: 10px 0 0 0; opacity: 0.9; }
+                .section { margin: 30px 0; }
+                .section h2 { color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+                .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+                .metric { background: #f8f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; }
+                .metric-value { font-size: 2em; font-weight: bold; color: #667eea; }
+                .metric-label { color: #666; font-size: 0.9em; }
+                .unused { background: #fff5f5; border-left-color: #e53e3e; }
+                .unused .metric-value { color: #e53e3e; }
+                .used { background: #f0fff4; border-left-color: #38a169; }
+                .used .metric-value { color: #38a169; }
+                table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+                th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                th { background-color: #667eea; color: white; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                .status-200 { color: #38a169; font-weight: bold; }
+                .status-404 { color: #e53e3e; font-weight: bold; }
+                .status-500 { color: #d69e2e; font-weight: bold; }
+                .toggle-info { background: #e6f7ff; padding: 15px; border-radius: 5px; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>📊 Integrated Usage Analysis</h1>
+                    <p>Analysis Duration: 1.1 minutes | Generated: 2025-06-22 14:37:13</p>
+                </div>
+                
+                <div class="toggle-info">
+                    <h3>💡 Toggle Analysis</h3>
+                    <p><strong>Enable:</strong> Set environment variable <code>ENABLE_USAGE_ANALYSIS=true</code></p>
+                    <p><strong>Disable:</strong> Set environment variable <code>ENABLE_USAGE_ANALYSIS=false</code></p>
+                    <p><strong>Current Status:</strong> ✅ Enabled</p>
+                </div>
+                
+                <div class="section">
+                    <h2>📊 Overview</h2>
+                    <div class="metrics-grid">
+                        <div class="metric used">
+                            <div class="metric-value">25</div>
+                            <div class="metric-label">Total API Calls</div>
+                        </div>
+                        <div class="metric used">
+                            <div class="metric-value">9</div>
+                            <div class="metric-label">Endpoints Used</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">0</div>
+                            <div class="metric-label">Endpoints Discovered</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">393</div>
+                            <div class="metric-label">Functions Discovered</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">80</div>
+                            <div class="metric-label">Classes Discovered</div>
+                        </div>
+                        <div class="metric unused">
+                            <div class="metric-value">0</div>
+                            <div class="metric-label">Unused Endpoints</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>📈 Code Coverage</h2>
+                    <div class="metrics-grid">
+                        <div class="metric used">
+                            <div class="metric-value">0.0%</div>
+                            <div class="metric-label">Endpoint Coverage</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>🌐 Most Used Endpoints</h2>
+                    <table>
+                        <tr><th>Endpoint</th><th>Calls</th><th>Avg Response Time</th></tr>
+        
+                        <tr>
+                            <td><code>GET /api/v1/documents/status</code></td>
+                            <td>8</td>
+                            <td>0.010s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>GET /api/urls/stats/summary</code></td>
+                            <td>4</td>
+                            <td>0.016s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>OPTIONS /api/v1/documents/status</code></td>
+                            <td>4</td>
+                            <td>0.000s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>POST /api/generate-field-answer</code></td>
+                            <td>3</td>
+                            <td>1.143s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>OPTIONS /api/urls/stats/summary</code></td>
+                            <td>2</td>
+                            <td>0.000s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>DELETE /api/session/e21001f3-e590-40fc-8d40-0a5e0a4c30f2</code></td>
+                            <td>1</td>
+                            <td>0.015s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>POST /api/logout</code></td>
+                            <td>1</td>
+                            <td>0.003s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>POST /api/simple/login</code></td>
+                            <td>1</td>
+                            <td>0.273s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>POST /api/session/check-and-update/7ddf163e-1d05-43ae-aace-7d4ad85575f7</code></td>
+                            <td>1</td>
+                            <td>0.013s</td>
+                        </tr>
+            
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>🚫 Unused Endpoints</h2>
+                    <ul>
+        
+                    </ul>
+                </div>
+            </div>
+        </body>
+        </html>
+        

@@ -149,6 +149,9 @@ def get_redis_llm_service():
     """Get Redis-enabled LLM service instance"""
     return RedisLLMService()
 
+# Import usage analyzer
+from app.services.integrated_usage_analyzer import start_analysis, stop_analysis
+
 # Lifecycle management
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -167,7 +170,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ Service pre-warming failed: {e}")
     
+    # Start usage analysis
+    start_analysis()
+    
     yield
+    
+    # Stop usage analysis and generate report
+    stop_analysis()
     
     # Cleanup
     logger.info("🛑 Shutting down Smart Form Fill API")
@@ -223,6 +232,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add usage analysis middleware
+from app.middleware.usage_middleware import UsageAnalysisMiddleware
+app.add_middleware(UsageAnalysisMiddleware)
 
 # Include URL tracking router
 app.include_router(url_tracking_router)
@@ -1184,6 +1197,32 @@ async def health_check():
             "status": "unhealthy",
             "error": str(e),
             "timestamp": datetime.now().isoformat()
+        }
+
+@app.get("/api/analysis/status")
+async def get_analysis_status():
+    """
+    📊 Get current usage analysis status
+    """
+    try:
+        from app.services.integrated_usage_analyzer import get_analyzer
+        analyzer = get_analyzer()
+        status = analyzer.get_status()
+        
+        return {
+            "status": "success",
+            "analysis": status,
+            "toggle_info": {
+                "enable": "Set environment variable ENABLE_USAGE_ANALYSIS=true",
+                "disable": "Set environment variable ENABLE_USAGE_ANALYSIS=false",
+                "current": "enabled" if status.get("enabled", False) else "disabled"
+            }
+        }
+    except Exception as e:
+        logger.error(f"❌ Analysis status check failed: {e}")
+        return {
+            "status": "error",
+            "error": str(e)
         }
 
 # ============================================================================
