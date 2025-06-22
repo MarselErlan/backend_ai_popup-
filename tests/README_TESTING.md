@@ -362,6 +362,28 @@ cd tests && python performance/performance_monitor.py
 cd tests && python analysis/detailed_code_analysis.py
 ```
 
+"""
+
+# Run all tests with coverage
+
+pytest --cov=app --cov-report=html
+
+# Run by category
+
+pytest -m unit
+pytest -m integration
+pytest -m e2e
+
+# Quick tests (exclude slow)
+
+pytest -m "not slow"
+
+# CI mode
+
+python tests/scripts/run_all_tests.py --ci
+
+"""
+
 ---
 
 **Note**: This organized structure makes it easy to find, run, and maintain tests based on their purpose and scope. Each category serves a specific role in ensuring system quality and reliability.

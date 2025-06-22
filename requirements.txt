@@ -107,3 +107,60 @@ uvicorn==0.34.3
 websockets==14.2
 yarl==1.20.1
 zstandard==0.23.0
+
+
+# Testing Dependencies for Smart Form Fill API
+# Install with: pip install -r requirements-test.txt
+
+# Core testing framework
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0.0
+pytest-html>=3.1.0
+pytest-xdist>=3.0.0
+pytest-timeout>=2.1.0
+pytest-mock>=3.10.0
+
+# Test utilities and mocking
+requests>=2.28.0
+responses>=0.23.0
+httpx>=0.24.0
+factory-boy>=3.2.0
+
+# Code quality and coverage
+coverage>=7.0.0
+pytest-clarity>=1.0.0
+pytest-sugar>=0.9.0
+
+# Performance and load testing
+pytest-benchmark>=4.0.0
+locust>=2.0.0
+
+# Database testing
+pytest-postgresql>=4.1.0
+pytest-redis>=3.0.0
+
+# Fixtures and test data
+Faker>=18.0.0
+freezegun>=1.2.0
+
+# Report generation
+reportlab>=4.0.0  # For PDF test fixtures
+jinja2>=3.1.0     # For HTML reports
+
+# Development utilities
+pre-commit>=3.0.0
+black>=23.0.0
+isort>=5.12.0
+flake8>=6.0.0
+mypy>=1.0.0
+
+# Documentation testing
+pytest-doctestplus>=0.12.0
+
+# Environment management
+python-dotenv>=1.0.0
+
+# Optional: Visual testing (if needed)
+# selenium>=4.0.0
+# playwright>=1.0.0 

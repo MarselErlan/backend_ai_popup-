@@ -1,0 +1,213 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Real-Time Usage Analysis Report</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+                .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+                .header h1 { margin: 0; font-size: 2.5em; }
+                .header p { margin: 10px 0 0 0; opacity: 0.9; }
+                .section { margin: 30px 0; }
+                .section h2 { color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+                .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+                .metric { background: #f8f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; }
+                .metric-value { font-size: 2em; font-weight: bold; color: #667eea; }
+                .metric-label { color: #666; font-size: 0.9em; }
+                .unused { background: #fff5f5; border-left-color: #e53e3e; }
+                .unused .metric-value { color: #e53e3e; }
+                .used { background: #f0fff4; border-left-color: #38a169; }
+                .used .metric-value { color: #38a169; }
+                table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+                th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                th { background-color: #667eea; color: white; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                .status-200 { color: #38a169; font-weight: bold; }
+                .status-404 { color: #e53e3e; font-weight: bold; }
+                .status-500 { color: #d69e2e; font-weight: bold; }
+                .endpoint-list { max-height: 300px; overflow-y: auto; background: #f8f9ff; padding: 15px; border-radius: 5px; }
+                .endpoint-item { margin: 5px 0; padding: 5px; background: white; border-radius: 3px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🔍 Real-Time Usage Analysis</h1>
+                    <p>Analysis Duration: 3.5 minutes | Generated: 2025-06-22 14:09:09</p>
+                </div>
+                
+                <div class="section">
+                    <h2>📊 Overview</h2>
+                    <div class="metrics-grid">
+                        <div class="metric used">
+                            <div class="metric-value">126</div>
+                            <div class="metric-label">Total API Calls</div>
+                        </div>
+                        <div class="metric used">
+                            <div class="metric-value">9</div>
+                            <div class="metric-label">Endpoints Tested</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">0</div>
+                            <div class="metric-label">Endpoints Discovered</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">369</div>
+                            <div class="metric-label">Functions Discovered</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">77</div>
+                            <div class="metric-label">Classes Discovered</div>
+                        </div>
+                        <div class="metric unused">
+                            <div class="metric-value">0</div>
+                            <div class="metric-label">Unused Endpoints</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>📈 Code Coverage</h2>
+                    <div class="metrics-grid">
+                        <div class="metric used">
+                            <div class="metric-value">0.0%</div>
+                            <div class="metric-label">Endpoint Coverage</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>🌐 Endpoint Usage Details</h2>
+                    <table>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Method</th>
+                            <th>Calls</th>
+                            <th>Avg Response Time</th>
+                            <th>Status Codes</th>
+                            <th>First Called</th>
+                            <th>Last Called</th>
+                        </tr>
+        
+                        <tr>
+                            <td><code>/</code></td>
+                            <td><strong>GET</strong></td>
+                            <td>14</td>
+                            <td>0.004s</td>
+                            <td><span class="status-200">200(14)</span> </td>
+                            <td>14:05:39</td>
+                            <td>14:08:55</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>/health</code></td>
+                            <td><strong>GET</strong></td>
+                            <td>14</td>
+                            <td>0.002s</td>
+                            <td><span class="status-200">200(14)</span> </td>
+                            <td>14:05:39</td>
+                            <td>14:08:55</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>/docs</code></td>
+                            <td><strong>GET</strong></td>
+                            <td>14</td>
+                            <td>0.002s</td>
+                            <td><span class="status-200">200(14)</span> </td>
+                            <td>14:05:39</td>
+                            <td>14:08:55</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>/openapi.json</code></td>
+                            <td><strong>GET</strong></td>
+                            <td>14</td>
+                            <td>0.002s</td>
+                            <td><span class="status-200">200(14)</span> </td>
+                            <td>14:05:39</td>
+                            <td>14:08:55</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>/api/v1/upload</code></td>
+                            <td><strong>POST</strong></td>
+                            <td>14</td>
+                            <td>0.002s</td>
+                            <td><span class="status-404">404(14)</span> </td>
+                            <td>14:05:39</td>
+                            <td>14:08:55</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>/api/v1/documents</code></td>
+                            <td><strong>GET</strong></td>
+                            <td>14</td>
+                            <td>0.002s</td>
+                            <td><span class="status-404">404(14)</span> </td>
+                            <td>14:05:39</td>
+                            <td>14:08:55</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>/api/v1/extract</code></td>
+                            <td><strong>POST</strong></td>
+                            <td>14</td>
+                            <td>0.002s</td>
+                            <td><span class="status-404">404(14)</span> </td>
+                            <td>14:05:39</td>
+                            <td>14:08:55</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>/api/v1/personal-info</code></td>
+                            <td><strong>POST</strong></td>
+                            <td>14</td>
+                            <td>0.002s</td>
+                            <td><span class="status-405">405(14)</span> </td>
+                            <td>14:05:39</td>
+                            <td>14:08:55</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>/api/v1/resume</code></td>
+                            <td><strong>POST</strong></td>
+                            <td>14</td>
+                            <td>0.002s</td>
+                            <td><span class="status-405">405(14)</span> </td>
+                            <td>14:05:39</td>
+                            <td>14:08:55</td>
+                        </tr>
+            
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>🚫 Unused Endpoints</h2>
+                    <div class="endpoint-list">
+        <div class="endpoint-item">🎉 All discovered endpoints were tested!</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>⚡ Performance Summary</h2>
+                    <h3>Most Used Endpoints</h3>
+                    <ul>
+        <li><strong>GET /</strong>: 14 calls</li><li><strong>GET /health</strong>: 14 calls</li><li><strong>GET /docs</strong>: 14 calls</li><li><strong>GET /openapi.json</strong>: 14 calls</li><li><strong>POST /api/v1/upload</strong>: 14 calls</li>
+                    </ul>
+                </div>
+                
+                <div class="section">
+                    <h2>💡 Recommendations</h2>
+                    <ul>
+                        <li>🧹 Consider removing or refactoring unused endpoints to reduce codebase complexity</li>
+                        <li>📊 Monitor frequently used endpoints for performance optimization opportunities</li>
+                        <li>🔍 Investigate endpoints with high error rates (4xx/5xx status codes)</li>
+                        <li>⚡ Optimize endpoints with slow response times</li>
+                    </ul>
+                </div>
+            </div>
+        </body>
+        </html>
+        

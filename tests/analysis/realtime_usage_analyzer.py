@@ -325,14 +325,28 @@ class RealTimeUsageAnalyzer:
         usage.status_codes[status_code] = usage.status_codes.get(status_code, 0) + 1
         usage.last_called = current_time
         
-        # Save to database
+        # Save to database with cleanup for memory optimization
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
+            
+            # Insert new record
             cursor.execute("""
                 INSERT INTO endpoint_usage 
                 (endpoint, method, path, timestamp, response_time, status_code, user_agent, ip_address)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, (endpoint, method, path, current_time, response_time, status_code, "realtime-analyzer", "localhost"))
+            
+            # Clean up old records (keep only last 1000 entries per endpoint for memory)
+            cursor.execute("""
+                DELETE FROM endpoint_usage 
+                WHERE id NOT IN (
+                    SELECT id FROM endpoint_usage 
+                    WHERE endpoint = ? 
+                    ORDER BY timestamp DESC 
+                    LIMIT 1000
+                )
+            """, (endpoint,))
+            
             conn.commit()
             
     def _monitor_system_metrics(self):
@@ -436,24 +450,50 @@ class RealTimeUsageAnalyzer:
         }
         
     def save_report(self, report: Dict[str, Any]):
-        """Save analysis report to file"""
+        """Save analysis report to file (replaces existing to save memory)"""
         report_dir = Path("tests/reports")
         report_dir.mkdir(parents=True, exist_ok=True)
         
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Use fixed filenames to replace existing reports (memory optimization)
+        json_path = report_dir / "realtime_analysis_current.json"
+        html_path = report_dir / "realtime_analysis_current.html"
         
-        # Save JSON report
-        json_path = report_dir / f"realtime_analysis_report_{timestamp}.json"
+        # Also save a timestamped backup for history
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_json_path = report_dir / f"realtime_analysis_backup_{timestamp}.json"
+        
+        # Save current report (replaces previous)
         with open(json_path, 'w') as f:
             json.dump(report, f, indent=2, default=str)
             
-        # Save HTML report
-        html_path = report_dir / f"realtime_analysis_report_{timestamp}.html"
+        # Save HTML report (replaces previous)
         self._generate_html_report(report, html_path)
         
-        self.logger.info(f"📊 Reports saved:")
-        self.logger.info(f"   📄 JSON: {json_path}")
-        self.logger.info(f"   🌐 HTML: {html_path}")
+        # Save backup copy for history
+        with open(backup_json_path, 'w') as f:
+            json.dump(report, f, indent=2, default=str)
+        
+        # Clean up old backup files (keep only last 5 for memory optimization)
+        self._cleanup_old_backups(report_dir)
+        
+        self.logger.info(f"📊 Reports updated:")
+        self.logger.info(f"   📄 Current JSON: {json_path}")
+        self.logger.info(f"   🌐 Current HTML: {html_path}")
+        self.logger.info(f"   💾 Backup: {backup_json_path}")
+        
+    def _cleanup_old_backups(self, report_dir: Path):
+        """Clean up old backup files to save disk space"""
+        try:
+            backup_files = list(report_dir.glob("realtime_analysis_backup_*.json"))
+            backup_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+            
+            # Keep only the 5 most recent backups
+            for old_backup in backup_files[5:]:
+                old_backup.unlink()
+                self.logger.debug(f"🗑️  Cleaned up old backup: {old_backup.name}")
+                
+        except Exception as e:
+            self.logger.debug(f"Failed to cleanup old backups: {e}")
         
     def _generate_html_report(self, report: Dict[str, Any], output_path: Path):
         """Generate HTML report"""
