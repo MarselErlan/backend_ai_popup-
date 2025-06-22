@@ -37,6 +37,36 @@ class EndpointUsage:
     user_agents: Set[str]
     ip_addresses: Set[str]
 
+@dataclass
+class FunctionUsage:
+    """Represents function usage tracking"""
+    function_name: str
+    file_name: str
+    file_path: str
+    call_count: int
+    execution_times: List[float]
+    input_types: Set[str]
+    output_types: Set[str]
+    input_examples: List[str]
+    output_examples: List[str]
+    first_called: float
+    last_called: float
+    error_count: int
+    success_count: int
+
+@dataclass
+class ClassUsage:
+    """Represents class usage tracking"""
+    class_name: str
+    file_name: str
+    file_path: str
+    instantiation_count: int
+    methods_called: Dict[str, int]
+    first_instantiated: float
+    last_instantiated: float
+    constructor_args: List[str]
+    instance_attributes: Set[str]
+
 class IntegratedUsageAnalyzer:
     """Integrated usage analyzer that runs within FastAPI app"""
     
@@ -63,11 +93,13 @@ class IntegratedUsageAnalyzer:
         
         # Analysis data
         self.endpoint_usage: Dict[str, EndpointUsage] = {}
+        self.function_usage: Dict[str, FunctionUsage] = {}
+        self.class_usage: Dict[str, ClassUsage] = {}
         self.start_time = time.time()
         
         # Code discovery
-        self.discovered_functions: Set[str] = set()
-        self.discovered_classes: Set[str] = set()
+        self.discovered_functions: Dict[str, Dict[str, str]] = {}  # {func_name: {file_name, file_path, signature}}
+        self.discovered_classes: Dict[str, Dict[str, str]] = {}   # {class_name: {file_name, file_path, methods}}
         self.discovered_endpoints: Set[str] = set()
         
         # Monitoring state
@@ -144,7 +176,34 @@ class IntegratedUsageAnalyzer:
             for node in ast.walk(tree):
                 if isinstance(node, ast.FunctionDef):
                     func_name = f"{file_path.stem}.{node.name}"
-                    self.discovered_functions.add(func_name)
+                    
+                    # Extract function signature
+                    args = []
+                    for arg in node.args.args:
+                        arg_str = arg.arg
+                        if arg.annotation:
+                            try:
+                                arg_str += f": {ast.unparse(arg.annotation)}"
+                            except:
+                                pass
+                        args.append(arg_str)
+                    
+                    # Extract return type
+                    return_type = "Any"
+                    if node.returns:
+                        try:
+                            return_type = ast.unparse(node.returns)
+                        except:
+                            pass
+                    
+                    signature = f"({', '.join(args)}) -> {return_type}"
+                    
+                    self.discovered_functions[func_name] = {
+                        'file_name': file_path.stem,
+                        'file_path': str(file_path),
+                        'signature': signature,
+                        'line_number': node.lineno
+                    }
                     
                     # Check for FastAPI endpoints
                     for decorator in node.decorator_list:
@@ -161,7 +220,28 @@ class IntegratedUsageAnalyzer:
                                         
                 elif isinstance(node, ast.ClassDef):
                     class_name = f"{file_path.stem}.{node.name}"
-                    self.discovered_classes.add(class_name)
+                    
+                    # Extract class methods
+                    methods = []
+                    for item in node.body:
+                        if isinstance(item, ast.FunctionDef):
+                            methods.append(item.name)
+                    
+                    # Extract base classes
+                    base_classes = []
+                    for base in node.bases:
+                        try:
+                            base_classes.append(ast.unparse(base))
+                        except:
+                            pass
+                    
+                    self.discovered_classes[class_name] = {
+                        'file_name': file_path.stem,
+                        'file_path': str(file_path),
+                        'methods': methods,
+                        'base_classes': base_classes,
+                        'line_number': node.lineno
+                    }
                     
         except Exception as e:
             logger.debug(f"Error parsing {file_path}: {e}")
@@ -238,6 +318,111 @@ class IntegratedUsageAnalyzer:
         except Exception as e:
             logger.debug(f"Error recording request: {e}")
             
+    def record_function_call(self, func_name: str, file_name: str, file_path: str, 
+                           execution_time: float, input_args: str, output_result: str, 
+                           success: bool = True):
+        """Record a function call for analysis"""
+        if not self.enabled or not self.monitoring:
+            return
+            
+        try:
+            current_time = time.time()
+            full_func_name = f"{file_name}.{func_name}"
+            
+            if full_func_name not in self.function_usage:
+                self.function_usage[full_func_name] = FunctionUsage(
+                    function_name=func_name,
+                    file_name=file_name,
+                    file_path=file_path,
+                    call_count=0,
+                    execution_times=[],
+                    input_types=set(),
+                    output_types=set(),
+                    input_examples=[],
+                    output_examples=[],
+                    first_called=current_time,
+                    last_called=current_time,
+                    error_count=0,
+                    success_count=0
+                )
+            
+            usage = self.function_usage[full_func_name]
+            usage.call_count += 1
+            usage.execution_times.append(execution_time)
+            usage.last_called = current_time
+            
+            # Track input/output examples (keep only last 5)
+            if len(usage.input_examples) >= 5:
+                usage.input_examples.pop(0)
+            if len(usage.output_examples) >= 5:
+                usage.output_examples.pop(0)
+                
+            usage.input_examples.append(input_args[:200])  # Limit length
+            usage.output_examples.append(str(output_result)[:200])  # Limit length
+            
+            # Track types
+            usage.input_types.add(type(input_args).__name__)
+            usage.output_types.add(type(output_result).__name__)
+            
+            if success:
+                usage.success_count += 1
+            else:
+                usage.error_count += 1
+                
+        except Exception as e:
+            logger.debug(f"Error recording function call: {e}")
+            
+    def record_class_instantiation(self, class_name: str, file_name: str, file_path: str,
+                                 constructor_args: str):
+        """Record a class instantiation for analysis"""
+        if not self.enabled or not self.monitoring:
+            return
+            
+        try:
+            current_time = time.time()
+            full_class_name = f"{file_name}.{class_name}"
+            
+            if full_class_name not in self.class_usage:
+                self.class_usage[full_class_name] = ClassUsage(
+                    class_name=class_name,
+                    file_name=file_name,
+                    file_path=file_path,
+                    instantiation_count=0,
+                    methods_called={},
+                    first_instantiated=current_time,
+                    last_instantiated=current_time,
+                    constructor_args=[],
+                    instance_attributes=set()
+                )
+            
+            usage = self.class_usage[full_class_name]
+            usage.instantiation_count += 1
+            usage.last_instantiated = current_time
+            
+            # Track constructor args (keep only last 5)
+            if len(usage.constructor_args) >= 5:
+                usage.constructor_args.pop(0)
+            usage.constructor_args.append(constructor_args[:200])  # Limit length
+            
+        except Exception as e:
+            logger.debug(f"Error recording class instantiation: {e}")
+            
+    def record_method_call(self, class_name: str, method_name: str, file_name: str):
+        """Record a method call on a class instance"""
+        if not self.enabled or not self.monitoring:
+            return
+            
+        try:
+            full_class_name = f"{file_name}.{class_name}"
+            if full_class_name in self.class_usage:
+                usage = self.class_usage[full_class_name]
+                if method_name not in usage.methods_called:
+                    usage.methods_called[method_name] = 0
+                usage.methods_called[method_name] += 1
+                
+        except Exception as e:
+            logger.debug(f"Error recording method call: {e}")
+            
     def _save_to_database(self, endpoint: str, method: str, path: str, 
                          timestamp: float, response_time: float, status_code: int,
                          user_agent: str, ip_address: str):
@@ -288,45 +473,76 @@ class IntegratedUsageAnalyzer:
         used_endpoints = set(self.endpoint_usage.keys())
         unused_endpoints = list(self.discovered_endpoints - used_endpoints)
         
+        used_functions = set(self.function_usage.keys())
+        unused_functions = list(set(self.discovered_functions.keys()) - used_functions)
+        
+        used_classes = set(self.class_usage.keys())
+        unused_classes = list(set(self.discovered_classes.keys()) - used_classes)
+        
         # Calculate performance metrics
         total_calls = sum(usage.call_count for usage in self.endpoint_usage.values())
+        total_function_calls = sum(usage.call_count for usage in self.function_usage.values())
+        total_class_instantiations = sum(usage.instantiation_count for usage in self.class_usage.values())
+        
         avg_response_times = {}
+        avg_function_times = {}
         
         for endpoint, usage in self.endpoint_usage.items():
             if usage.response_times:
                 avg_response_times[endpoint] = sum(usage.response_times) / len(usage.response_times)
+                
+        for func_name, usage in self.function_usage.items():
+            if usage.execution_times:
+                avg_function_times[func_name] = sum(usage.execution_times) / len(usage.execution_times)
         
-        # Get most/least used endpoints
+        # Get most/least used items
         endpoint_call_counts = [(usage.endpoint, usage.call_count) for usage in self.endpoint_usage.values()]
         endpoint_call_counts.sort(key=lambda x: x[1], reverse=True)
+        
+        function_call_counts = [(usage.function_name, usage.call_count) for usage in self.function_usage.values()]
+        function_call_counts.sort(key=lambda x: x[1], reverse=True)
+        
+        class_instantiation_counts = [(usage.class_name, usage.instantiation_count) for usage in self.class_usage.values()]
+        class_instantiation_counts.sort(key=lambda x: x[1], reverse=True)
         
         return {
             "analysis_start": self.start_time,
             "analysis_end": current_time,
             "total_duration_minutes": (current_time - self.start_time) / 60,
             "endpoint_usage": [self._serialize_endpoint_usage(usage) for usage in self.endpoint_usage.values()],
+            "function_usage": [self._serialize_function_usage(usage) for usage in self.function_usage.values()],
+            "class_usage": [self._serialize_class_usage(usage) for usage in self.class_usage.values()],
             "discovered_code": {
-                "functions": list(self.discovered_functions),
-                "classes": list(self.discovered_classes),
+                "functions": self.discovered_functions,
+                "classes": self.discovered_classes,
                 "endpoints": list(self.discovered_endpoints)
             },
             "unused_code": {
-                "functions": list(self.discovered_functions),
-                "classes": list(self.discovered_classes),
+                "functions": unused_functions,
+                "classes": unused_classes,
                 "endpoints": unused_endpoints
             },
             "performance_metrics": {
                 "total_endpoint_calls": total_calls,
+                "total_function_calls": total_function_calls,
+                "total_class_instantiations": total_class_instantiations,
                 "average_response_times": avg_response_times,
+                "average_function_times": avg_function_times,
                 "most_used_endpoints": endpoint_call_counts[:10],
+                "most_used_functions": function_call_counts[:10],
+                "most_used_classes": class_instantiation_counts[:10],
                 "least_used_endpoints": endpoint_call_counts[-10:] if endpoint_call_counts else []
             },
             "code_coverage": {
                 "endpoint_coverage_percent": (len(used_endpoints) / len(self.discovered_endpoints) * 100) if self.discovered_endpoints else 0,
+                "function_coverage_percent": (len(used_functions) / len(self.discovered_functions) * 100) if self.discovered_functions else 0,
+                "class_coverage_percent": (len(used_classes) / len(self.discovered_classes) * 100) if self.discovered_classes else 0,
                 "endpoints_discovered": len(self.discovered_endpoints),
                 "endpoints_tested": len(used_endpoints),
                 "functions_discovered": len(self.discovered_functions),
-                "classes_discovered": len(self.discovered_classes)
+                "functions_tested": len(used_functions),
+                "classes_discovered": len(self.discovered_classes),
+                "classes_tested": len(used_classes)
             }
         }
         
@@ -343,6 +559,42 @@ class IntegratedUsageAnalyzer:
             "last_called": usage.last_called,
             "user_agents": list(usage.user_agents),
             "ip_addresses": list(usage.ip_addresses)
+        }
+        
+    def _serialize_function_usage(self, usage: FunctionUsage) -> Dict[str, Any]:
+        """Serialize FunctionUsage for JSON"""
+        return {
+            "function_name": usage.function_name,
+            "file_name": usage.file_name,
+            "file_path": usage.file_path,
+            "call_count": usage.call_count,
+            "execution_times": usage.execution_times,
+            "avg_execution_time": sum(usage.execution_times) / len(usage.execution_times) if usage.execution_times else 0,
+            "input_types": list(usage.input_types),
+            "output_types": list(usage.output_types),
+            "input_examples": usage.input_examples,
+            "output_examples": usage.output_examples,
+            "first_called": usage.first_called,
+            "last_called": usage.last_called,
+            "error_count": usage.error_count,
+            "success_count": usage.success_count,
+            "success_rate": (usage.success_count / (usage.success_count + usage.error_count) * 100) if (usage.success_count + usage.error_count) > 0 else 0
+        }
+        
+    def _serialize_class_usage(self, usage: ClassUsage) -> Dict[str, Any]:
+        """Serialize ClassUsage for JSON"""
+        return {
+            "class_name": usage.class_name,
+            "file_name": usage.file_name,
+            "file_path": usage.file_path,
+            "instantiation_count": usage.instantiation_count,
+            "methods_called": usage.methods_called,
+            "total_method_calls": sum(usage.methods_called.values()),
+            "most_used_method": max(usage.methods_called.items(), key=lambda x: x[1])[0] if usage.methods_called else None,
+            "first_instantiated": usage.first_instantiated,
+            "last_instantiated": usage.last_instantiated,
+            "constructor_args": usage.constructor_args,
+            "instance_attributes": list(usage.instance_attributes)
         }
         
     def _save_report(self, report: Dict[str, Any]):
@@ -486,6 +738,14 @@ class IntegratedUsageAnalyzer:
                             <div class="metric-value">{report['code_coverage']['endpoint_coverage_percent']:.1f}%</div>
                             <div class="metric-label">Endpoint Coverage</div>
                         </div>
+                        <div class="metric used">
+                            <div class="metric-value">{report['code_coverage'].get('function_coverage_percent', 0):.1f}%</div>
+                            <div class="metric-label">Function Coverage</div>
+                        </div>
+                        <div class="metric used">
+                            <div class="metric-value">{report['code_coverage'].get('class_coverage_percent', 0):.1f}%</div>
+                            <div class="metric-label">Class Coverage</div>
+                        </div>
                     </div>
                 </div>
                 
@@ -510,12 +770,78 @@ class IntegratedUsageAnalyzer:
                 </div>
                 
                 <div class="section">
-                    <h2>🚫 Unused Endpoints</h2>
+                    <h2>⚡ Most Used Functions</h2>
+                    <table>
+                        <tr><th>Function Name</th><th>File</th><th>Calls</th><th>Avg Time</th><th>Success Rate</th><th>Input Types</th><th>Output Types</th></tr>
+        """
+        
+        for func_data in report['function_usage'][:10]:
+            html_content += f"""
+                        <tr>
+                            <td><code>{func_data['function_name']}</code></td>
+                            <td><code>{func_data['file_name']}</code></td>
+                            <td>{func_data['call_count']}</td>
+                            <td>{func_data['avg_execution_time']:.4f}s</td>
+                            <td>{func_data['success_rate']:.1f}%</td>
+                            <td>{', '.join(func_data['input_types'][:3])}</td>
+                            <td>{', '.join(func_data['output_types'][:3])}</td>
+                        </tr>
+            """
+            
+        html_content += """
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>🏗️ Most Used Classes</h2>
+                    <table>
+                        <tr><th>Class Name</th><th>File</th><th>Instantiations</th><th>Methods Called</th><th>Most Used Method</th><th>Constructor Args</th></tr>
+        """
+        
+        for class_data in report['class_usage'][:10]:
+            methods_summary = f"{class_data['total_method_calls']} calls on {len(class_data['methods_called'])} methods"
+            constructor_args = class_data['constructor_args'][-1] if class_data['constructor_args'] else "None"
+            html_content += f"""
+                        <tr>
+                            <td><code>{class_data['class_name']}</code></td>
+                            <td><code>{class_data['file_name']}</code></td>
+                            <td>{class_data['instantiation_count']}</td>
+                            <td>{methods_summary}</td>
+                            <td><code>{class_data['most_used_method'] or 'None'}</code></td>
+                            <td><code>{constructor_args[:50]}{'...' if len(constructor_args) > 50 else ''}</code></td>
+                        </tr>
+            """
+            
+        html_content += """
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>🚫 Unused Code</h2>
+                    <h3>Unused Endpoints</h3>
                     <ul>
         """
         
-        for endpoint in report['unused_code']['endpoints'][:20]:
+        for endpoint in report['unused_code']['endpoints'][:10]:
             html_content += f"<li>❌ {endpoint}</li>"
+            
+        html_content += """
+                    </ul>
+                    <h3>Unused Functions (Top 20)</h3>
+                    <ul>
+        """
+        
+        for func in report['unused_code']['functions'][:20]:
+            html_content += f"<li>❌ <code>{func}</code></li>"
+            
+        html_content += """
+                    </ul>
+                    <h3>Unused Classes (Top 20)</h3>
+                    <ul>
+        """
+        
+        for cls in report['unused_code']['classes'][:20]:
+            html_content += f"<li>❌ <code>{cls}</code></li>"
             
         html_content += """
                     </ul>
@@ -570,4 +896,23 @@ def stop_analysis():
 def record_request(request, response_time: float, status_code: int):
     """Record a request (call from middleware)"""
     analyzer = get_analyzer()
-    analyzer.record_request(request, response_time, status_code) 
+    analyzer.record_request(request, response_time, status_code)
+
+def record_function_call(func_name: str, file_name: str, file_path: str, 
+                        execution_time: float, input_args: str, output_result: str, 
+                        success: bool = True):
+    """Record a function call (call from decorators)"""
+    analyzer = get_analyzer()
+    analyzer.record_function_call(func_name, file_name, file_path, execution_time, 
+                                 input_args, output_result, success)
+
+def record_class_instantiation(class_name: str, file_name: str, file_path: str,
+                              constructor_args: str):
+    """Record a class instantiation (call from class decorators)"""
+    analyzer = get_analyzer()
+    analyzer.record_class_instantiation(class_name, file_name, file_path, constructor_args)
+
+def record_method_call(class_name: str, method_name: str, file_name: str):
+    """Record a method call (call from method decorators)"""
+    analyzer = get_analyzer()
+    analyzer.record_method_call(class_name, method_name, file_name) 

@@ -33,7 +33,7 @@
             <div class="container">
                 <div class="header">
                     <h1>📊 Integrated Usage Analysis</h1>
-                    <p>Analysis Duration: 0.2 minutes | Generated: 2025-06-22 14:57:17</p>
+                    <p>Analysis Duration: 0.0 minutes | Generated: 2025-06-22 15:17:56</p>
                 </div>
                 
                 <div class="toggle-info">
@@ -47,11 +47,11 @@
                     <h2>📊 Overview</h2>
                     <div class="metrics-grid">
                         <div class="metric used">
-                            <div class="metric-value">2</div>
+                            <div class="metric-value">0</div>
                             <div class="metric-label">Total API Calls</div>
                         </div>
                         <div class="metric used">
-                            <div class="metric-value">2</div>
+                            <div class="metric-value">0</div>
                             <div class="metric-label">Endpoints Used</div>
                         </div>
                         <div class="metric">
@@ -59,11 +59,11 @@
                             <div class="metric-label">Endpoints Discovered</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-value">396</div>
+                            <div class="metric-value">426</div>
                             <div class="metric-label">Functions Discovered</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-value">80</div>
+                            <div class="metric-value">84</div>
                             <div class="metric-label">Classes Discovered</div>
                         </div>
                         <div class="metric unused">
@@ -80,6 +80,14 @@
                             <div class="metric-value">0.0%</div>
                             <div class="metric-label">Endpoint Coverage</div>
                         </div>
+                        <div class="metric used">
+                            <div class="metric-value">0.7%</div>
+                            <div class="metric-label">Function Coverage</div>
+                        </div>
+                        <div class="metric used">
+                            <div class="metric-value">2.4%</div>
+                            <div class="metric-label">Class Coverage</div>
+                        </div>
                     </div>
                 </div>
                 
@@ -88,25 +96,86 @@
                     <table>
                         <tr><th>Endpoint</th><th>Calls</th><th>Avg Response Time</th></tr>
         
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>⚡ Most Used Functions</h2>
+                    <table>
+                        <tr><th>Function Name</th><th>File</th><th>Calls</th><th>Avg Time</th><th>Success Rate</th><th>Input Types</th><th>Output Types</th></tr>
+        
                         <tr>
-                            <td><code>GET /health</code></td>
-                            <td>1</td>
-                            <td>0.001s</td>
+                            <td><code>calculate_sum</code></td>
+                            <td><code>demo_function_class_tracking</code></td>
+                            <td>6</td>
+                            <td>0.0125s</td>
+                            <td>100.0%</td>
+                            <td>str</td>
+                            <td>str</td>
                         </tr>
             
                         <tr>
-                            <td><code>GET /</code></td>
-                            <td>1</td>
-                            <td>0.000s</td>
+                            <td><code>process_text</code></td>
+                            <td><code>demo_function_class_tracking</code></td>
+                            <td>6</td>
+                            <td>0.0061s</td>
+                            <td>100.0%</td>
+                            <td>str</td>
+                            <td>str</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>fetch_user_data</code></td>
+                            <td><code>demo_function_class_tracking</code></td>
+                            <td>6</td>
+                            <td>0.0236s</td>
+                            <td>83.3%</td>
+                            <td>str</td>
+                            <td>str</td>
                         </tr>
             
                     </table>
                 </div>
                 
                 <div class="section">
-                    <h2>🚫 Unused Endpoints</h2>
+                    <h2>🏗️ Most Used Classes</h2>
+                    <table>
+                        <tr><th>Class Name</th><th>File</th><th>Instantiations</th><th>Methods Called</th><th>Most Used Method</th><th>Constructor Args</th></tr>
+        
+                        <tr>
+                            <td><code>UserService</code></td>
+                            <td><code>demo_function_class_tracking</code></td>
+                            <td>2</td>
+                            <td>7 calls on 3 methods</td>
+                            <td><code>create_user</code></td>
+                            <td><code>(sqlite:///demo.db)</code></td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>DataProcessor</code></td>
+                            <td><code>demo_function_class_tracking</code></td>
+                            <td>2</td>
+                            <td>4 calls on 2 methods</td>
+                            <td><code>process_batch</code></td>
+                            <td><code>(batch_size=100)</code></td>
+                        </tr>
+            
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <h2>🚫 Unused Code</h2>
+                    <h3>Unused Endpoints</h3>
                     <ul>
         
+                    </ul>
+                    <h3>Unused Functions (Top 20)</h3>
+                    <ul>
+        <li>❌ <code>test_sample_pytest.test_parametrized</code></li><li>❌ <code>integrated_usage_analyzer._discover_code_structure</code></li><li>❌ <code>personal_info_extractor_db.split_documents</code></li><li>❌ <code>form_filler_optimized._log_satisfaction_decision</code></li><li>❌ <code>integrated_usage_analyzer._serialize_function_usage</code></li><li>❌ <code>main.get_session_user</code></li><li>❌ <code>form_filler_optimized._generate_personal_info_search_queries</code></li><li>❌ <code>performance_monitor.save_report</code></li><li>❌ <code>test_improved_chunking.test_improved_chunking</code></li><li>❌ <code>conftest.start_timer</code></li><li>❌ <code>demo_function_class_tracking.process_batch</code></li><li>❌ <code>personal_info_extractor_optimized.save_to_vectordb_optimized</code></li><li>❌ <code>form_filler_cache_analytics._parse_response</code></li><li>❌ <code>personal_info_extractor_optimized.get_performance_metrics</code></li><li>❌ <code>vector_store.delete_document</code></li><li>❌ <code>realtime_usage_analyzer.main</code></li><li>❌ <code>test_sample_pytest.module_specific_fixture</code></li><li>❌ <code>run_all_tests.generate_consolidated_report</code></li><li>❌ <code>run_tests.start_server</code></li><li>❌ <code>test_url_tracking_api.test_get_stats</code></li>
+                    </ul>
+                    <h3>Unused Classes (Top 20)</h3>
+                    <ul>
+        <li>❌ <code>llm_service.RedisLLMService</code></li><li>❌ <code>schemas.FormResponse</code></li><li>❌ <code>models.FormDb</code></li><li>❌ <code>test_sample_pytest.TestSampleSlow</code></li><li>❌ <code>form_filler.FormFiller</code></li><li>❌ <code>api.FormAnalysisRequest</code></li><li>❌ <code>postgres_service.FormTable</code></li><li>❌ <code>form_filler_optimized.OptimizedFormFiller</code></li><li>❌ <code>usage_middleware.UsageAnalysisMiddleware</code></li><li>❌ <code>vector_store.RedisVectorStore</code></li><li>❌ <code>main.UpdateSessionResponse</code></li><li>❌ <code>integrated_usage_analyzer.IntegratedUsageAnalyzer</code></li><li>❌ <code>main.SimpleRegisterResponse</code></li><li>❌ <code>main.RedisWorkflowTestResponse</code></li><li>❌ <code>main.DocumentUploadResponse</code></li><li>❌ <code>test_sample_pytest.TestWithSetupTeardown</code></li><li>❌ <code>run_all_tests.PytestTestRunner</code></li><li>❌ <code>main.SessionCreateRequest</code></li><li>❌ <code>detailed_code_analysis.DetailedCodeAnalyzer</code></li><li>❌ <code>form_filler_cache_analytics.FormFillerWithCacheAnalytics</code></li>
                     </ul>
                 </div>
             </div>

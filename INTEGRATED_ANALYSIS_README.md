@@ -80,16 +80,30 @@ ENABLE_USAGE_ANALYSIS=false  # Disable
 
 ### 🔍 Code Discovery
 
-- **Functions**: All Python functions in your codebase (369 discovered)
-- **Classes**: All Python classes (77 discovered)
+- **Functions**: All Python functions in your codebase with signatures (392 discovered)
+- **Classes**: All Python classes with methods and inheritance (80 discovered)
 - **Endpoints**: All FastAPI route definitions
+
+### ⚡ Function Tracking (NEW!)
+
+- **Execution Monitoring**: Track function calls with timing data
+- **Input/Output Analysis**: Parameter types and example values
+- **Success/Error Rates**: Monitor function reliability
+- **Performance Metrics**: Execution times and bottlenecks
+
+### 🏗️ Class Usage Tracking (NEW!)
+
+- **Instantiation Monitoring**: Track class creation and constructor arguments
+- **Method Usage**: Monitor which methods are called and how often
+- **Usage Patterns**: Identify most-used methods per class
+- **Instance Analytics**: Analyze constructor argument patterns
 
 ### 📈 Performance Metrics
 
-- **Call Frequency**: Which endpoints are used most/least
-- **Response Performance**: Average response times
-- **Error Rates**: Status code distributions
-- **Usage Patterns**: When endpoints are called
+- **Call Frequency**: Which endpoints/functions/classes are used most/least
+- **Response Performance**: Average response times and execution times
+- **Error Rates**: Status code distributions and function success rates
+- **Usage Patterns**: When endpoints are called and functions are executed
 
 ## 📁 Report Locations
 
@@ -103,6 +117,46 @@ tests/reports/
 └── integrated_analysis.db             # SQLite database
 ```
 
+## 🔧 Function & Class Tracking
+
+### Using Decorators (Optional)
+
+For detailed function and class tracking, you can use the provided decorators:
+
+```python
+from app.utils.usage_decorators import track_function, track_class
+
+# Track function calls
+@track_function
+def my_function(param1: str, param2: int) -> str:
+    return f"{param1}_{param2}"
+
+# Track class usage
+@track_class
+class MyService:
+    def __init__(self, config: str):
+        self.config = config
+
+    def process_data(self, data: list) -> dict:
+        return {"processed": len(data)}
+```
+
+### Automatic Discovery
+
+Even without decorators, the analyzer automatically discovers:
+
+- All functions and their signatures
+- All classes and their methods
+- Function and class locations in your codebase
+
+### Demo Script
+
+Run the function/class tracking demo:
+
+```bash
+python demo_function_class_tracking.py
+```
+
 ## 🌐 View Reports
 
 ### HTML Dashboard
@@ -111,8 +165,10 @@ Open `tests/reports/integrated_analysis_current.html` in your browser for a beau
 
 - 📊 Usage overview and metrics
 - 🎯 Code coverage statistics
-- 📈 Most/least used endpoints
-- 🚫 Unused endpoints list
+- 📈 Most used endpoints table with detailed info
+- ⚡ **Most Used Functions table** (NEW!) - function name, file, calls, timing, success rate, input/output types
+- 🏗️ **Most Used Classes table** (NEW!) - class name, file, instantiations, method calls, constructor args
+- 🚫 Unused code lists (endpoints, functions, classes)
 - 💡 Toggle instructions
 
 ### JSON Data
@@ -123,6 +179,7 @@ Use `tests/reports/integrated_analysis_current.json` for:
 - Custom reporting
 - Data integration
 - API consumption
+- Function and class usage data
 
 ## 🔧 API Endpoints
 
