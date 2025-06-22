@@ -11,7 +11,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 from functools import lru_cache
 import openai
-from loguru import logger
+from app.utils.logger import logger
 
 from app.services.embedding_service import EmbeddingService
 from app.services.vector_store import RedisVectorStore
@@ -76,9 +76,9 @@ class RedisLLMService:
         speed_emoji = "⚡" if is_hit else "🐌"
         
         logger.info(f"")
-        logger.info(f"{'='*80}")
+        logger.info(f"{'='*100}")
         logger.info(f"🔍 CACHE ANALYSIS: {operation}")
-        logger.info(f"{'='*80}")
+        logger.info(f"{'='*100}")
         logger.info(f"   📊 Cache Type: {cache_type}")
         logger.info(f"   {status_emoji} Result: {'CACHE HIT' if is_hit else 'CACHE MISS'}")
         logger.info(f"   {speed_emoji} Speed: {'FAST (cached)' if is_hit else 'SLOW (vector search)'}")
@@ -86,9 +86,11 @@ class RedisLLMService:
         logger.info(f"   📝 Details: {details}")
         
         if is_hit:
-            logger.info(f"   💡 BENEFIT: Avoided expensive vector database search")
+            logger.info(f"   💡 WHY FAST: Data was already in memory cache")
+            logger.info(f"   🚀 BENEFIT: Avoided expensive vector database search + embedding computation")
             self.cache_stats['total_time_saved'] += 1.5  # Estimate 1.5s saved per cache hit
         else:
+            logger.info(f"   💡 WHY SLOW: Had to search Redis vector database + compute embeddings")
             logger.info(f"   📈 FUTURE: This result is now cached for next time")
         
         # Update cache hit rate
@@ -101,8 +103,14 @@ class RedisLLMService:
                          self.cache_stats['answer_cache_hits'])
             self.cache_stats['cache_hit_rate'] = total_hits / total_cache_requests
         
-        logger.info(f"   📊 CACHE STATS: Hit Rate: {self.cache_stats['cache_hit_rate']:.1%}")
-        logger.info(f"{'='*80}")
+        # Show current cache statistics
+        logger.info(f"   📊 CURRENT CACHE STATS:")
+        logger.info(f"      • {cache_type} Hits: {self.cache_stats.get(f'{cache_type}_hits', 0)}")
+        logger.info(f"      • {cache_type} Misses: {self.cache_stats.get(f'{cache_type}_misses', 0)}")
+        logger.info(f"      • Overall Hit Rate: {self.cache_stats['cache_hit_rate']:.1%}")
+        logger.info(f"      • Total Time Saved: {self.cache_stats['total_time_saved']:.1f}s")
+        logger.info(f"      • Vector Searches Avoided: {self.cache_stats['vector_searches_avoided']}")
+        logger.info(f"{'='*100}")
 
     def _generate_cache_key(self, query: str, user_id: str, cache_type: str) -> str:
         """Generate optimized cache key"""
@@ -168,7 +176,8 @@ class RedisLLMService:
         self.performance_stats["total_requests"] += 1
         self.cache_stats["total_requests"] += 1
         
-        logger.info(f"🧠 Generating answer for: '{field_label}' (User: {user_id})")
+        # Log detailed request start
+        self._log_request_start(field_label, user_id, self.cache_stats["total_requests"])
         
         # Check answer cache first (fastest possible response)
         answer_cache_key = self._generate_cache_key(field_label, user_id, "answer")
@@ -189,6 +198,8 @@ class RedisLLMService:
             cached_answer["performance_metrics"]["processing_time_seconds"] = processing_time
             cached_answer["performance_metrics"]["cache_hit"] = True
             
+            logger.info(f"🎯 CACHE HIT - Returning instant answer: '{cached_answer['answer']}'")
+            
             return cached_answer
         
         self.cache_stats['answer_cache_misses'] += 1
@@ -196,23 +207,30 @@ class RedisLLMService:
         try:
             # Generate optimized search queries
             search_queries = self._generate_search_queries(field_label)
-            logger.info(f"🔍 Generated search queries: {search_queries}")
+            self._log_query_generation_analysis(field_label, search_queries)
             
             # TIER 1: Search Resume Vector Store with caching
             logger.info("🎯 TIER 1: Resume Vector Search with Advanced Caching")
+            tier1_start = time.time()
             resume_results = await self._search_resume_vectors_cached(search_queries, user_id)
+            tier1_time = time.time() - tier1_start
             
             # Check if TIER 1 is sufficient
             tier1_confidence = self._calculate_confidence(resume_results, field_label)
+            tier1_exit = tier1_confidence >= 0.8
             
-            if tier1_confidence >= 0.8:
+            self._log_tier_analysis(1, tier1_confidence, len(resume_results), tier1_time, tier1_exit)
+            
+            if tier1_exit:
                 # Early exit with resume data
                 answer = self._extract_answer_from_results(resume_results, field_label)
+                self._log_answer_extraction_analysis(resume_results, field_label, answer)
+                
                 if answer:
                     processing_time = time.time() - start_time
                     self.performance_stats["tier_1_exits"] += 1
                     
-                    logger.info(f"✅ TIER 1 EXIT: '{answer}' (confidence: {tier1_confidence:.2f})")
+                    logger.info(f"✅ TIER 1 EARLY EXIT SUCCESS")
                     
                     result = {
                         "answer": answer,
@@ -232,29 +250,39 @@ class RedisLLMService:
                     # Cache the result for future requests
                     self._cache_answer(answer_cache_key, result)
                     
+                    # Log comprehensive performance report
+                    self._log_comprehensive_performance_report(processing_time, 1, field_label)
+                    
                     return result
             
             # TIER 2: Search Personal Info Vector Store with caching
             logger.info("🎯 TIER 2: Personal Info Vector Search with Advanced Caching")
+            tier2_start = time.time()
             personal_results = await self._search_personal_info_vectors_cached(search_queries, user_id)
+            tier2_time = time.time() - tier2_start
             
             # Check if TIER 1 + TIER 2 is sufficient
             combined_confidence = self._calculate_combined_confidence(
                 resume_results, personal_results, field_label
             )
+            tier2_exit = combined_confidence >= 0.8
             
-            if combined_confidence >= 0.8:
+            self._log_tier_analysis(2, combined_confidence, len(resume_results) + len(personal_results), tier2_time, tier2_exit)
+            
+            if tier2_exit:
                 # Early exit with combined data
                 answer = self._extract_answer_from_combined_results(
                     resume_results, personal_results, field_label
                 )
+                self._log_answer_extraction_analysis(resume_results + personal_results, field_label, answer)
+                
                 if answer:
                     processing_time = time.time() - start_time
                     self.performance_stats["tier_2_exits"] += 1
                     
                     data_source = self._determine_primary_source(answer, resume_results, personal_results)
                     
-                    logger.info(f"✅ TIER 2 EXIT: '{answer}' (confidence: {combined_confidence:.2f})")
+                    logger.info(f"✅ TIER 2 EARLY EXIT SUCCESS")
                     
                     result = {
                         "answer": answer,
@@ -274,18 +302,28 @@ class RedisLLMService:
                     # Cache the result
                     self._cache_answer(answer_cache_key, result)
                     
+                    # Log comprehensive performance report
+                    self._log_comprehensive_performance_report(processing_time, 2, field_label)
+                    
                     return result
             
-            # TIER 3: LLM Generation with Context
-            logger.info("🎯 TIER 3: Enhanced LLM Generation")
+            # TIER 3: Enhanced LLM Generation
+            logger.info("🎯 TIER 3: Enhanced LLM Generation with Premium Quality")
+            tier3_start = time.time()
             llm_answer = await self._generate_llm_answer_enhanced(
                 field_label, resume_results, personal_results, field_context
             )
+            tier3_time = time.time() - tier3_start
             
             processing_time = time.time() - start_time
             self.performance_stats["tier_3_completions"] += 1
             
-            logger.info(f"✅ TIER 3 COMPLETE: '{llm_answer['answer']}' ({processing_time:.2f}s)")
+            # Log LLM generation analysis
+            resume_context = "\n".join([result.get("text", "") for result in resume_results[:3]])
+            personal_context = "\n".join([result.get("text", "") for result in personal_results[:3]])
+            self._log_llm_generation_analysis(field_label, resume_context, personal_context, llm_answer["answer"], llm_answer["data_source"])
+            
+            logger.info(f"✅ TIER 3 FULL PROCESSING COMPLETE")
             
             result = {
                 "answer": llm_answer["answer"],
@@ -298,18 +336,35 @@ class RedisLLMService:
                     "confidence_score": combined_confidence,
                     "early_exit": False,
                     "cache_hit": False,
-                    "cache_stats": self._get_cache_analytics()
+                    "cache_stats": self._get_cache_analytics(),
+                    "tier_breakdown": {
+                        "tier_1_time": tier1_time,
+                        "tier_2_time": tier2_time,
+                        "tier_3_time": tier3_time
+                    }
                 }
             }
             
             # Cache the final result
             self._cache_answer(answer_cache_key, result)
             
+            # Log comprehensive performance report
+            self._log_comprehensive_performance_report(processing_time, 3, field_label)
+            
             return result
             
         except Exception as e:
             processing_time = time.time() - start_time
             logger.error(f"❌ LLM answer generation failed: {e}")
+            
+            # Log error analysis
+            logger.info(f"")
+            logger.info(f"💥 ERROR ANALYSIS")
+            logger.info(f"{'='*50}")
+            logger.info(f"   ❌ Error Type: {type(e).__name__}")
+            logger.info(f"   📝 Error Message: {str(e)}")
+            logger.info(f"   ⏱️  Time Before Error: {processing_time:.3f}s")
+            logger.info(f"{'='*50}")
             
             return {
                 "answer": "Unable to generate answer",
@@ -765,4 +820,228 @@ Generate the precise value that should go directly into the form field:
             "answer_cache_size": len(self._answer_cache),
             "max_cache_size": self._cache_size,
             "cache_analytics": self._get_cache_analytics()
-        } 
+        }
+
+    def _log_request_start(self, field_label: str, user_id: str, request_number: int):
+        """Log detailed request start information"""
+        logger.info(f"")
+        logger.info(f"🚀 STARTING REQUEST #{request_number} WITH COMPREHENSIVE ANALYTICS")
+        logger.info(f"{'='*100}")
+        logger.info(f"📊 REQUEST DETAILS:")
+        logger.info(f"   • Field: '{field_label}'")
+        logger.info(f"   • User ID: {user_id}")
+        logger.info(f"   • Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info(f"   • Cache Status: {len(self._search_cache)} search entries, {len(self._answer_cache)} answer entries")
+        logger.info(f"{'='*100}")
+
+    def _log_tier_analysis(self, tier: int, confidence: float, results_count: int, time_taken: float, exit_decision: bool):
+        """Log detailed tier analysis"""
+        tier_emoji = "🎯" if tier == 1 else "🔍" if tier == 2 else "🧠"
+        tier_name = "RESUME VECTOR SEARCH" if tier == 1 else "PERSONAL INFO SEARCH" if tier == 2 else "LLM GENERATION"
+        
+        logger.info(f"")
+        logger.info(f"{tier_emoji} TIER {tier} ANALYSIS: {tier_name}")
+        logger.info(f"{'='*80}")
+        logger.info(f"   📊 Results Found: {results_count}")
+        logger.info(f"   🎯 Confidence Score: {confidence:.2f} ({confidence*100:.1f}%)")
+        logger.info(f"   ⏱️  Processing Time: {time_taken:.3f}s")
+        logger.info(f"   🚪 Exit Decision: {'YES - Early Exit' if exit_decision else 'NO - Continue to next tier'}")
+        
+        if exit_decision:
+            logger.info(f"   ✅ EARLY EXIT REASON: Confidence {confidence:.2f} >= 0.8 threshold")
+            logger.info(f"   🚀 PERFORMANCE BENEFIT: Avoided processing in remaining tiers")
+        else:
+            logger.info(f"   ⏭️  CONTINUE REASON: Confidence {confidence:.2f} < 0.8 threshold")
+            logger.info(f"   📈 STRATEGY: Gathering more data from next tier")
+        
+        logger.info(f"{'='*80}")
+
+    def _log_comprehensive_performance_report(self, total_time: float, tier_exit: int, field_label: str):
+        """Log comprehensive performance report similar to form_filler_cache_analytics"""
+        logger.info(f"")
+        logger.info(f"📊 COMPREHENSIVE PERFORMANCE REPORT")
+        logger.info(f"{'='*100}")
+        logger.info(f"🎯 REQUEST SUMMARY:")
+        logger.info(f"   • Field: '{field_label}'")
+        logger.info(f"   • Total Processing Time: {total_time:.3f}s")
+        logger.info(f"   • Tier Exit Level: {tier_exit}")
+        logger.info(f"   • Exit Strategy: {'Early Exit' if tier_exit < 3 else 'Full Processing'}")
+        
+        # Timing breakdown analysis
+        logger.info(f"")
+        logger.info(f"⏱️  PERFORMANCE ANALYSIS:")
+        if tier_exit == 1:
+            logger.info(f"   • Resume Search: {total_time:.3f}s")
+            logger.info(f"   • Personal Search: SKIPPED (early exit)")
+            logger.info(f"   • LLM Processing: SKIPPED (early exit)")
+            logger.info(f"   • Efficiency: EXCELLENT - Found answer in Tier 1")
+        elif tier_exit == 2:
+            logger.info(f"   • Resume + Personal Search: {total_time:.3f}s")
+            logger.info(f"   • LLM Processing: SKIPPED (early exit)")
+            logger.info(f"   • Efficiency: GOOD - Found answer in Tier 2")
+        else:
+            logger.info(f"   • Full 3-Tier Processing: {total_time:.3f}s")
+            logger.info(f"   • Efficiency: STANDARD - Required LLM generation")
+        
+        # Cache efficiency analysis
+        total_hits = self.cache_stats['resume_cache_hits'] + self.cache_stats['personal_cache_hits'] + self.cache_stats['answer_cache_hits']
+        total_misses = self.cache_stats['resume_cache_misses'] + self.cache_stats['personal_cache_misses'] + self.cache_stats['answer_cache_misses']
+        hit_rate = (total_hits / (total_hits + total_misses)) * 100 if (total_hits + total_misses) > 0 else 0
+        
+        logger.info(f"")
+        logger.info(f"🎯 CACHE EFFICIENCY REPORT:")
+        logger.info(f"   • Overall Hit Rate: {hit_rate:.1f}%")
+        logger.info(f"   • Resume Cache: {self.cache_stats['resume_cache_hits']} hits, {self.cache_stats['resume_cache_misses']} misses")
+        logger.info(f"   • Personal Cache: {self.cache_stats['personal_cache_hits']} hits, {self.cache_stats['personal_cache_misses']} misses")
+        logger.info(f"   • Answer Cache: {self.cache_stats['answer_cache_hits']} hits, {self.cache_stats['answer_cache_misses']} misses")
+        
+        logger.info(f"")
+        logger.info(f"⚡ OPTIMIZATION IMPACT:")
+        logger.info(f"   • Vector Searches Performed: {self.cache_stats['vector_searches_performed']}")
+        logger.info(f"   • Vector Searches Avoided: {self.cache_stats['vector_searches_avoided']}")
+        logger.info(f"   • Estimated Time Saved: {self.cache_stats['total_time_saved']:.1f}s")
+        
+        # Performance trend analysis
+        total_requests = self.cache_stats['total_requests']
+        if total_requests == 1:
+            trend = "First request - establishing baseline"
+            trend_emoji = "🏁"
+        elif hit_rate > 70:
+            trend = "EXCELLENT - High cache efficiency, optimal performance"
+            trend_emoji = "🏆"
+        elif hit_rate > 40:
+            trend = "GOOD - Cache warming up, performance improving"
+            trend_emoji = "📈"
+        elif hit_rate > 15:
+            trend = "BUILDING - Cache building, performance will improve"
+            trend_emoji = "🔨"
+        else:
+            trend = "INITIAL - Performance baseline being established"
+            trend_emoji = "🌱"
+        
+        logger.info(f"   • Performance Trend: {trend_emoji} {trend}")
+        
+        # Session statistics
+        logger.info(f"")
+        logger.info(f"📈 SESSION STATISTICS:")
+        logger.info(f"   • Total Requests: {total_requests}")
+        logger.info(f"   • Tier 1 Exits: {self.performance_stats['tier_1_exits']} ({(self.performance_stats['tier_1_exits']/total_requests)*100:.1f}%)")
+        logger.info(f"   • Tier 2 Exits: {self.performance_stats['tier_2_exits']} ({(self.performance_stats['tier_2_exits']/total_requests)*100:.1f}%)")
+        logger.info(f"   • Tier 3 Completions: {self.performance_stats['tier_3_completions']} ({(self.performance_stats['tier_3_completions']/total_requests)*100:.1f}%)")
+        
+        # Memory usage
+        logger.info(f"")
+        logger.info(f"💾 MEMORY USAGE:")
+        logger.info(f"   • Search Cache Size: {len(self._search_cache)}/{self._cache_size}")
+        logger.info(f"   • Answer Cache Size: {len(self._answer_cache)}/{self._cache_size}")
+        logger.info(f"   • Memory Efficiency: {((len(self._search_cache) + len(self._answer_cache))/(self._cache_size*2))*100:.1f}% utilized")
+        
+        logger.info(f"{'='*100}")
+
+    def _log_query_generation_analysis(self, field_label: str, generated_queries: List[str]):
+        """Log detailed query generation analysis"""
+        logger.info(f"")
+        logger.info(f"🔍 SMART QUERY GENERATION ANALYSIS")
+        logger.info(f"{'='*80}")
+        logger.info(f"   📝 Original Field: '{field_label}'")
+        logger.info(f"   🧠 Generated Queries: {len(generated_queries)} optimized queries")
+        
+        for i, query in enumerate(generated_queries, 1):
+            logger.info(f"      {i}. '{query}'")
+        
+        # Query strategy analysis
+        field_lower = field_label.lower()
+        if any(keyword in field_lower for keyword in ["email", "phone", "name", "address"]):
+            strategy = "CONTACT INFO STRATEGY - Prioritizing personal data extraction"
+        elif any(keyword in field_lower for keyword in ["company", "position", "title", "experience", "skill"]):
+            strategy = "PROFESSIONAL STRATEGY - Prioritizing resume data extraction"
+        elif any(keyword in field_lower for keyword in ["salary", "authorization", "visa"]):
+            strategy = "PREFERENCE STRATEGY - Prioritizing personal preferences"
+        else:
+            strategy = "GENERAL STRATEGY - Balanced professional and personal search"
+        
+        logger.info(f"   🎯 Query Strategy: {strategy}")
+        logger.info(f"   📊 Expected Benefits: Multiple targeted searches for higher accuracy")
+        logger.info(f"{'='*80}")
+
+    def _log_answer_extraction_analysis(self, results: List[Dict[str, Any]], field_label: str, extracted_answer: Optional[str]):
+        """Log detailed answer extraction analysis"""
+        logger.info(f"")
+        logger.info(f"🎯 ANSWER EXTRACTION ANALYSIS")
+        logger.info(f"{'='*60}")
+        logger.info(f"   📊 Input Results: {len(results)} vector search results")
+        logger.info(f"   🎯 Target Field: '{field_label}'")
+        
+        if extracted_answer:
+            logger.info(f"   ✅ Extracted Answer: '{extracted_answer}'")
+            logger.info(f"   🧠 Extraction Method: Pattern matching + field-specific logic")
+            
+            # Show extraction reasoning
+            field_lower = field_label.lower()
+            if "email" in field_lower:
+                logger.info(f"   📧 Strategy: Email regex pattern extraction")
+            elif "phone" in field_lower:
+                logger.info(f"   📞 Strategy: Phone number pattern extraction")
+            elif "name" in field_lower:
+                logger.info(f"   👤 Strategy: Name pattern recognition")
+            else:
+                logger.info(f"   📝 Strategy: Best result + sentence extraction")
+        else:
+            logger.info(f"   ❌ No Answer Extracted: Insufficient data in results")
+            logger.info(f"   📈 Next Step: Will proceed to next tier or LLM generation")
+        
+        # Show top results for transparency
+        if results:
+            logger.info(f"   📊 Top Results Analysis:")
+            for i, result in enumerate(results[:2], 1):
+                score = result.get("score", 0.0)
+                text_preview = result.get("text", "")[:50] + "..." if len(result.get("text", "")) > 50 else result.get("text", "")
+                logger.info(f"      {i}. Score: {score:.3f} | Preview: '{text_preview}'")
+        
+        logger.info(f"{'='*60}")
+
+    def _log_llm_generation_analysis(self, field_label: str, resume_context: str, personal_context: str, generated_answer: str, data_source: str):
+        """Log detailed LLM generation analysis"""
+        logger.info(f"")
+        logger.info(f"🧠 LLM GENERATION ANALYSIS")
+        logger.info(f"{'='*80}")
+        logger.info(f"   🎯 Target Field: '{field_label}'")
+        logger.info(f"   🤖 Model: GPT-4-0125-preview (Premium quality)")
+        logger.info(f"   📊 Context Analysis:")
+        
+        resume_words = len(resume_context.split()) if resume_context else 0
+        personal_words = len(personal_context.split()) if personal_context else 0
+        
+        logger.info(f"      • Resume Context: {resume_words} words {'✅' if resume_words > 0 else '❌'}")
+        logger.info(f"      • Personal Context: {personal_words} words {'✅' if personal_words > 0 else '❌'}")
+        
+        context_quality = "EXCELLENT" if (resume_words + personal_words) > 100 else "GOOD" if (resume_words + personal_words) > 50 else "LIMITED"
+        logger.info(f"      • Context Quality: {context_quality}")
+        
+        logger.info(f"   ✅ Generated Answer: '{generated_answer}'")
+        logger.info(f"   📍 Data Source: {data_source.upper()}")
+        
+        # Answer quality analysis
+        answer_length = len(generated_answer)
+        if answer_length < 3:
+            quality = "MINIMAL - Very short answer"
+        elif answer_length < 20:
+            quality = "CONCISE - Appropriate for form field"
+        elif answer_length < 50:
+            quality = "DETAILED - Good information content"
+        else:
+            quality = "COMPREHENSIVE - Rich information"
+        
+        logger.info(f"   📏 Answer Quality: {quality} ({answer_length} characters)")
+        
+        # Professional formatting check
+        has_email = "@" in generated_answer and "." in generated_answer
+        has_phone = any(char.isdigit() for char in generated_answer) and len([c for c in generated_answer if c.isdigit()]) >= 10
+        is_capitalized = generated_answer and generated_answer[0].isupper()
+        
+        formatting_score = sum([has_email and "email" in field_label.lower(), 
+                               has_phone and "phone" in field_label.lower(), 
+                               is_capitalized])
+        
+        logger.info(f"   ✨ Formatting Quality: {'EXCELLENT' if formatting_score > 0 or is_capitalized else 'STANDARD'}")
+        logger.info(f"{'='*80}") 

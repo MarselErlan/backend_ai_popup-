@@ -1,6 +1,6 @@
 """
 Logger Configuration for Smart Form Fill API
-Customizes loguru format to be more readable
+Customizes loguru format to be more readable with clean time format
 """
 
 import sys
@@ -8,14 +8,14 @@ from loguru import logger
 
 
 def configure_logger():
-    """Configure loguru logger with custom format"""
+    """Configure loguru logger with clean, short time format"""
     # Remove default handler
     logger.remove()
     
-    # Add custom handler with shorter format
+    # Add custom handler with clean HH:MM format
     logger.add(
         sys.stderr,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+        format="<green>{time:HH:MM}</green> | <level>{level: <4}</level> | <cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
         level="INFO",
         colorize=True
     )
