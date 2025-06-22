@@ -192,8 +192,9 @@ Response:
 
 - **Fixed Filenames**: Reports overwrite previous versions
 - **Automatic Cleanup**: Old database entries are pruned
-- **Backup Limits**: Only 5 most recent backups kept
+- **Backup Limits**: Only 1 most recent backup kept (maximum memory savings)
 - **Efficient Storage**: Compressed JSON and optimized database
+- **Manual Cleanup**: `python cleanup_old_analysis_reports.py` for manual cleanup
 
 ## 🛠️ Technical Details
 
@@ -287,6 +288,36 @@ uvicorn main:app --reload
 - **Export formats**: CSV, Excel, PDF reports
 - **Integration**: Slack/Discord notifications
 
+## 🧹 Memory Management
+
+### Automatic Cleanup
+
+The analyzer automatically manages memory by:
+
+- **Limiting backups**: Keeps only 1 most recent backup file
+- **Database pruning**: Removes old entries (keeps last 1000 per endpoint)
+- **Fixed filenames**: Current reports replace previous versions
+
+### Manual Cleanup
+
+```bash
+# View current reports and backup files
+python cleanup_old_analysis_reports.py --show
+
+# Clean up old backup files (interactive)
+python cleanup_old_analysis_reports.py
+
+# Help
+python cleanup_old_analysis_reports.py --help
+```
+
+### Memory Usage
+
+- **Typical usage**: 2-5MB additional memory
+- **Backup files**: ~50KB each (only 1 kept)
+- **Database**: ~10-20KB with automatic cleanup
+- **Total footprint**: <1MB for most applications
+
 ## 📞 Support
 
 Need help? Check:
@@ -295,6 +326,7 @@ Need help? Check:
 2. **Status API**: `GET /api/analysis/status`
 3. **Toggle Script**: `python toggle_analysis.py --help`
 4. **Environment**: Verify `ENABLE_USAGE_ANALYSIS` setting
+5. **Cleanup**: `python cleanup_old_analysis_reports.py --show`
 
 ---
 

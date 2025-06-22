@@ -378,18 +378,27 @@ class IntegratedUsageAnalyzer:
         logger.info(f"   💾 Backup: {backup_json_path}")
         
     def _cleanup_old_backups(self, report_dir: Path):
-        """Clean up old backup files"""
+        """Clean up old backup files - keep only 1 most recent"""
         try:
             backup_files = list(report_dir.glob("integrated_analysis_backup_*.json"))
-            backup_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
             
-            # Keep only the 5 most recent backups
-            for old_backup in backup_files[5:]:
+            if len(backup_files) <= 1:
+                return  # Keep at least 1 backup
+                
+            # Sort by filename (which includes timestamp) - newer files have later timestamps
+            backup_files.sort(key=lambda x: x.name, reverse=True)
+            
+            # Keep only the 1 most recent backup, delete the rest
+            files_to_delete = backup_files[1:]
+            for old_backup in files_to_delete:
                 old_backup.unlink()
-                logger.debug(f"🗑️  Cleaned up old backup: {old_backup.name}")
+                logger.info(f"🗑️  Cleaned up old backup: {old_backup.name}")
+                
+            if files_to_delete:
+                logger.info(f"📊 Backup cleanup: Kept {len(backup_files) - len(files_to_delete)} backup, removed {len(files_to_delete)} old files")
                 
         except Exception as e:
-            logger.debug(f"Failed to cleanup old backups: {e}")
+            logger.warning(f"Failed to cleanup old backups: {e}")
             
     def _generate_html_report(self, report: Dict[str, Any], output_path: Path):
         """Generate HTML report"""

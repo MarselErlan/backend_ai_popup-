@@ -42,8 +42,10 @@ def toggle_analysis(enable: bool):
         print("  • Performance metrics tracking")
         print("  • Report generation on shutdown (Ctrl+C)")
         print("  • Reports saved to tests/reports/")
+        print("  • Automatic backup cleanup (keeps only 1 recent backup)")
         print("\n🚀 Start your app: uvicorn main:app --reload")
         print("⏹️  Stop with Ctrl+C to generate reports")
+        print("\n🧹 Cleanup old backups: python cleanup_old_analysis_reports.py")
     else:
         print("\n❌ Analysis disabled for production use")
         print("🚀 Start your app: uvicorn main:app --reload")
