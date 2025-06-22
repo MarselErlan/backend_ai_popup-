@@ -1,0 +1,63 @@
+{
+  "test_summary": {
+    "total_tests": 7,
+    "passed_tests": 7,
+    "failed_tests": 0,
+    "success_rate": 100.0,
+    "total_time": 8.053066968917847
+  },
+  "performance_metrics": {
+    "health_check_time": 0.0014591217041015625
+  },
+  "test_details": [
+    {
+      "test_name": "API Health Check",
+      "message": "API healthy in 0.001s - Services: {'document_service': 'healthy', 'resume_extractor': 'cached', 'personal_info_extractor': 'cached', 'form_filler': 'cached'}",
+      "success": true,
+      "timestamp": "12:11:59"
+    },
+    {
+      "test_name": "User Registration",
+      "message": "User registered successfully in 0.241s - ID: 5d59c11e-e709-440f-bce5-b59f3a41c7a6",
+      "success": true,
+      "timestamp": "12:12:00"
+    },
+    {
+      "test_name": "Session Creation",
+      "message": "Session created in 0.008s - Session ID: 75b64e61...",
+      "success": true,
+      "timestamp": "12:12:00"
+    },
+    {
+      "test_name": "Demo Form Filling",
+      "message": "Demo form filling working in 3.036s - Answer: 'My name is [Your Name], and I am thrilled to be ap...'",
+      "success": true,
+      "timestamp": "12:12:04"
+    },
+    {
+      "test_name": "Authenticated Form Filling",
+      "message": "Authenticated form filling working in 1.240s - Answer: 'N/A...' (Source: generated)",
+      "success": true,
+      "timestamp": "12:12:05"
+    },
+    {
+      "test_name": "URL Tracking",
+      "message": "URL tracking working in 0.014s - Total URLs: 1",
+      "success": true,
+      "timestamp": "12:12:06"
+    },
+    {
+      "test_name": "Session Cleanup",
+      "message": "Session cleaned up in 0.005s",
+      "success": true,
+      "timestamp": "12:12:06"
+    }
+  ],
+  "errors": [],
+  "test_configuration": {
+    "base_url": "http://localhost:8000",
+    "test_email": "e2e_test_20250622_121159@example.com",
+    "user_id": "5d59c11e-e709-440f-bce5-b59f3a41c7a6",
+    "timestamp": "2025-06-22T12:12:07.385622"
+  }
+}
