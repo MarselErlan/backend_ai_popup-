@@ -1,0 +1,1198 @@
+{
+  "summary": {
+    "total_functions": 7,
+    "total_classes": 13,
+    "total_endpoints": 27,
+    "total_imports": 35,
+    "unused_functions": 0,
+    "unused_classes": 0
+  },
+  "functions": {
+    "all": [
+      "get_session_user",
+      "get_document_service",
+      "get_resume_extractor",
+      "get_personal_info_extractor",
+      "get_form_filler",
+      "get_redis_llm_service",
+      "extract_text_from_bytes"
+    ],
+    "endpoint_functions": [],
+    "service_functions": [],
+    "utility_functions": [
+      "get_resume_extractor",
+      "get_redis_llm_service",
+      "extract_text_from_bytes",
+      "get_session_user",
+      "get_document_service",
+      "get_personal_info_extractor",
+      "get_form_filler"
+    ],
+    "unused": [],
+    "details": {
+      "get_session_user": {
+        "line_number": 67,
+        "decorators": [],
+        "args": [
+          "db",
+          "session_id"
+        ],
+        "is_async": false,
+        "docstring": "Dependency to get the current user based on session ID from Authorization header\nRaises HTTPException if session is invalid or expired"
+      },
+      "get_document_service": {
+        "line_number": 102,
+        "decorators": [],
+        "args": [],
+        "is_async": false,
+        "docstring": "Cached document service singleton"
+      },
+      "get_resume_extractor": {
+        "line_number": 109,
+        "decorators": [],
+        "args": [],
+        "is_async": false,
+        "docstring": "Resume extractor singleton (cache disabled for debugging)"
+      },
+      "get_personal_info_extractor": {
+        "line_number": 123,
+        "decorators": [],
+        "args": [],
+        "is_async": false,
+        "docstring": "Cached personal info extractor singleton"
+      },
+      "get_form_filler": {
+        "line_number": 135,
+        "decorators": [],
+        "args": [],
+        "is_async": false,
+        "docstring": "Cached form filler singleton"
+      },
+      "get_redis_llm_service": {
+        "line_number": 148,
+        "decorators": [],
+        "args": [],
+        "is_async": false,
+        "docstring": "Get Redis-enabled LLM service instance"
+      },
+      "extract_text_from_bytes": {
+        "line_number": 730,
+        "decorators": [],
+        "args": [
+          "file_content",
+          "content_type"
+        ],
+        "is_async": false,
+        "docstring": "Extract text from file bytes based on content type"
+      }
+    }
+  },
+  "classes": {
+    "all": [
+      "ReembedResponse",
+      "FieldAnswerRequest",
+      "FieldAnswerResponse",
+      "UserRegister",
+      "UserLogin",
+      "SimpleRegisterResponse",
+      "SessionCreateRequest",
+      "SessionResponse",
+      "CurrentUserResponse",
+      "DocumentUploadResponse",
+      "DocumentInfoResponse",
+      "RedisWorkflowTestResponse",
+      "UpdateSessionResponse"
+    ],
+    "unused": [],
+    "details": {
+      "ReembedResponse": {
+        "line_number": 176,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": null
+      },
+      "FieldAnswerRequest": {
+        "line_number": 182,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": null
+      },
+      "FieldAnswerResponse": {
+        "line_number": 187,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": null
+      },
+      "UserRegister": {
+        "line_number": 198,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": null
+      },
+      "UserLogin": {
+        "line_number": 202,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": null
+      },
+      "SimpleRegisterResponse": {
+        "line_number": 316,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": "\ud83d\udcdd Simple response for register/login\nIncludes user_id and session_id for authentication"
+      },
+      "SessionCreateRequest": {
+        "line_number": 410,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": null
+      },
+      "SessionResponse": {
+        "line_number": 414,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": null
+      },
+      "CurrentUserResponse": {
+        "line_number": 420,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": null
+      },
+      "DocumentUploadResponse": {
+        "line_number": 852,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": null
+      },
+      "DocumentInfoResponse": {
+        "line_number": 862,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": null
+      },
+      "RedisWorkflowTestResponse": {
+        "line_number": 1193,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": null
+      },
+      "UpdateSessionResponse": {
+        "line_number": 1386,
+        "methods": [],
+        "bases": [
+          "BaseModel"
+        ],
+        "docstring": "Response for session update/creation"
+      }
+    }
+  },
+  "endpoints": {
+    "all": [
+      "POST /api/generate-field-answer",
+      "GET /api/validate-user/{user_id}",
+      "POST /api/simple/register",
+      "POST /api/simple/login",
+      "POST /api/session/create",
+      "GET /api/session/current/{session_id}",
+      "DELETE /api/session/{session_id}",
+      "GET /api/session/list/{user_id}",
+      "POST /api/demo/generate-field-answer",
+      "POST /api/v1/resume/reembed",
+      "POST /api/v1/personal-info/reembed",
+      "GET /api/v1/documents/status/all",
+      "POST /api/v1/resume/upload",
+      "GET /api/v1/resume",
+      "DELETE /api/v1/resume",
+      "GET /api/v1/documents/status",
+      "POST /api/v1/personal-info/upload",
+      "GET /api/v1/personal-info",
+      "GET /api/v1/personal-info/download",
+      "DELETE /api/v1/personal-info",
+      "GET /api/auth/validate",
+      "GET /",
+      "GET /health",
+      "POST /api/test/redis-workflow",
+      "POST /api/logout",
+      "POST /api/session/check-and-update/{user_id}",
+      "POST /api/test/redis-field-answer"
+    ],
+    "details": {
+      "POST /api/generate-field-answer": {
+        "method": "POST",
+        "path": "/api/generate-field-answer",
+        "function_name": "generate_field_answer",
+        "line_number": 243
+      },
+      "GET /api/validate-user/{user_id}": {
+        "method": "GET",
+        "path": "/api/validate-user/{user_id}",
+        "function_name": "validate_user_id",
+        "line_number": 287
+      },
+      "POST /api/simple/register": {
+        "method": "POST",
+        "path": "/api/simple/register",
+        "function_name": "simple_register_user",
+        "line_number": 326
+      },
+      "POST /api/simple/login": {
+        "method": "POST",
+        "path": "/api/simple/login",
+        "function_name": "simple_login_user",
+        "line_number": 382
+      },
+      "POST /api/session/create": {
+        "method": "POST",
+        "path": "/api/session/create",
+        "function_name": "create_user_session",
+        "line_number": 429
+      },
+      "GET /api/session/current/{session_id}": {
+        "method": "GET",
+        "path": "/api/session/current/{session_id}",
+        "function_name": "get_current_user_by_session",
+        "line_number": 475
+      },
+      "DELETE /api/session/{session_id}": {
+        "method": "DELETE",
+        "path": "/api/session/{session_id}",
+        "function_name": "delete_user_session",
+        "line_number": 525
+      },
+      "GET /api/session/list/{user_id}": {
+        "method": "GET",
+        "path": "/api/session/list/{user_id}",
+        "function_name": "list_user_sessions",
+        "line_number": 552
+      },
+      "POST /api/demo/generate-field-answer": {
+        "method": "POST",
+        "path": "/api/demo/generate-field-answer",
+        "function_name": "demo_generate_field_answer",
+        "line_number": 598
+      },
+      "POST /api/v1/resume/reembed": {
+        "method": "POST",
+        "path": "/api/v1/resume/reembed",
+        "function_name": "reembed_resume",
+        "line_number": 663
+      },
+      "POST /api/v1/personal-info/reembed": {
+        "method": "POST",
+        "path": "/api/v1/personal-info/reembed",
+        "function_name": "reembed_personal_info_from_database",
+        "line_number": 759
+      },
+      "GET /api/v1/documents/status/all": {
+        "method": "GET",
+        "path": "/api/v1/documents/status/all",
+        "function_name": "get_documents_status_legacy",
+        "line_number": 826
+      },
+      "POST /api/v1/resume/upload": {
+        "method": "POST",
+        "path": "/api/v1/resume/upload",
+        "function_name": "upload_resume",
+        "line_number": 874
+      },
+      "GET /api/v1/resume": {
+        "method": "GET",
+        "path": "/api/v1/resume",
+        "function_name": "get_user_resume",
+        "line_number": 921
+      },
+      "DELETE /api/v1/resume": {
+        "method": "DELETE",
+        "path": "/api/v1/resume",
+        "function_name": "delete_user_resume",
+        "line_number": 948
+      },
+      "GET /api/v1/documents/status": {
+        "method": "GET",
+        "path": "/api/v1/documents/status",
+        "function_name": "get_user_documents_status",
+        "line_number": 973
+      },
+      "POST /api/v1/personal-info/upload": {
+        "method": "POST",
+        "path": "/api/v1/personal-info/upload",
+        "function_name": "upload_personal_info",
+        "line_number": 995
+      },
+      "GET /api/v1/personal-info": {
+        "method": "GET",
+        "path": "/api/v1/personal-info",
+        "function_name": "get_personal_info",
+        "line_number": 1042
+      },
+      "GET /api/v1/personal-info/download": {
+        "method": "GET",
+        "path": "/api/v1/personal-info/download",
+        "function_name": "download_user_personal_info",
+        "line_number": 1074
+      },
+      "DELETE /api/v1/personal-info": {
+        "method": "DELETE",
+        "path": "/api/v1/personal-info",
+        "function_name": "delete_user_personal_info",
+        "line_number": 1098
+      },
+      "GET /api/auth/validate": {
+        "method": "GET",
+        "path": "/api/auth/validate",
+        "function_name": "validate_session",
+        "line_number": 1128
+      },
+      "GET /": {
+        "method": "GET",
+        "path": "/",
+        "function_name": "root",
+        "line_number": 1144
+      },
+      "GET /health": {
+        "method": "GET",
+        "path": "/health",
+        "function_name": "health_check",
+        "line_number": 1162
+      },
+      "POST /api/test/redis-workflow": {
+        "method": "POST",
+        "path": "/api/test/redis-workflow",
+        "function_name": "test_redis_workflow",
+        "line_number": 1200
+      },
+      "POST /api/logout": {
+        "method": "POST",
+        "path": "/api/logout",
+        "function_name": "logout_user",
+        "line_number": 1356
+      },
+      "POST /api/session/check-and-update/{user_id}": {
+        "method": "POST",
+        "path": "/api/session/check-and-update/{user_id}",
+        "function_name": "check_and_update_session",
+        "line_number": 1395
+      },
+      "POST /api/test/redis-field-answer": {
+        "method": "POST",
+        "path": "/api/test/redis-field-answer",
+        "function_name": "test_redis_field_answer",
+        "line_number": 1469
+      }
+    }
+  },
+  "imports": {
+    "os": [],
+    "asyncio": [],
+    "functools": [
+      "lru_cache"
+    ],
+    "contextlib": [
+      "asynccontextmanager"
+    ],
+    "dotenv": [
+      "load_dotenv"
+    ],
+    "fastapi": [
+      "Request",
+      "BackgroundTasks"
+    ],
+    "fastapi.middleware.cors": [
+      "CORSMiddleware"
+    ],
+    "fastapi.responses": [
+      "StreamingResponse"
+    ],
+    "httpcore": [
+      "request"
+    ],
+    "pydantic": [
+      "BaseModel",
+      "HttpUrl"
+    ],
+    "typing": [
+      "Dict",
+      "Any",
+      "List",
+      "Optional"
+    ],
+    "datetime": [
+      "datetime"
+    ],
+    "app.utils.logger": [
+      "configure_logger"
+    ],
+    "loguru": [
+      "logger"
+    ],
+    "sqlalchemy.orm": [
+      "Session"
+    ],
+    "io": [],
+    "sqlalchemy": [
+      "func"
+    ],
+    "time": [],
+    "PyPDF2": [],
+    "docx2txt": [],
+    "database": [
+      "get_db"
+    ],
+    "models": [
+      "User",
+      "UserSession"
+    ],
+    "app.services.form_filler_optimized": [
+      "OptimizedFormFiller"
+    ],
+    "resume_extractor_optimized": [
+      "ResumeExtractorOptimized"
+    ],
+    "personal_info_extractor_optimized": [
+      "PersonalInfoExtractorOptimized"
+    ],
+    "app.services.document_service": [
+      "DocumentService"
+    ],
+    "app.models.document_models": [
+      "ResumeDocument",
+      "PersonalInfoDocument"
+    ],
+    "app.utils.text_extractor": [
+      "extract_text_from_file"
+    ],
+    "app.services.embedding_service": [
+      "EmbeddingService"
+    ],
+    "app.services.llm_service": [
+      "RedisLLMService"
+    ],
+    "app.api.url_tracking_endpoints": [
+      "router"
+    ],
+    "uvicorn": [],
+    "app.services.vector_store": [
+      "VectorStore"
+    ],
+    "numpy": [],
+    "openai": []
+  },
+  "usage_analysis": {
+    "function_calls": {
+      "configure_logger": [
+        22
+      ],
+      "load_dotenv": [
+        56
+      ],
+      "getenv": [
+        59,
+        60,
+        61,
+        231,
+        232
+      ],
+      "lru_cache": [
+        101,
+        122,
+        134,
+        147
+      ],
+      "FastAPI": [
+        209
+      ],
+      "add_middleware": [
+        219
+      ],
+      "include_router": [
+        228
+      ],
+      "DocumentService": [
+        233,
+        106
+      ],
+      "EmbeddingService": [
+        234,
+        680,
+        769
+      ],
+      "post": [
+        243,
+        326,
+        382,
+        429,
+        598,
+        663,
+        759,
+        874,
+        995,
+        1200,
+        1356,
+        1395,
+        1469
+      ],
+      "get": [
+        287,
+        475,
+        552,
+        826,
+        921,
+        973,
+        1042,
+        1074,
+        1128,
+        1144,
+        1162,
+        629,
+        630,
+        631,
+        1362,
+        628,
+        635,
+        637,
+        638,
+        639,
+        640,
+        1488,
+        637,
+        643,
+        625
+      ],
+      "delete": [
+        525,
+        948,
+        1098,
+        956
+      ],
+      "ValueError": [
+        64,
+        753
+      ],
+      "Depends": [
+        67,
+        246,
+        288,
+        327,
+        383,
+        432,
+        478,
+        528,
+        555,
+        665,
+        761,
+        877,
+        923,
+        950,
+        975,
+        998,
+        1043,
+        1129,
+        1201,
+        1357,
+        1398
+      ],
+      "Header": [
+        67
+      ],
+      "first": [
+        76,
+        85,
+        294,
+        334,
+        390,
+        446,
+        490,
+        499,
+        534,
+        562,
+        1367,
+        1406,
+        1425
+      ],
+      "utcnow": [
+        90,
+        1431,
+        1420
+      ],
+      "commit": [
+        91,
+        360,
+        457,
+        505,
+        540,
+        1376,
+        1422,
+        963,
+        1114,
+        1433,
+        1451,
+        346
+      ],
+      "ResumeExtractorOptimized": [
+        113
+      ],
+      "clear_cache": [
+        119
+      ],
+      "RedisLLMService": [
+        150
+      ],
+      "info": [
+        156,
+        173,
+        160,
+        166,
+        269,
+        363,
+        394,
+        460,
+        507,
+        542,
+        607,
+        608,
+        643,
+        774,
+        1224,
+        1254,
+        1289,
+        1294,
+        1326,
+        1378,
+        1435,
+        1454,
+        337,
+        347
+      ],
+      "now": [
+        764,
+        504,
+        798,
+        821,
+        840,
+        1172,
+        1186
+      ],
+      "Query": [
+        827,
+        1076,
+        1100
+      ],
+      "File": [
+        876,
+        997
+      ],
+      "time": [
+        887,
+        1008,
+        1209,
+        901,
+        1022,
+        1329,
+        1345
+      ],
+      "run": [
+        1510
+      ],
+      "HTTPException": [
+        73,
+        82,
+        87,
+        281,
+        296,
+        310,
+        376,
+        392,
+        404,
+        448,
+        473,
+        496,
+        501,
+        523,
+        536,
+        550,
+        564,
+        592,
+        625,
+        657,
+        685,
+        725,
+        779,
+        824,
+        845,
+        916,
+        931,
+        946,
+        971,
+        989,
+        1037,
+        1051,
+        1069,
+        1084,
+        1096,
+        1122,
+        1364,
+        1373,
+        1384,
+        1412,
+        1467,
+        338,
+        961,
+        1112
+      ],
+      "PersonalInfoExtractorOptimized": [
+        127
+      ],
+      "OptimizedFormFiller": [
+        139
+      ],
+      "get_document_service": [
+        161,
+        679,
+        768,
+        830,
+        927,
+        954,
+        979,
+        1080,
+        1104,
+        1167,
+        1225
+      ],
+      "get_resume_extractor": [
+        162,
+        141
+      ],
+      "get_personal_info_extractor": [
+        163,
+        142
+      ],
+      "get_form_filler": [
+        164,
+        611
+      ],
+      "get_redis_llm_service": [
+        165,
+        256
+      ],
+      "FieldAnswerResponse": [
+        271,
+        645,
+        1492,
+        1501
+      ],
+      "User": [
+        356
+      ],
+      "set_password": [
+        357,
+        345
+      ],
+      "add": [
+        359,
+        456,
+        1450
+      ],
+      "refresh": [
+        361,
+        458,
+        1452
+      ],
+      "SimpleRegisterResponse": [
+        365,
+        396,
+        348
+      ],
+      "UserSession": [
+        451,
+        1445
+      ],
+      "SessionResponse": [
+        462
+      ],
+      "CurrentUserResponse": [
+        509
+      ],
+      "all": [
+        567
+      ],
+      "get_user_resume": [
+        683,
+        928,
+        1226
+      ],
+      "update_resume_status": [
+        691,
+        706,
+        718
+      ],
+      "get_personal_info_document": [
+        777,
+        1046
+      ],
+      "update_personal_info_status": [
+        782,
+        796,
+        815
+      ],
+      "get_documents_status": [
+        833,
+        980
+      ],
+      "save_resume_document": [
+        894
+      ],
+      "DocumentInfoResponse": [
+        933,
+        1056
+      ],
+      "save_personal_info_document": [
+        1015
+      ],
+      "get_active_personal_info_document": [
+        1081
+      ],
+      "StreamingResponse": [
+        1086
+      ],
+      "RedisVectorStore": [
+        1217
+      ],
+      "enumerate": [
+        1281
+      ],
+      "store_embeddings": [
+        1291
+      ],
+      "delete_document": [
+        1327
+      ],
+      "RedisWorkflowTestResponse": [
+        1331,
+        1348
+      ],
+      "update": [
+        1415,
+        1106
+      ],
+      "VectorStore": [
+        1476
+      ],
+      "search_similar_by_document_type": [
+        1479
+      ],
+      "filter": [
+        76,
+        85,
+        294,
+        334,
+        390,
+        446,
+        490,
+        499,
+        534,
+        562,
+        567,
+        1367,
+        1406,
+        1415,
+        956,
+        1106,
+        1425
+      ],
+      "error": [
+        168,
+        280,
+        309,
+        375,
+        403,
+        472,
+        522,
+        549,
+        591,
+        656,
+        724,
+        756,
+        823,
+        844,
+        915,
+        945,
+        970,
+        988,
+        1036,
+        1068,
+        1095,
+        1121,
+        1182,
+        1346,
+        1383,
+        1466
+      ],
+      "generate_field_answer": [
+        259
+      ],
+      "append": [
+        574,
+        1282,
+        1265
+      ],
+      "len": [
+        584,
+        908,
+        1029,
+        1261,
+        1323,
+        936,
+        1059,
+        1334,
+        1335,
+        1336,
+        1337,
+        1497
+      ],
+      "generate_field_values_optimized": [
+        622
+      ],
+      "extract_text_from_bytes": [
+        695
+      ],
+      "process_document": [
+        698,
+        788
+      ],
+      "total_seconds": [
+        799,
+        822
+      ],
+      "ReembedResponse": [
+        801
+      ],
+      "isoformat": [
+        840,
+        1172,
+        515,
+        516,
+        1186,
+        577,
+        578
+      ],
+      "read": [
+        891,
+        1012
+      ],
+      "round": [
+        910,
+        1031
+      ],
+      "get_session": [
+        955,
+        1105
+      ],
+      "BytesIO": [
+        1087,
+        735,
+        744
+      ],
+      "strip": [
+        1263
+      ],
+      "create": [
+        1270,
+        1307
+      ],
+      "zip": [
+        1281
+      ],
+      "str": [
+        1291,
+        1327,
+        1185,
+        281,
+        404,
+        989,
+        1318,
+        1353,
+        1384,
+        1504,
+        280,
+        403,
+        656,
+        724,
+        756,
+        915,
+        1036,
+        1068,
+        1383,
+        310,
+        657,
+        727,
+        824,
+        845,
+        918,
+        946,
+        971,
+        1039,
+        1071,
+        1096,
+        1122
+      ],
+      "search_similar": [
+        1316
+      ],
+      "UpdateSessionResponse": [
+        1437,
+        1456
+      ],
+      "verify_password": [
+        391
+      ],
+      "PdfReader": [
+        736
+      ],
+      "isinstance": [
+        786
+      ],
+      "decode": [
+        786,
+        750
+      ],
+      "array": [
+        1274,
+        1311
+      ],
+      "warning": [
+        1276
+      ],
+      "order_by": [
+        1425
+      ],
+      "query": [
+        76,
+        85,
+        294,
+        334,
+        390,
+        446,
+        490,
+        499,
+        534,
+        562,
+        567,
+        1367,
+        1406,
+        1415,
+        956,
+        1106,
+        1425
+      ],
+      "process": [
+        745
+      ],
+      "astype": [
+        1277,
+        1313
+      ],
+      "desc": [
+        1427
+      ],
+      "getattr": [
+        264,
+        265
+      ],
+      "extract_text": [
+        739
+      ],
+      "rand": [
+        1277,
+        1313
+      ]
+    },
+    "class_usage": {
+      "FieldAnswerResponse": [
+        599,
+        243,
+        598,
+        271,
+        645,
+        1492,
+        1501
+      ],
+      "FieldAnswerRequest": [
+        245,
+        599,
+        1470
+      ],
+      "UserRegister": [
+        327
+      ],
+      "SimpleRegisterResponse": [
+        326,
+        382,
+        365,
+        396,
+        348
+      ],
+      "UserLogin": [
+        383
+      ],
+      "SessionCreateRequest": [
+        431
+      ],
+      "SessionResponse": [
+        429,
+        462
+      ],
+      "CurrentUserResponse": [
+        475,
+        509
+      ],
+      "ReembedResponse": [
+        759,
+        801
+      ],
+      "DocumentUploadResponse": [
+        874,
+        995
+      ],
+      "DocumentInfoResponse": [
+        1042,
+        933,
+        1056
+      ],
+      "RedisWorkflowTestResponse": [
+        1200,
+        1331,
+        1348
+      ],
+      "UpdateSessionResponse": [
+        1395,
+        1437,
+        1456
+      ]
+    }
+  }
+}

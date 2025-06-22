@@ -6,8 +6,8 @@ Tests the new resume/vectordb → info/vectordb → generation pipeline
 
 import asyncio
 import json
-from backend.services.form_filler_optimized import FormFiller
-from backend.services.cache_service import CacheService
+from app.services.form_filler import FormFiller
+from app.services.cache_service import CacheService
 import os
 from dotenv import load_dotenv
 

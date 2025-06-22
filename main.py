@@ -37,8 +37,8 @@ from models import User, UserSession
 from app.services.form_filler_optimized import OptimizedFormFiller
 
 # Import database-based extractors
-from resume_extractor_optimized import ResumeExtractorOptimized
-from personal_info_extractor_optimized import PersonalInfoExtractorOptimized
+from app.services.resume_extractor_optimized import ResumeExtractorOptimized
+from app.services.personal_info_extractor_optimized import PersonalInfoExtractorOptimized
 from app.services.document_service import DocumentService
 from app.models.document_models import ResumeDocument, PersonalInfoDocument
 from app.utils.text_extractor import extract_text_from_file
