@@ -254,6 +254,14 @@ class IntegratedUsageAnalyzer:
         self.monitoring = True
         self.start_time = time.time()
         
+        # Enable automatic function/class tracking
+        try:
+            from app.services.auto_tracker import enable_auto_tracking
+            enable_auto_tracking()
+            logger.info("🔍 Automatic function/class tracking enabled")
+        except ImportError:
+            logger.debug("Auto tracking not available")
+        
         # Start background monitoring thread
         monitor_thread = threading.Thread(target=self._background_monitor, daemon=True)
         monitor_thread.start()
@@ -266,6 +274,14 @@ class IntegratedUsageAnalyzer:
             return
             
         self.monitoring = False
+        
+        # Disable automatic tracking
+        try:
+            from app.services.auto_tracker import disable_auto_tracking
+            disable_auto_tracking()
+            logger.info("🔍 Automatic function/class tracking disabled")
+        except ImportError:
+            pass
         
         # Generate final report
         report = self._generate_report()

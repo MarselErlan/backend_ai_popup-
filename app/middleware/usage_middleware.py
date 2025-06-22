@@ -1,7 +1,8 @@
 """
 Usage Analysis Middleware
 
-This middleware captures all FastAPI requests and sends them to the usage analyzer
+This middleware captures all FastAPI requests and sends them to the usage analyzer.
+It also enables runtime tracking of function calls and class instantiations.
 """
 
 import time
@@ -11,16 +12,16 @@ from starlette.types import ASGIApp
 from loguru import logger
 
 class UsageAnalysisMiddleware(BaseHTTPMiddleware):
-    """Middleware to capture API requests for usage analysis"""
+    """Middleware to capture API requests and runtime function/class usage"""
     
     def __init__(self, app: ASGIApp):
         super().__init__(app)
         
     async def dispatch(self, request: Request, call_next):
-        """Capture request and response for analysis"""
+        """Capture request, response, and runtime function/class usage"""
         start_time = time.time()
         
-        # Process the request
+        # Process the request (auto-tracking is global, no per-request setup needed)
         response = await call_next(request)
         
         # Calculate response time

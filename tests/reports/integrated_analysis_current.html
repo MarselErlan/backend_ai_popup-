@@ -33,7 +33,7 @@
             <div class="container">
                 <div class="header">
                     <h1>📊 Integrated Usage Analysis</h1>
-                    <p>Analysis Duration: 0.0 minutes | Generated: 2025-06-22 15:17:56</p>
+                    <p>Analysis Duration: 0.5 minutes | Generated: 2025-06-22 15:46:58</p>
                 </div>
                 
                 <div class="toggle-info">
@@ -47,11 +47,11 @@
                     <h2>📊 Overview</h2>
                     <div class="metrics-grid">
                         <div class="metric used">
-                            <div class="metric-value">0</div>
+                            <div class="metric-value">12</div>
                             <div class="metric-label">Total API Calls</div>
                         </div>
                         <div class="metric used">
-                            <div class="metric-value">0</div>
+                            <div class="metric-value">8</div>
                             <div class="metric-label">Endpoints Used</div>
                         </div>
                         <div class="metric">
@@ -59,11 +59,11 @@
                             <div class="metric-label">Endpoints Discovered</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-value">426</div>
+                            <div class="metric-value">454</div>
                             <div class="metric-label">Functions Discovered</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-value">84</div>
+                            <div class="metric-value">86</div>
                             <div class="metric-label">Classes Discovered</div>
                         </div>
                         <div class="metric unused">
@@ -81,11 +81,11 @@
                             <div class="metric-label">Endpoint Coverage</div>
                         </div>
                         <div class="metric used">
-                            <div class="metric-value">0.7%</div>
+                            <div class="metric-value">0.2%</div>
                             <div class="metric-label">Function Coverage</div>
                         </div>
                         <div class="metric used">
-                            <div class="metric-value">2.4%</div>
+                            <div class="metric-value">1.2%</div>
                             <div class="metric-label">Class Coverage</div>
                         </div>
                     </div>
@@ -96,6 +96,54 @@
                     <table>
                         <tr><th>Endpoint</th><th>Calls</th><th>Avg Response Time</th></tr>
         
+                        <tr>
+                            <td><code>GET /api/v1/documents/status</code></td>
+                            <td>3</td>
+                            <td>0.011s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>POST /api/generate-field-answer</code></td>
+                            <td>3</td>
+                            <td>1.026s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>DELETE /api/session/e21001f3-e590-40fc-8d40-0a5e0a4c30f2</code></td>
+                            <td>1</td>
+                            <td>0.014s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>POST /api/simple/login</code></td>
+                            <td>1</td>
+                            <td>0.272s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>POST /api/session/check-and-update/7ddf163e-1d05-43ae-aace-7d4ad85575f7</code></td>
+                            <td>1</td>
+                            <td>0.013s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>OPTIONS /api/v1/documents/status</code></td>
+                            <td>1</td>
+                            <td>0.000s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>OPTIONS /api/urls/stats/summary</code></td>
+                            <td>1</td>
+                            <td>0.000s</td>
+                        </tr>
+            
+                        <tr>
+                            <td><code>GET /api/urls/stats/summary</code></td>
+                            <td>1</td>
+                            <td>0.037s</td>
+                        </tr>
+            
                     </table>
                 </div>
                 
@@ -105,31 +153,11 @@
                         <tr><th>Function Name</th><th>File</th><th>Calls</th><th>Avg Time</th><th>Success Rate</th><th>Input Types</th><th>Output Types</th></tr>
         
                         <tr>
-                            <td><code>calculate_sum</code></td>
-                            <td><code>demo_function_class_tracking</code></td>
-                            <td>6</td>
-                            <td>0.0125s</td>
+                            <td><code>generate_field_answer</code></td>
+                            <td><code>llm_service</code></td>
+                            <td>3</td>
+                            <td>1.0203s</td>
                             <td>100.0%</td>
-                            <td>str</td>
-                            <td>str</td>
-                        </tr>
-            
-                        <tr>
-                            <td><code>process_text</code></td>
-                            <td><code>demo_function_class_tracking</code></td>
-                            <td>6</td>
-                            <td>0.0061s</td>
-                            <td>100.0%</td>
-                            <td>str</td>
-                            <td>str</td>
-                        </tr>
-            
-                        <tr>
-                            <td><code>fetch_user_data</code></td>
-                            <td><code>demo_function_class_tracking</code></td>
-                            <td>6</td>
-                            <td>0.0236s</td>
-                            <td>83.3%</td>
                             <td>str</td>
                             <td>str</td>
                         </tr>
@@ -143,21 +171,12 @@
                         <tr><th>Class Name</th><th>File</th><th>Instantiations</th><th>Methods Called</th><th>Most Used Method</th><th>Constructor Args</th></tr>
         
                         <tr>
-                            <td><code>UserService</code></td>
-                            <td><code>demo_function_class_tracking</code></td>
-                            <td>2</td>
-                            <td>7 calls on 3 methods</td>
-                            <td><code>create_user</code></td>
-                            <td><code>(sqlite:///demo.db)</code></td>
-                        </tr>
-            
-                        <tr>
-                            <td><code>DataProcessor</code></td>
-                            <td><code>demo_function_class_tracking</code></td>
-                            <td>2</td>
-                            <td>4 calls on 2 methods</td>
-                            <td><code>process_batch</code></td>
-                            <td><code>(batch_size=100)</code></td>
+                            <td><code>RedisLLMService</code></td>
+                            <td><code>llm_service</code></td>
+                            <td>3</td>
+                            <td>3 calls on 1 methods</td>
+                            <td><code>generate_field_answer</code></td>
+                            <td><code>(redis_url=redis://localhost:63...)</code></td>
                         </tr>
             
                     </table>
@@ -171,11 +190,11 @@
                     </ul>
                     <h3>Unused Functions (Top 20)</h3>
                     <ul>
-        <li>❌ <code>test_sample_pytest.test_parametrized</code></li><li>❌ <code>integrated_usage_analyzer._discover_code_structure</code></li><li>❌ <code>personal_info_extractor_db.split_documents</code></li><li>❌ <code>form_filler_optimized._log_satisfaction_decision</code></li><li>❌ <code>integrated_usage_analyzer._serialize_function_usage</code></li><li>❌ <code>main.get_session_user</code></li><li>❌ <code>form_filler_optimized._generate_personal_info_search_queries</code></li><li>❌ <code>performance_monitor.save_report</code></li><li>❌ <code>test_improved_chunking.test_improved_chunking</code></li><li>❌ <code>conftest.start_timer</code></li><li>❌ <code>demo_function_class_tracking.process_batch</code></li><li>❌ <code>personal_info_extractor_optimized.save_to_vectordb_optimized</code></li><li>❌ <code>form_filler_cache_analytics._parse_response</code></li><li>❌ <code>personal_info_extractor_optimized.get_performance_metrics</code></li><li>❌ <code>vector_store.delete_document</code></li><li>❌ <code>realtime_usage_analyzer.main</code></li><li>❌ <code>test_sample_pytest.module_specific_fixture</code></li><li>❌ <code>run_all_tests.generate_consolidated_report</code></li><li>❌ <code>run_tests.start_server</code></li><li>❌ <code>test_url_tracking_api.test_get_stats</code></li>
+        <li>❌ <code>test_sample_pytest.module_specific_fixture</code></li><li>❌ <code>conftest.test_report_data</code></li><li>❌ <code>resume_extractor_optimized.create_embeddings_optimized</code></li><li>❌ <code>text_extractor.extract_from_pdf</code></li><li>❌ <code>form_filler_cache_analytics._create_prompt</code></li><li>❌ <code>main.get_form_filler</code></li><li>❌ <code>auto_tracker.get_analyzer</code></li><li>❌ <code>resume_extractor_db.load_resume_from_database</code></li><li>❌ <code>test_url_tracking_api.test_save_urls</code></li><li>❌ <code>resume_extractor_db.search_resume</code></li><li>❌ <code>test_upload_api.test_demo_resume_upload</code></li><li>❌ <code>detailed_code_analysis._analyze_usage_patterns</code></li><li>❌ <code>integrated_usage_analyzer._serialize_function_usage</code></li><li>❌ <code>database.create_tables</code></li><li>❌ <code>test_end_to_end.__init__</code></li><li>❌ <code>document_service._get_file_extension</code></li><li>❌ <code>test_sample_pytest.test_with_mock_patch</code></li><li>❌ <code>test_api.test_health_check</code></li><li>❌ <code>conftest.temp_directory</code></li><li>❌ <code>document_service.save_resume_document</code></li>
                     </ul>
                     <h3>Unused Classes (Top 20)</h3>
                     <ul>
-        <li>❌ <code>llm_service.RedisLLMService</code></li><li>❌ <code>schemas.FormResponse</code></li><li>❌ <code>models.FormDb</code></li><li>❌ <code>test_sample_pytest.TestSampleSlow</code></li><li>❌ <code>form_filler.FormFiller</code></li><li>❌ <code>api.FormAnalysisRequest</code></li><li>❌ <code>postgres_service.FormTable</code></li><li>❌ <code>form_filler_optimized.OptimizedFormFiller</code></li><li>❌ <code>usage_middleware.UsageAnalysisMiddleware</code></li><li>❌ <code>vector_store.RedisVectorStore</code></li><li>❌ <code>main.UpdateSessionResponse</code></li><li>❌ <code>integrated_usage_analyzer.IntegratedUsageAnalyzer</code></li><li>❌ <code>main.SimpleRegisterResponse</code></li><li>❌ <code>main.RedisWorkflowTestResponse</code></li><li>❌ <code>main.DocumentUploadResponse</code></li><li>❌ <code>test_sample_pytest.TestWithSetupTeardown</code></li><li>❌ <code>run_all_tests.PytestTestRunner</code></li><li>❌ <code>main.SessionCreateRequest</code></li><li>❌ <code>detailed_code_analysis.DetailedCodeAnalyzer</code></li><li>❌ <code>form_filler_cache_analytics.FormFillerWithCacheAnalytics</code></li>
+        <li>❌ <code>test_sample_pytest.TestSampleUnit</code></li><li>❌ <code>form_filler.FormFiller</code></li><li>❌ <code>demo_function_class_tracking.UserService</code></li><li>❌ <code>schemas.FormFieldSchema</code></li><li>❌ <code>api.FormAnalysisRequest</code></li><li>❌ <code>schemas.FormResponse</code></li><li>❌ <code>test_sample_pytest.TestSampleIntegration</code></li><li>❌ <code>integrated_usage_analyzer.IntegratedUsageAnalyzer</code></li><li>❌ <code>schemas.DetailedFormAnalysisResponse</code></li><li>❌ <code>main.FieldAnswerRequest</code></li><li>❌ <code>main.RedisWorkflowTestResponse</code></li><li>❌ <code>schemas.FormAnalysisResponse</code></li><li>❌ <code>test_sample_pytest.TestWithSetupTeardown</code></li><li>❌ <code>models.User</code></li><li>❌ <code>models.TrackedUrl</code></li><li>❌ <code>schemas.UpdateUrlStatusRequest</code></li><li>❌ <code>main.ReembedResponse</code></li><li>❌ <code>auto_tracker.TrackedClass</code></li><li>❌ <code>conftest.APIClient</code></li><li>❌ <code>integrated_usage_analyzer.FunctionUsage</code></li>
                     </ul>
                 </div>
             </div>

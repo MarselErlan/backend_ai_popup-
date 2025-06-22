@@ -152,6 +152,9 @@ def get_redis_llm_service():
 # Import usage analyzer
 from app.services.integrated_usage_analyzer import start_analysis, stop_analysis
 
+# Import simple function tracker
+from app.services.simple_function_tracker import track_service_call, track_class_creation, track_method_call
+
 # Lifecycle management
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -268,7 +271,11 @@ async def generate_field_answer(
         # Get Redis-enabled LLM service
         llm_service = get_redis_llm_service()
         
+        # Track LLM service instantiation
+        track_class_creation("RedisLLMService", "llm_service", f"(redis_url={REDIS_URL[:20]}...)")
+        
         # Generate answer using Redis-powered system
+        service_start = time.time()
         result = await llm_service.generate_field_answer(
             field_label=field_data.label,
             user_id=user.id,
@@ -278,6 +285,18 @@ async def generate_field_answer(
                 "field_name": getattr(field_data, 'field_name', None)
             }
         )
+        service_time = time.time() - service_start
+        
+        # Track the service call
+        track_service_call(
+            "generate_field_answer",
+            "llm_service",
+            service_time,
+            f"(field_label={field_data.label}, user_id={user.id}, url={field_data.url})",
+            f"answer={result['answer'][:50]}..., source={result['data_source']}",
+            True
+        )
+        track_method_call("RedisLLMService", "generate_field_answer", "llm_service")
         
         logger.info(f"✅ Generated answer: '{result['answer']}' (source: {result['data_source']}) in {result['performance_metrics']['processing_time_seconds']:.2f}s")
         
@@ -904,12 +923,25 @@ async def upload_resume(
         file_content = await file.read()
         
         # Save document
+        service_start = time.time()
         document_id = document_service.save_resume_document(
             filename=file.filename,
             file_content=file_content,
             content_type=file.content_type,
             user_id=user.id if user else None
         )
+        service_time = time.time() - service_start
+        
+        # Track the service call
+        track_service_call(
+            "save_resume_document",
+            "document_service", 
+            service_time,
+            f"(filename={file.filename}, size={len(file_content)}, user_id={user.id})",
+            f"document_id={document_id}",
+            True
+        )
+        track_method_call("DocumentService", "save_resume_document", "document_service")
         
         processing_time = time.time() - start_time
         
@@ -1025,12 +1057,25 @@ async def upload_personal_info(
         file_content = await file.read()
         
         # Save document
+        service_start = time.time()
         document_id = document_service.save_personal_info_document(
             filename=file.filename,
             file_content=file_content,
             content_type=file.content_type,
             user_id=user.id if user else None
         )
+        service_time = time.time() - service_start
+        
+        # Track the service call
+        track_service_call(
+            "save_personal_info_document",
+            "document_service", 
+            service_time,
+            f"(filename={file.filename}, size={len(file_content)}, user_id={user.id})",
+            f"document_id={document_id}",
+            True
+        )
+        track_method_call("DocumentService", "save_personal_info_document", "document_service")
         
         processing_time = time.time() - start_time
         
