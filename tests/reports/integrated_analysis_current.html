@@ -1,167 +1,991 @@
 
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Integrated Usage Analysis Report</title>
-            <style>
-                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-                .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
-                .header h1 { margin: 0; font-size: 2.5em; }
-                .header p { margin: 10px 0 0 0; opacity: 0.9; }
-                .section { margin: 30px 0; }
-                .section h2 { color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
-                .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
-                .metric { background: #f8f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; }
-                .metric-value { font-size: 2em; font-weight: bold; color: #667eea; }
-                .metric-label { color: #666; font-size: 0.9em; }
-                .unused { background: #fff5f5; border-left-color: #e53e3e; }
-                .unused .metric-value { color: #e53e3e; }
-                .used { background: #f0fff4; border-left-color: #38a169; }
-                .used .metric-value { color: #38a169; }
-                table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-                th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                th { background-color: #667eea; color: white; }
-                tr:nth-child(even) { background-color: #f9f9f9; }
-                .status-200 { color: #38a169; font-weight: bold; }
-                .status-404 { color: #e53e3e; font-weight: bold; }
-                .status-500 { color: #d69e2e; font-weight: bold; }
-                .toggle-info { background: #e6f7ff; padding: 15px; border-radius: 5px; margin: 20px 0; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>📊 Integrated Usage Analysis</h1>
-                    <p>Analysis Duration: 4.4 minutes | Generated: 2025-06-22 19:09:32</p>
-                </div>
-                
-                <div class="toggle-info">
-                    <h3>💡 Toggle Analysis</h3>
-                    <p><strong>Enable:</strong> Set environment variable <code>ENABLE_USAGE_ANALYSIS=true</code></p>
-                    <p><strong>Disable:</strong> Set environment variable <code>ENABLE_USAGE_ANALYSIS=false</code></p>
-                    <p><strong>Current Status:</strong> ✅ Enabled</p>
-                </div>
-                
-                <div class="section">
-                    <h2>📊 Overview</h2>
-                    <div class="metrics-grid">
-                        <div class="metric used">
-                            <div class="metric-value">3</div>
-                            <div class="metric-label">Total API Calls</div>
-                        </div>
-                        <div class="metric used">
-                            <div class="metric-value">2</div>
-                            <div class="metric-label">Endpoints Used</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-value">0</div>
-                            <div class="metric-label">Endpoints Discovered</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-value">496</div>
-                            <div class="metric-label">Functions Discovered</div>
-                        </div>
-                        <div class="metric">
-                            <div class="metric-value">100</div>
-                            <div class="metric-label">Classes Discovered</div>
-                        </div>
-                        <div class="metric unused">
-                            <div class="metric-value">0</div>
-                            <div class="metric-label">Unused Endpoints</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="section">
-                    <h2>📈 Code Coverage</h2>
-                    <div class="metrics-grid">
-                        <div class="metric used">
-                            <div class="metric-value">0.0%</div>
-                            <div class="metric-label">Endpoint Coverage</div>
-                        </div>
-                        <div class="metric used">
-                            <div class="metric-value">0.2%</div>
-                            <div class="metric-label">Function Coverage</div>
-                        </div>
-                        <div class="metric used">
-                            <div class="metric-value">1.0%</div>
-                            <div class="metric-label">Class Coverage</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="section">
-                    <h2>🌐 Most Used Endpoints</h2>
-                    <table>
-                        <tr><th>Endpoint</th><th>Calls</th><th>Avg Response Time</th></tr>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Real-Time API Analysis Report</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; }
+        h2 { color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h3 { color: #2c3e50; margin-top: 25px; }
         
-                        <tr>
-                            <td><code>POST /api/generate-field-answer</code></td>
-                            <td>2</td>
-                            <td>4.940s</td>
-                        </tr>
-            
-                        <tr>
-                            <td><code>OPTIONS /api/generate-field-answer</code></td>
-                            <td>1</td>
-                            <td>0.000s</td>
-                        </tr>
-            
-                    </table>
-                </div>
-                
-                <div class="section">
-                    <h2>⚡ Most Used Functions</h2>
-                    <table>
-                        <tr><th>Function Name</th><th>File</th><th>Calls</th><th>Avg Time</th><th>Success Rate</th><th>Input Types</th><th>Output Types</th></tr>
+        .summary { background: #ecf0f1; padding: 20px; border-radius: 8px; margin-bottom: 25px; }
+        .metric { display: inline-block; margin: 10px 20px; }
+        .metric-value { font-size: 24px; font-weight: bold; color: #3498db; }
+        .metric-label { font-size: 14px; color: #7f8c8d; }
         
-                        <tr>
-                            <td><code>generate_field_answer</code></td>
-                            <td><code>llm_service</code></td>
-                            <td>2</td>
-                            <td>4.9275s</td>
-                            <td>100.0%</td>
-                            <td>str</td>
-                            <td>str</td>
-                        </tr>
-            
-                    </table>
-                </div>
-                
-                <div class="section">
-                    <h2>🏗️ Most Used Classes</h2>
-                    <table>
-                        <tr><th>Class Name</th><th>File</th><th>Instantiations</th><th>Methods Called</th><th>Most Used Method</th><th>Constructor Args</th></tr>
+        .deep-tracking { background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .deep-title { color: #1565c0; font-weight: bold; font-size: 18px; margin-bottom: 15px; }
         
-                        <tr>
-                            <td><code>RedisLLMService</code></td>
-                            <td><code>llm_service</code></td>
-                            <td>2</td>
-                            <td>2 calls on 1 methods</td>
-                            <td><code>generate_field_answer</code></td>
-                            <td><code>(redis_url=redis://localhost:63...)</code></td>
-                        </tr>
-            
-                    </table>
-                </div>
-                
-                <div class="section">
-                    <h2>🚫 Unused Code</h2>
-                    <h3>Unused Endpoints</h3>
-                    <ul>
+        .execution-trace { background: #fff; border: 1px solid #ddd; border-radius: 8px; margin: 15px 0; padding: 15px; }
+        .trace-header { display: flex; justify-content: between; align-items: center; margin-bottom: 10px; }
+        .trace-endpoint { font-weight: bold; color: #1976d2; font-size: 16px; }
+        .trace-time { color: #666; font-size: 12px; }
+        .trace-stats { display: flex; gap: 20px; margin: 10px 0; }
+        .trace-stat { text-align: center; }
+        .trace-stat-value { font-weight: bold; color: #1976d2; }
+        .trace-stat-label { font-size: 11px; color: #666; }
         
-                    </ul>
-                    <h3>Unused Functions (Top 20)</h3>
-                    <ul>
-        <li>❌ <code>url_tracking_endpoints.get_session_user</code></li><li>❌ <code>resume_extractor_db.process_resume</code></li><li>❌ <code>document_service.get_user_resume_documents</code></li><li>❌ <code>document_service.get_personal_info_document</code></li><li>❌ <code>detailed_code_analysis.get_unused_functions</code></li><li>❌ <code>test_sample_pytest.test_with_fixture</code></li><li>❌ <code>cleanup_old_analysis_reports.main</code></li><li>❌ <code>test_sample_pytest.test_unix_specific</code></li><li>❌ <code>conftest.server_health_check</code></li><li>❌ <code>run_all_tests.run_tests_by_category</code></li><li>❌ <code>test_upload_api.test_demo_resume_upload</code></li><li>❌ <code>form_filler_optimized.__init__</code></li><li>❌ <code>personal_info_extractor_optimized.__init__</code></li><li>❌ <code>form_filler_optimized.calculate_satisfaction_score</code></li><li>❌ <code>embedding_service._chunk_text_smart</code></li><li>❌ <code>auto_tracker._create_method_wrapper</code></li><li>❌ <code>main.get_session_user</code></li><li>❌ <code>personal_info_extractor_db.split_documents</code></li><li>❌ <code>postgres_service.add_form_url</code></li><li>❌ <code>integrated_usage_analyzer._serialize_function_usage</code></li>
-                    </ul>
-                    <h3>Unused Classes (Top 20)</h3>
-                    <ul>
-        <li>❌ <code>usage_middleware.UsageAnalysisMiddleware</code></li><li>❌ <code>auto_tracker.TrackedClass</code></li><li>❌ <code>performance_tracker.PerformanceTracker</code></li><li>❌ <code>models.FormDb</code></li><li>❌ <code>models.PerformanceStats</code></li><li>❌ <code>main.UserLogin</code></li><li>❌ <code>test_vector_api.VectorDBAPITester</code></li><li>❌ <code>conftest.APIClient</code></li><li>❌ <code>detailed_code_analysis.DetailedCodeAnalyzer</code></li><li>❌ <code>llm_service.SmartLLMService</code></li><li>❌ <code>integrated_usage_analyzer.EndpointUsage</code></li><li>❌ <code>test_sample_pytest.TestSampleAsync</code></li><li>❌ <code>main.ReembedResponse</code></li><li>❌ <code>document_service.DocumentService</code></li><li>❌ <code>demo_function_class_tracking.UserService</code></li><li>❌ <code>schemas.FormResponse</code></li><li>❌ <code>run_all_tests.PytestTestRunner</code></li><li>❌ <code>llm_service.ResumeSearchInput</code></li><li>❌ <code>schemas.DetailedFormAnalysisResponse</code></li><li>❌ <code>test_sample_pytest.TestWithSetupTeardown</code></li>
-                    </ul>
+        .call-stack { background: #f8f9fa; border-left: 4px solid #007bff; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 12px; }
+        .call-tree { background: #f1f8e9; border: 1px solid #8bc34a; border-radius: 4px; padding: 10px; margin: 10px 0; }
+        .tree-node { margin: 5px 0; padding-left: 20px; }
+        .tree-function { font-weight: bold; color: #2e7d32; }
+        
+        .bottleneck { background: #ffebee; border: 1px solid #f44336; border-radius: 4px; padding: 10px; margin: 5px 0; }
+        .bottleneck-slow { border-color: #ff9800; background: #fff3e0; }
+        .bottleneck-memory { border-color: #9c27b0; background: #f3e5f5; }
+        
+        .detailed-call { background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 8px 0; }
+        .call-header { display: flex; justify-content: space-between; align-items: center; }
+        .call-function { font-weight: bold; color: #1976d2; }
+        .call-time { background: #4caf50; color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px; }
+        .call-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px; }
+        .call-detail { font-size: 12px; }
+        .call-detail-label { font-weight: bold; color: #666; }
+        
+        .resource-usage { background: #e8f5e8; border: 1px solid #4caf50; border-radius: 4px; padding: 10px; margin: 10px 0; }
+        .resource-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+        .resource-item { text-align: center; }
+        .resource-value { font-weight: bold; color: #2e7d32; }
+        .resource-label { font-size: 11px; color: #666; }
+        
+        .no-usage { background: #ffebee; border: 1px solid #f44336; border-radius: 8px; padding: 20px; text-align: center; color: #c62828; }
+        .highlight { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        
+        .expandable { cursor: pointer; }
+        .expandable:hover { background-color: #f0f0f0; }
+        .collapsed { display: none; }
+        
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; font-size: 12px; }
+        th { background-color: #f8f9fa; font-weight: bold; }
+    </style>
+    <script>
+        function toggleExpand(id) {
+            const element = document.getElementById(id);
+            element.classList.toggle('collapsed');
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Deep Real-Time API Analysis Report</h1>
+        
+        <div class="summary">
+            <h2>📊 Deep Tracking Summary</h2>
+            <div class="metric">
+                <div class="metric-value">9</div>
+                <div class="metric-label">Total API Calls</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">20</div>
+                <div class="metric-label">Detailed Function Calls</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">0</div>
+                <div class="metric-label">Execution Traces</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">0</div>
+                <div class="metric-label">Active Requests</div>
+            </div>
+        </div>
+
+        <div class="deep-tracking">
+            <div class="deep-title">🔥 Deep Function Tracking Active</div>
+            <p>Capturing call stacks, execution flow, memory usage, and performance bottlenecks in real-time.</p>
+        </div>
+        
+        <h2>🎯 Recent Execution Traces</h2>
+
+        
+        <h2>⚡ Recent Detailed Function Calls</h2>
+        <p>Showing last 20 function calls with full context</p>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ _search_resume_vectors</div>
+                <div class="call-time">0.257s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:403
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.1MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> llm_service.py:268 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
                 </div>
             </div>
-        </body>
-        </html>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>, 'Name', '36ece285-0a53-414f-8058-27ed0338cb8a'), {}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>[]...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4827041552')">
+                <strong>📚 Call Stack (30 frames)</strong>
+            </div>
+            <div id="stack-4827041552" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:268 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ _search_personal_vectors</div>
+                <div class="call-time">0.657s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:422
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.1MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> llm_service.py:269 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>, 'Name', '36ece285-0a53-414f-8058-27ed0338cb8a'), {}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>[]...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4826313936')">
+                <strong>📚 Call Stack (30 frames)</strong>
+            </div>
+            <div id="stack-4826313936" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:269 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ generate_field_answer</div>
+                <div class="call-time">3.279s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:239
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.3MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> main.py:280 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>,), {'field_label': 'Name', 'user_id': '36ece285-0a53-414f-8058-27ed0338cb8a', 'field_context': {'url': 'https://example.com/job-applic...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>{'status': 'success', 'answer': "I'm sorry, but your question seems to be incomplete. Could you please provide more details?", 'confidence': 60.0, 'data_source': 'generated', 'processing_time': 3.2781...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4826301776')">
+                <strong>📚 Call Stack (28 frames)</strong>
+            </div>
+            <div id="stack-4826301776" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ generate_field_answer</div>
+                <div class="call-time">3.280s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> main.py:259
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.3MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> routing.py:212 run_endpoint_function
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(), {'user': <User(id=36ece285-0a53-414f-8058-27ed0338cb8a, email=test_24c8dd53@example.com)>, 'field_data': FieldAnswerRequest(label='Name', url='https://example.com/job-application')}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>answer="I'm sorry, but your question seems to be incomplete. Could you please provide more details?" data_source='generated' reasoning='Used LangGraph tool calling to intelligently search and answer t...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4822122192')">
+                <strong>📚 Call Stack (26 frames)</strong>
+            </div>
+            <div id="stack-4822122192" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ _search_resume_vectors</div>
+                <div class="call-time">0.496s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:403
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.3MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> llm_service.py:268 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>, 'Email', '36ece285-0a53-414f-8058-27ed0338cb8a'), {}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>[]...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4826913744')">
+                <strong>📚 Call Stack (30 frames)</strong>
+            </div>
+            <div id="stack-4826913744" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:268 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ _search_personal_vectors</div>
+                <div class="call-time">0.166s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:422
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.3MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> llm_service.py:269 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>, 'Email', '36ece285-0a53-414f-8058-27ed0338cb8a'), {}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>[]...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4837037136')">
+                <strong>📚 Call Stack (30 frames)</strong>
+            </div>
+            <div id="stack-4837037136" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:269 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ generate_field_answer</div>
+                <div class="call-time">3.156s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:239
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.3MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> main.py:280 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>,), {'field_label': 'Email', 'user_id': '36ece285-0a53-414f-8058-27ed0338cb8a', 'field_context': {'url': 'https://example.com/job-appli...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>{'status': 'success', 'answer': "I'm sorry, but your question seems to be incomplete. Could you please provide more details or context?", 'confidence': 60.0, 'data_source': 'generated', 'processing_ti...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4837366096')">
+                <strong>📚 Call Stack (28 frames)</strong>
+            </div>
+            <div id="stack-4837366096" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ generate_field_answer</div>
+                <div class="call-time">3.158s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> main.py:259
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.3MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> routing.py:212 run_endpoint_function
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(), {'user': <User(id=36ece285-0a53-414f-8058-27ed0338cb8a, email=test_24c8dd53@example.com)>, 'field_data': FieldAnswerRequest(label='Email', url='https://example.com/job-application')}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>answer="I'm sorry, but your question seems to be incomplete. Could you please provide more details or context?" data_source='generated' reasoning='Used LangGraph tool calling to intelligently search a...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4826921808')">
+                <strong>📚 Call Stack (26 frames)</strong>
+            </div>
+            <div id="stack-4826921808" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ _search_resume_vectors</div>
+                <div class="call-time">0.155s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:403
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.3MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> llm_service.py:268 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>, 'Phone', '36ece285-0a53-414f-8058-27ed0338cb8a'), {}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>[]...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4837207952')">
+                <strong>📚 Call Stack (30 frames)</strong>
+            </div>
+            <div id="stack-4837207952" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:268 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ _search_personal_vectors</div>
+                <div class="call-time">0.163s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:422
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.3MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> llm_service.py:269 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>, 'Phone', '36ece285-0a53-414f-8058-27ed0338cb8a'), {}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>[]...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4837207824')">
+                <strong>📚 Call Stack (30 frames)</strong>
+            </div>
+            <div id="stack-4837207824" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:269 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ generate_field_answer</div>
+                <div class="call-time">3.368s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:239
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.4MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> main.py:280 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>,), {'field_label': 'Phone', 'user_id': '36ece285-0a53-414f-8058-27ed0338cb8a', 'field_context': {'url': 'https://example.com/contact-f...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>{'status': 'success', 'answer': "I'm sorry, but your question seems to be incomplete. Could you please provide more context or clarify what you would like to know about the phone?", 'confidence': 60.0...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4837205904')">
+                <strong>📚 Call Stack (28 frames)</strong>
+            </div>
+            <div id="stack-4837205904" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ generate_field_answer</div>
+                <div class="call-time">3.369s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> main.py:259
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.4MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> routing.py:212 run_endpoint_function
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(), {'user': <User(id=36ece285-0a53-414f-8058-27ed0338cb8a, email=test_24c8dd53@example.com)>, 'field_data': FieldAnswerRequest(label='Phone', url='https://example.com/contact-form')}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>answer="I'm sorry, but your question seems to be incomplete. Could you please provide more context or clarify what you would like to know about the phone?" data_source='generated' reasoning='Used Lang...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4837197840')">
+                <strong>📚 Call Stack (26 frames)</strong>
+            </div>
+            <div id="stack-4837197840" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ _search_resume_vectors</div>
+                <div class="call-time">0.210s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:403
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.5MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> llm_service.py:268 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>, 'Name', '7ddf163e-1d05-43ae-aace-7d4ad85575f7'), {}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>[{'document_id': 'resume_6', 'chunk_id': 'chunk_2', 'text': '312-805-9851 | ericabram33@gmail.com', 'score': 0.719273507595}]...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4822643984')">
+                <strong>📚 Call Stack (31 frames)</strong>
+            </div>
+            <div id="stack-4822643984" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:268 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ _search_personal_vectors</div>
+                <div class="call-time">0.199s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:422
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.5MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> llm_service.py:269 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>, 'Name', '7ddf163e-1d05-43ae-aace-7d4ad85575f7'), {}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>[{'document_id': 'personal_info_6', 'chunk_id': 'chunk_0', 'text': 'Name: Eric Abram\nPhone: 312-805-9851\nEmail: ericabram33@gmail.com\nLocation: San Francisco, CA\nLinkedIn: https://linkedin.com/in/...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4826906960')">
+                <strong>📚 Call Stack (31 frames)</strong>
+            </div>
+            <div id="stack-4826906960" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:269 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ generate_field_answer</div>
+                <div class="call-time">1.070s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:239
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.5MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> main.py:280 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>,), {'field_label': 'Name', 'user_id': '7ddf163e-1d05-43ae-aace-7d4ad85575f7', 'field_context': {'url': 'https://jobs.ashbyhq.com/wande...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>{'status': 'success', 'answer': 'Abram', 'confidence': 85.0, 'data_source': 'resume + personal', 'processing_time': 1.06986403465271, 'reasoning': 'Used LangGraph tool calling to intelligently search ...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4837032912')">
+                <strong>📚 Call Stack (29 frames)</strong>
+            </div>
+            <div id="stack-4837032912" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ generate_field_answer</div>
+                <div class="call-time">1.072s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> main.py:259
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.5MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> routing.py:212 run_endpoint_function
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(), {'user': <User(id=7ddf163e-1d05-43ae-aace-7d4ad85575f7, email=erlan2020@gmail.com)>, 'field_data': FieldAnswerRequest(label='Name', url='https://jobs.ashbyhq.com/wander/96d09210-9d42-4e67-a035-005...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>answer='Abram' data_source='resume + personal' reasoning='Used LangGraph tool calling to intelligently search and answer the question' status='success' performance_metrics={'processing_time_seconds': ...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4837032464')">
+                <strong>📚 Call Stack (27 frames)</strong>
+            </div>
+            <div id="stack-4837032464" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ _search_resume_vectors</div>
+                <div class="call-time">0.247s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:403
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.6MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> llm_service.py:268 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>, 'Email', '7ddf163e-1d05-43ae-aace-7d4ad85575f7'), {}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>[{'document_id': 'resume_6', 'chunk_id': 'chunk_2', 'text': '312-805-9851 | ericabram33@gmail.com', 'score': 0.611327528954}, {'document_id': 'resume_6', 'chunk_id': 'chunk_17', 'text': 'SDET         ...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4837303184')">
+                <strong>📚 Call Stack (31 frames)</strong>
+            </div>
+            <div id="stack-4837303184" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:268 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ _search_personal_vectors</div>
+                <div class="call-time">0.225s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:422
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.6MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> llm_service.py:269 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>, 'Email', '7ddf163e-1d05-43ae-aace-7d4ad85575f7'), {}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>[{'document_id': 'personal_info_6', 'chunk_id': 'chunk_0', 'text': 'Name: Eric Abram\nPhone: 312-805-9851\nEmail: ericabram33@gmail.com\nLocation: San Francisco, CA\nLinkedIn: https://linkedin.com/in/...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4837301136')">
+                <strong>📚 Call Stack (31 frames)</strong>
+            </div>
+            <div id="stack-4837301136" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:269 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ generate_field_answer</div>
+                <div class="call-time">1.456s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:239
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.6MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> main.py:280 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11f634290>,), {'field_label': 'Email', 'user_id': '7ddf163e-1d05-43ae-aace-7d4ad85575f7', 'field_context': {'url': 'https://jobs.ashbyhq.com/wand...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>{'status': 'success', 'answer': 'ericabram33@gmail.com', 'confidence': 85.0, 'data_source': 'resume + personal', 'processing_time': 1.455636978149414, 'reasoning': 'Used LangGraph tool calling to inte...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4837308368')">
+                <strong>📚 Call Stack (29 frames)</strong>
+            </div>
+            <div id="stack-4837308368" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:280 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ generate_field_answer</div>
+                <div class="call-time">1.457s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> main.py:259
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8674013696
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 234.6MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> routing.py:212 run_endpoint_function
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(), {'user': <User(id=7ddf163e-1d05-43ae-aace-7d4ad85575f7, email=erlan2020@gmail.com)>, 'field_data': FieldAnswerRequest(label='Email', url='https://jobs.ashbyhq.com/wander/96d09210-9d42-4e67-a035-00...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>answer='ericabram33@gmail.com' data_source='resume + personal' reasoning='Used LangGraph tool calling to intelligently search and answer the question' status='success' performance_metrics={'processing...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4837304656')">
+                <strong>📚 Call Stack (27 frames)</strong>
+            </div>
+            <div id="stack-4837304656" class="call-stack collapsed">
+<div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
         
+        <div class="highlight">
+            <h3>💡 Deep Tracking Features</h3>
+            <p><strong>Currently tracking:</strong> 20 detailed function calls</p>
+            <ul>
+                <li>📚 <strong>Call Stacks:</strong> Complete execution context for each function</li>
+                <li>🔄 <strong>Execution Flow:</strong> Step-by-step function call sequences</li>
+                <li>⚡ <strong>Performance Bottlenecks:</strong> Automatic detection of slow functions</li>
+                <li>📊 <strong>Resource Usage:</strong> Memory and CPU tracking per function</li>
+                <li>🎯 <strong>Request Tracing:</strong> End-to-end request execution analysis</li>
+                <li>🧬 <strong>Call Trees:</strong> Parent-child function relationships</li>
+            </ul>
+        </div>
+        
+        <div class="summary" style="margin-top: 30px;">
+            <p style="text-align: center; color: #6c757d; font-size: 12px;">
+                Deep analysis report generated on 2025-06-23 02:54:09 | 
+                Tracking 0 active requests |
+                20 function calls analyzed
+            </p>
+        </div>
+    </div>
+</body>
+</html>

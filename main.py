@@ -150,7 +150,7 @@ def get_smart_llm_service():
     return SmartLLMService()
 
 # Import usage analyzer
-from app.services.integrated_usage_analyzer import start_analysis, stop_analysis
+from app.services.integrated_usage_analyzer import start_analysis, stop_analysis, deep_track_function
 
 # Import simple function tracker
 from app.services.simple_function_tracker import track_service_call, track_class_creation, track_method_call
@@ -257,6 +257,7 @@ embedding_service = EmbeddingService(
 # ============================================================================
 
 @app.post("/api/generate-field-answer", response_model=FieldAnswerResponse)
+@deep_track_function
 async def generate_field_answer(
     field_data: FieldAnswerRequest,
     user: User = Depends(get_session_user)

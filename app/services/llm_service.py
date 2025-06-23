@@ -25,6 +25,7 @@ from app.utils.logger import logger
 from app.services.embedding_service import EmbeddingService
 from app.services.vector_store import RedisVectorStore
 from app.services.document_service import DocumentService
+from app.services.integrated_usage_analyzer import deep_track_function
 
 
 class AgentState(TypedDict):
@@ -235,6 +236,7 @@ class SmartLLMService:
         # Compile the graph
         self.app = workflow.compile()
 
+    @deep_track_function
     async def generate_field_answer(
         self,
         field_label: str,
@@ -398,6 +400,7 @@ Answer:"""
                 "error": str(e)
             }
 
+    @deep_track_function
     async def _search_resume_vectors(self, query: str, user_id: str) -> List[Dict[str, Any]]:
         """Search resume vector database"""
         try:
@@ -416,6 +419,7 @@ Answer:"""
             logger.error(f"Resume vector search error: {e}")
             return []
 
+    @deep_track_function
     async def _search_personal_vectors(self, query: str, user_id: str) -> List[Dict[str, Any]]:
         """Search personal info vector database"""
         try:
