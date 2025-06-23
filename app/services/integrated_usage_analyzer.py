@@ -1065,7 +1065,7 @@ class IntegratedUsageAnalyzer:
             </div>
             <div id="stack-{id(call)}" class="call-stack collapsed">
 """
-                    for frame in call.call_stack[-5:]:  # Show last 5 frames
+                    for frame in call.call_stack:  # Show last 5 frames
                         html_content += f"<div>{frame}</div>"
                     html_content += """
             </div>
