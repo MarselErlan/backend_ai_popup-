@@ -47,7 +47,7 @@ from app.utils.text_extractor import extract_text_from_file
 from app.services.embedding_service import EmbeddingService
 
 # Import LLM service
-from app.services.llm_service import RedisLLMService
+from app.services.llm_service import SmartLLMService
 
 # Import URL tracking endpoints
 from app.api.url_tracking_endpoints import router as url_tracking_router
@@ -145,9 +145,9 @@ def get_form_filler():
     return _form_filler
 
 @lru_cache(maxsize=1)
-def get_redis_llm_service():
-    """Get Redis-enabled LLM service instance"""
-    return RedisLLMService()
+def get_smart_llm_service():
+    """Get Smart LLM service instance"""
+    return SmartLLMService()
 
 # Import usage analyzer
 from app.services.integrated_usage_analyzer import start_analysis, stop_analysis
@@ -168,7 +168,7 @@ async def lifespan(app: FastAPI):
         get_resume_extractor()
         get_personal_info_extractor()
         get_form_filler()
-        get_redis_llm_service()
+        get_smart_llm_service()
         logger.info("✅ All services pre-warmed successfully")
     except Exception as e:
         logger.error(f"❌ Service pre-warming failed: {e}")
@@ -268,8 +268,8 @@ async def generate_field_answer(
     Auth: Requires valid session
     """
     try:
-        # Get Redis-enabled LLM service
-        llm_service = get_redis_llm_service()
+        # Get Smart LLM service
+        llm_service = get_smart_llm_service()
         
         # Track LLM service instantiation
         track_class_creation("RedisLLMService", "llm_service", f"(redis_url={REDIS_URL[:20]}...)")
