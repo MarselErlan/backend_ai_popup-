@@ -240,6 +240,10 @@ app.add_middleware(
 from app.middleware.usage_middleware import UsageAnalysisMiddleware
 app.add_middleware(UsageAnalysisMiddleware)
 
+# Add deep tracking middleware for execution traces
+from app.services.integrated_usage_analyzer import DeepTrackingMiddleware
+app.add_middleware(DeepTrackingMiddleware)
+
 # Include URL tracking router
 app.include_router(url_tracking_router)
 

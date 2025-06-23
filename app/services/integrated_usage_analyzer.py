@@ -1734,27 +1734,28 @@ def deep_track_function(func):
                 
         return sync_wrapper
 
-# Middleware for request tracing
-class DeepTrackingMiddleware:
-    """Middleware to automatically track requests and their function calls"""
+# Middleware for request tracing (FastAPI compatible)
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+
+class DeepTrackingMiddleware(BaseHTTPMiddleware):
+    """FastAPI middleware to automatically track requests and their function calls"""
     
-    def __init__(self, app):
-        self.app = app
+    async def dispatch(self, request: Request, call_next):
+        print(f"🔍 DeepTrackingMiddleware called for: {request.url.path}")
         
-    async def __call__(self, scope, receive, send):
-        if scope["type"] != "http":
-            await self.app(scope, receive, send)
-            return
-            
         analyzer = get_analyzer()
         if not analyzer or not analyzer.enabled:
-            await self.app(scope, receive, send)
-            return
-            
+            print(f"⚠️  Analyzer not enabled: analyzer={analyzer is not None}, enabled={analyzer.enabled if analyzer else False}")
+            return await call_next(request)
+        
         # Generate request ID
         import uuid
         request_id = str(uuid.uuid4())
-        endpoint = scope.get("path", "unknown")
+        endpoint = str(request.url.path)
+        
+        print(f"🎯 Starting request trace: {request_id} -> {endpoint}")
         
         # Set thread-local data
         threading.current_thread().request_id = request_id
@@ -1766,14 +1767,10 @@ class DeepTrackingMiddleware:
         status_code = 200
         error_details = None
         
-        async def send_wrapper(message):
-            nonlocal status_code, error_details
-            if message["type"] == "http.response.start":
-                status_code = message["status"]
-            await send(message)
-            
         try:
-            await self.app(scope, receive, send_wrapper)
+            response = await call_next(request)
+            status_code = response.status_code
+            return response
         except Exception as e:
             error_details = str(e)
             status_code = 500
