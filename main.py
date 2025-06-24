@@ -227,22 +227,23 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add CORS middleware
+# Add CORS middleware - Universal access (no credentials)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=["*"],  # Allow ALL websites - perfect for browser extensions
+    allow_credentials=False,  # Must be False when using "*" for security
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
-# Add usage analysis middleware
-from app.middleware.usage_middleware import UsageAnalysisMiddleware
-app.add_middleware(UsageAnalysisMiddleware)
+# Add usage analysis middleware (DISABLED)
+# from app.middleware.usage_middleware import UsageAnalysisMiddleware
+# app.add_middleware(UsageAnalysisMiddleware)
 
-# Add deep tracking middleware for execution traces
-from app.services.integrated_usage_analyzer import DeepTrackingMiddleware
-app.add_middleware(DeepTrackingMiddleware)
+# Add deep tracking middleware for execution traces (DISABLED)
+# from app.services.integrated_usage_analyzer import DeepTrackingMiddleware
+# app.add_middleware(DeepTrackingMiddleware)
 
 # Include URL tracking router
 app.include_router(url_tracking_router)
