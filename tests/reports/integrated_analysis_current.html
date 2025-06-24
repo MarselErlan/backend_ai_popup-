@@ -77,15 +77,15 @@
         <div class="summary">
             <h2>📊 Deep Tracking Summary</h2>
             <div class="metric">
-                <div class="metric-value">6</div>
+                <div class="metric-value">0</div>
                 <div class="metric-label">Total API Calls</div>
             </div>
             <div class="metric">
-                <div class="metric-value">13</div>
+                <div class="metric-value">7</div>
                 <div class="metric-label">Detailed Function Calls</div>
             </div>
             <div class="metric">
-                <div class="metric-value">6</div>
+                <div class="metric-value">0</div>
                 <div class="metric-label">Execution Traces</div>
             </div>
             <div class="metric">
@@ -101,438 +101,24 @@
         
         <h2>🎯 Recent Execution Traces</h2>
 
-        <div class="execution-trace">
-            <div class="trace-header">
-                <div class="trace-endpoint">🎯 /api/generate-field-answer</div>
-                <div class="trace-time">Request ID: ebe6147c-c989-4abf-a9a3-3cdc7be368cb</div>
-            </div>
-            <div class="trace-stats">
-                <div class="trace-stat">
-                    <div class="trace-stat-value">0.001s</div>
-                    <div class="trace-stat-label">Total Time</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">0</div>
-                    <div class="trace-stat-label">Functions Called</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">200</div>
-                    <div class="trace-stat-label">Status Code</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">0</div>
-                    <div class="trace-stat-label">Bottlenecks</div>
-                </div>
-            </div>
-            
-            <div class="expandable" onclick="toggleExpand('trace-0')">
-                <strong>📋 Click to view execution flow (0 functions)</strong>
-            </div>
-            <div id="trace-0" class="collapsed">
-                <div class="call-tree">
-                    <strong>🌳 Execution Flow:</strong><br>
-
-                </div>
-
-                <div class="resource-usage">
-                    <strong>📊 Resource Usage:</strong>
-                    <div class="resource-grid">
-                        <div class="resource-item">
-                            <div class="resource-value">0.0MB</div>
-                            <div class="resource-label">Memory Used</div>
-                        </div>
-                        <div class="resource-item">
-                            <div class="resource-value">0.001s</div>
-                            <div class="resource-label">Total Time</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="execution-trace">
-            <div class="trace-header">
-                <div class="trace-endpoint">🎯 /api/generate-field-answer</div>
-                <div class="trace-time">Request ID: b4c56e99-a075-4730-b943-0092efff5d12</div>
-            </div>
-            <div class="trace-stats">
-                <div class="trace-stat">
-                    <div class="trace-stat-value">1.597s</div>
-                    <div class="trace-stat-label">Total Time</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">3</div>
-                    <div class="trace-stat-label">Functions Called</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">200</div>
-                    <div class="trace-stat-label">Status Code</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">6</div>
-                    <div class="trace-stat-label">Bottlenecks</div>
-                </div>
-            </div>
-            
-            <div class="expandable" onclick="toggleExpand('trace-1')">
-                <strong>📋 Click to view execution flow (3 functions)</strong>
-            </div>
-            <div id="trace-1" class="collapsed">
-                <div class="call-tree">
-                    <strong>🌳 Execution Flow:</strong><br>
-<div class='tree-node'>1. <span class='tree-function'>_search_personal_vectors</span></div><div class='tree-node'>2. <span class='tree-function'>generate_field_answer</span></div><div class='tree-node'>3. <span class='tree-function'>generate_field_answer</span></div>
-                </div>
-
-                <strong>⚠️ Performance Bottlenecks:</strong><br>
-
-                <div class="bottleneck bottleneck">
-                    🐌 <strong>Slow Function:</strong> generate_field_answer 
-                    (1.574s in main.py:263)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🐌 <strong>Slow Function:</strong> generate_field_answer 
-                    (1.572s in llm_service.py:467)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🐌 <strong>Slow Function:</strong> _search_personal_vectors 
-                    (0.442s in llm_service.py:733)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> _search_personal_vectors 
-                    (229.2MB in llm_service.py)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> generate_field_answer 
-                    (229.5MB in llm_service.py)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> generate_field_answer 
-                    (229.5MB in main.py)
-                </div>
-
-                <div class="resource-usage">
-                    <strong>📊 Resource Usage:</strong>
-                    <div class="resource-grid">
-                        <div class="resource-item">
-                            <div class="resource-value">1.0MB</div>
-                            <div class="resource-label">Memory Used</div>
-                        </div>
-                        <div class="resource-item">
-                            <div class="resource-value">1.597s</div>
-                            <div class="resource-label">Total Time</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="execution-trace">
-            <div class="trace-header">
-                <div class="trace-endpoint">🎯 /api/generate-field-answer</div>
-                <div class="trace-time">Request ID: db67f6a5-ea83-4fbc-9842-2067d592bd33</div>
-            </div>
-            <div class="trace-stats">
-                <div class="trace-stat">
-                    <div class="trace-stat-value">1.755s</div>
-                    <div class="trace-stat-label">Total Time</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">3</div>
-                    <div class="trace-stat-label">Functions Called</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">200</div>
-                    <div class="trace-stat-label">Status Code</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">6</div>
-                    <div class="trace-stat-label">Bottlenecks</div>
-                </div>
-            </div>
-            
-            <div class="expandable" onclick="toggleExpand('trace-2')">
-                <strong>📋 Click to view execution flow (3 functions)</strong>
-            </div>
-            <div id="trace-2" class="collapsed">
-                <div class="call-tree">
-                    <strong>🌳 Execution Flow:</strong><br>
-<div class='tree-node'>1. <span class='tree-function'>_search_personal_vectors</span></div><div class='tree-node'>2. <span class='tree-function'>generate_field_answer</span></div><div class='tree-node'>3. <span class='tree-function'>generate_field_answer</span></div>
-                </div>
-
-                <strong>⚠️ Performance Bottlenecks:</strong><br>
-
-                <div class="bottleneck bottleneck">
-                    🐌 <strong>Slow Function:</strong> generate_field_answer 
-                    (1.746s in main.py:263)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🐌 <strong>Slow Function:</strong> generate_field_answer 
-                    (1.744s in llm_service.py:467)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🐌 <strong>Slow Function:</strong> _search_personal_vectors 
-                    (1.029s in llm_service.py:733)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> _search_personal_vectors 
-                    (229.6MB in llm_service.py)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> generate_field_answer 
-                    (229.6MB in llm_service.py)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> generate_field_answer 
-                    (229.6MB in main.py)
-                </div>
-
-                <div class="resource-usage">
-                    <strong>📊 Resource Usage:</strong>
-                    <div class="resource-grid">
-                        <div class="resource-item">
-                            <div class="resource-value">0.0MB</div>
-                            <div class="resource-label">Memory Used</div>
-                        </div>
-                        <div class="resource-item">
-                            <div class="resource-value">1.755s</div>
-                            <div class="resource-label">Total Time</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="execution-trace">
-            <div class="trace-header">
-                <div class="trace-endpoint">🎯 /api/generate-field-answer</div>
-                <div class="trace-time">Request ID: 81ed98f8-8c13-418f-85e3-875e027f5417</div>
-            </div>
-            <div class="trace-stats">
-                <div class="trace-stat">
-                    <div class="trace-stat-value">0.009s</div>
-                    <div class="trace-stat-label">Total Time</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">2</div>
-                    <div class="trace-stat-label">Functions Called</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">200</div>
-                    <div class="trace-stat-label">Status Code</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">2</div>
-                    <div class="trace-stat-label">Bottlenecks</div>
-                </div>
-            </div>
-            
-            <div class="expandable" onclick="toggleExpand('trace-3')">
-                <strong>📋 Click to view execution flow (2 functions)</strong>
-            </div>
-            <div id="trace-3" class="collapsed">
-                <div class="call-tree">
-                    <strong>🌳 Execution Flow:</strong><br>
-<div class='tree-node'>1. <span class='tree-function'>generate_field_answer</span></div><div class='tree-node'>2. <span class='tree-function'>generate_field_answer</span></div>
-                </div>
-
-                <strong>⚠️ Performance Bottlenecks:</strong><br>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> generate_field_answer 
-                    (229.6MB in llm_service.py)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> generate_field_answer 
-                    (229.6MB in main.py)
-                </div>
-
-                <div class="resource-usage">
-                    <strong>📊 Resource Usage:</strong>
-                    <div class="resource-grid">
-                        <div class="resource-item">
-                            <div class="resource-value">0.0MB</div>
-                            <div class="resource-label">Memory Used</div>
-                        </div>
-                        <div class="resource-item">
-                            <div class="resource-value">0.009s</div>
-                            <div class="resource-label">Total Time</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="execution-trace">
-            <div class="trace-header">
-                <div class="trace-endpoint">🎯 /api/generate-field-answer</div>
-                <div class="trace-time">Request ID: b906ee89-fe98-4f7b-99c8-9c4ed09c50ec</div>
-            </div>
-            <div class="trace-stats">
-                <div class="trace-stat">
-                    <div class="trace-stat-value">0.010s</div>
-                    <div class="trace-stat-label">Total Time</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">2</div>
-                    <div class="trace-stat-label">Functions Called</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">200</div>
-                    <div class="trace-stat-label">Status Code</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">2</div>
-                    <div class="trace-stat-label">Bottlenecks</div>
-                </div>
-            </div>
-            
-            <div class="expandable" onclick="toggleExpand('trace-4')">
-                <strong>📋 Click to view execution flow (2 functions)</strong>
-            </div>
-            <div id="trace-4" class="collapsed">
-                <div class="call-tree">
-                    <strong>🌳 Execution Flow:</strong><br>
-<div class='tree-node'>1. <span class='tree-function'>generate_field_answer</span></div><div class='tree-node'>2. <span class='tree-function'>generate_field_answer</span></div>
-                </div>
-
-                <strong>⚠️ Performance Bottlenecks:</strong><br>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> generate_field_answer 
-                    (229.6MB in llm_service.py)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> generate_field_answer 
-                    (229.6MB in main.py)
-                </div>
-
-                <div class="resource-usage">
-                    <strong>📊 Resource Usage:</strong>
-                    <div class="resource-grid">
-                        <div class="resource-item">
-                            <div class="resource-value">0.1MB</div>
-                            <div class="resource-label">Memory Used</div>
-                        </div>
-                        <div class="resource-item">
-                            <div class="resource-value">0.010s</div>
-                            <div class="resource-label">Total Time</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="execution-trace">
-            <div class="trace-header">
-                <div class="trace-endpoint">🎯 /api/generate-field-answer</div>
-                <div class="trace-time">Request ID: b6764131-5c10-410c-a5af-c7d273e81d5b</div>
-            </div>
-            <div class="trace-stats">
-                <div class="trace-stat">
-                    <div class="trace-stat-value">2.402s</div>
-                    <div class="trace-stat-label">Total Time</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">3</div>
-                    <div class="trace-stat-label">Functions Called</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">200</div>
-                    <div class="trace-stat-label">Status Code</div>
-                </div>
-                <div class="trace-stat">
-                    <div class="trace-stat-value">6</div>
-                    <div class="trace-stat-label">Bottlenecks</div>
-                </div>
-            </div>
-            
-            <div class="expandable" onclick="toggleExpand('trace-5')">
-                <strong>📋 Click to view execution flow (3 functions)</strong>
-            </div>
-            <div id="trace-5" class="collapsed">
-                <div class="call-tree">
-                    <strong>🌳 Execution Flow:</strong><br>
-<div class='tree-node'>1. <span class='tree-function'>_search_resume_vectors</span></div><div class='tree-node'>2. <span class='tree-function'>generate_field_answer</span></div><div class='tree-node'>3. <span class='tree-function'>generate_field_answer</span></div>
-                </div>
-
-                <strong>⚠️ Performance Bottlenecks:</strong><br>
-
-                <div class="bottleneck bottleneck">
-                    🐌 <strong>Slow Function:</strong> generate_field_answer 
-                    (2.396s in main.py:263)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🐌 <strong>Slow Function:</strong> generate_field_answer 
-                    (2.394s in llm_service.py:467)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🐌 <strong>Slow Function:</strong> _search_resume_vectors 
-                    (0.961s in llm_service.py:714)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> _search_resume_vectors 
-                    (229.7MB in llm_service.py)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> generate_field_answer 
-                    (229.7MB in llm_service.py)
-                </div>
-
-                <div class="bottleneck bottleneck">
-                    🧠 <strong>High Memory:</strong> generate_field_answer 
-                    (229.7MB in main.py)
-                </div>
-
-                <div class="resource-usage">
-                    <strong>📊 Resource Usage:</strong>
-                    <div class="resource-grid">
-                        <div class="resource-item">
-                            <div class="resource-value">0.1MB</div>
-                            <div class="resource-label">Memory Used</div>
-                        </div>
-                        <div class="resource-item">
-                            <div class="resource-value">2.402s</div>
-                            <div class="resource-label">Total Time</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         
         <h2>⚡ Recent Detailed Function Calls</h2>
-        <p>Showing last 13 function calls with full context</p>
+        <p>Showing last 7 function calls with full context</p>
 
         <div class="detailed-call">
             <div class="call-header">
                 <div class="call-function">✅ _search_personal_vectors</div>
-                <div class="call-time">0.442s</div>
+                <div class="call-time">0.197s</div>
             </div>
             <div class="call-details">
                 <div class="call-detail">
                     <span class="call-detail-label">File:</span> llm_service.py:733
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
+                    <span class="call-detail-label">Thread:</span> 8638341632
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.2MB
+                    <span class="call-detail-label">Memory:</span> 225.9MB
                 </div>
                 <div class="call-detail">
                     <span class="call-detail-label">CPU:</span> 0.0%
@@ -541,23 +127,23 @@
                     <span class="call-detail-label">Parent:</span> llm_service.py:526 generate_field_answer
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
+                    <span class="call-detail-label">Endpoint:</span> N/A
                 </div>
             </div>
 
             <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11dbaa1d0>, 'Name', '7ddf163e-1d05-43ae-aace-7d4ad85575f7'), {}...</code>
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11d3dfd90>, 'Mobile phone number', '6fe5bceb-8c76-4db6-a0ec-79c65c6a9346'), {}...</code>
             </div>
 
             <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>[{'document_id': 'personal_info_6', 'chunk_id': 'chunk_0', 'text': 'Name: Eric Abram\nPhone: 312-805-9851\nEmail: ericabram33@gmail.com\nLocation: San Francisco, CA\nLinkedIn: https://linkedin.com/in/...</code>
+                <span class="call-detail-label">Output:</span> <code>[{'document_id': 'personal_info_8', 'chunk_id': 'chunk_8', 'text': 'home adress, \n275 Oak Creek Dr, \nWheeling, Illinois, 60090, Unit 501', 'score': 0.723511278629}]...</code>
             </div>
 
-            <div class="expandable" onclick="toggleExpand('stack-4792686864')">
-                <strong>📚 Call Stack (32 frames)</strong>
+            <div class="expandable" onclick="toggleExpand('stack-4799325904')">
+                <strong>📚 Call Stack (30 frames)</strong>
             </div>
-            <div id="stack-4792686864" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:284 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:144 wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:526 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            <div id="stack-4799325904" class="call-stack collapsed">
+<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:338 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:144 wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:526 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
             </div>
 
         </div>
@@ -565,42 +151,42 @@
         <div class="detailed-call">
             <div class="call-header">
                 <div class="call-function">✅ generate_field_answer</div>
-                <div class="call-time">1.572s</div>
+                <div class="call-time">0.834s</div>
             </div>
             <div class="call-details">
                 <div class="call-detail">
                     <span class="call-detail-label">File:</span> llm_service.py:467
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
+                    <span class="call-detail-label">Thread:</span> 8638341632
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.5MB
+                    <span class="call-detail-label">Memory:</span> 226.2MB
                 </div>
                 <div class="call-detail">
                     <span class="call-detail-label">CPU:</span> 0.0%
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Parent:</span> main.py:284 generate_field_answer
+                    <span class="call-detail-label">Parent:</span> main.py:338 generate_field_answer
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
+                    <span class="call-detail-label">Endpoint:</span> N/A
                 </div>
             </div>
 
             <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11dbaa1d0>,), {'field_label': 'Name', 'user_id': '7ddf163e-1d05-43ae-aace-7d4ad85575f7', 'field_context': {'url': 'https://jobs.ashbyhq.com/wande...</code>
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11d3dfd90>,), {'field_label': 'Mobile phone number', 'user_id': '6fe5bceb-8c76-4db6-a0ec-79c65c6a9346', 'field_context': {'url': 'https://www.lin...</code>
             </div>
 
             <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>{'status': 'success', 'answer': 'Eric Abram', 'confidence': 85.0, 'data_source': 'personal', 'processing_time': 1.571760892868042, 'reasoning': 'Optimized processing for name field type', 'field_analy...</code>
+                <span class="call-detail-label">Output:</span> <code>{'status': 'success', 'answer': 'Mobile phone number:', 'confidence': 85.0, 'data_source': 'personal', 'processing_time': 0.8342530727386475, 'reasoning': 'Optimized processing for phone field type', ...</code>
             </div>
 
-            <div class="expandable" onclick="toggleExpand('stack-4802131024')">
-                <strong>📚 Call Stack (29 frames)</strong>
+            <div class="expandable" onclick="toggleExpand('stack-4789174096')">
+                <strong>📚 Call Stack (27 frames)</strong>
             </div>
-            <div id="stack-4802131024" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:284 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            <div id="stack-4789174096" class="call-stack collapsed">
+<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:338 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
             </div>
 
         </div>
@@ -608,17 +194,17 @@
         <div class="detailed-call">
             <div class="call-header">
                 <div class="call-function">✅ generate_field_answer</div>
-                <div class="call-time">1.574s</div>
+                <div class="call-time">0.836s</div>
             </div>
             <div class="call-details">
                 <div class="call-detail">
-                    <span class="call-detail-label">File:</span> main.py:263
+                    <span class="call-detail-label">File:</span> main.py:317
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
+                    <span class="call-detail-label">Thread:</span> 8638341632
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.5MB
+                    <span class="call-detail-label">Memory:</span> 226.2MB
                 </div>
                 <div class="call-detail">
                     <span class="call-detail-label">CPU:</span> 0.0%
@@ -627,324 +213,23 @@
                     <span class="call-detail-label">Parent:</span> routing.py:212 run_endpoint_function
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
+                    <span class="call-detail-label">Endpoint:</span> N/A
                 </div>
             </div>
 
             <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(), {'user': <User(id=7ddf163e-1d05-43ae-aace-7d4ad85575f7, email=erlan2020@gmail.com)>, 'field_data': FieldAnswerRequest(label='Name', url='https://jobs.ashbyhq.com/wander/96d09210-9d42-4e67-a035-005...</code>
+                <span class="call-detail-label">Input:</span> <code>(), {'user': <User(id=6fe5bceb-8c76-4db6-a0ec-79c65c6a9346, email=ethanabduraimov@gmail.com)>, 'field_data': FieldAnswerRequest(label='Mobile phone number', url='https://www.linkedin.com/jobs/search-r...</code>
             </div>
 
             <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>answer='Eric Abram' data_source='personal' reasoning='Optimized processing for name field type' status='success' performance_metrics={'processing_time_seconds': 1.571760892868042, 'llm_time_seconds': ...</code>
+                <span class="call-detail-label">Output:</span> <code>answer='Mobile phone number:' data_source='personal' reasoning='Optimized processing for phone field type' status='success' performance_metrics={'processing_time_seconds': 0.8342530727386475, 'llm_tim...</code>
             </div>
 
-            <div class="expandable" onclick="toggleExpand('stack-4791702736')">
-                <strong>📚 Call Stack (27 frames)</strong>
+            <div class="expandable" onclick="toggleExpand('stack-4789854928')">
+                <strong>📚 Call Stack (25 frames)</strong>
             </div>
-            <div id="stack-4791702736" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
-            </div>
-
-        </div>
-
-        <div class="detailed-call">
-            <div class="call-header">
-                <div class="call-function">✅ _search_personal_vectors</div>
-                <div class="call-time">1.029s</div>
-            </div>
-            <div class="call-details">
-                <div class="call-detail">
-                    <span class="call-detail-label">File:</span> llm_service.py:733
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.6MB
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">CPU:</span> 0.0%
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Parent:</span> llm_service.py:526 generate_field_answer
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
-                </div>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11dbaa1d0>, 'Email', '7ddf163e-1d05-43ae-aace-7d4ad85575f7'), {}...</code>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>[{'document_id': 'personal_info_6', 'chunk_id': 'chunk_0', 'text': 'Name: Eric Abram\nPhone: 312-805-9851\nEmail: ericabram33@gmail.com\nLocation: San Francisco, CA\nLinkedIn: https://linkedin.com/in/...</code>
-            </div>
-
-            <div class="expandable" onclick="toggleExpand('stack-4792656720')">
-                <strong>📚 Call Stack (32 frames)</strong>
-            </div>
-            <div id="stack-4792656720" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:284 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:144 wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:526 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
-            </div>
-
-        </div>
-
-        <div class="detailed-call">
-            <div class="call-header">
-                <div class="call-function">✅ generate_field_answer</div>
-                <div class="call-time">1.744s</div>
-            </div>
-            <div class="call-details">
-                <div class="call-detail">
-                    <span class="call-detail-label">File:</span> llm_service.py:467
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.6MB
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">CPU:</span> 0.0%
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Parent:</span> main.py:284 generate_field_answer
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
-                </div>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11dbaa1d0>,), {'field_label': 'Email', 'user_id': '7ddf163e-1d05-43ae-aace-7d4ad85575f7', 'field_context': {'url': 'https://jobs.ashbyhq.com/wand...</code>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>{'status': 'success', 'answer': 'ericabram33@gmail.com', 'confidence': 85.0, 'data_source': 'personal', 'processing_time': 1.7440869808197021, 'reasoning': 'Optimized processing for email field type',...</code>
-            </div>
-
-            <div class="expandable" onclick="toggleExpand('stack-4788219152')">
-                <strong>📚 Call Stack (29 frames)</strong>
-            </div>
-            <div id="stack-4788219152" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:284 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
-            </div>
-
-        </div>
-
-        <div class="detailed-call">
-            <div class="call-header">
-                <div class="call-function">✅ generate_field_answer</div>
-                <div class="call-time">1.746s</div>
-            </div>
-            <div class="call-details">
-                <div class="call-detail">
-                    <span class="call-detail-label">File:</span> main.py:263
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.6MB
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">CPU:</span> 0.0%
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Parent:</span> routing.py:212 run_endpoint_function
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
-                </div>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(), {'user': <User(id=7ddf163e-1d05-43ae-aace-7d4ad85575f7, email=erlan2020@gmail.com)>, 'field_data': FieldAnswerRequest(label='Email', url='https://jobs.ashbyhq.com/wander/96d09210-9d42-4e67-a035-00...</code>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>answer='ericabram33@gmail.com' data_source='personal' reasoning='Optimized processing for email field type' status='success' performance_metrics={'processing_time_seconds': 1.7440869808197021, 'llm_ti...</code>
-            </div>
-
-            <div class="expandable" onclick="toggleExpand('stack-4792657168')">
-                <strong>📚 Call Stack (27 frames)</strong>
-            </div>
-            <div id="stack-4792657168" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
-            </div>
-
-        </div>
-
-        <div class="detailed-call">
-            <div class="call-header">
-                <div class="call-function">✅ generate_field_answer</div>
-                <div class="call-time">0.000s</div>
-            </div>
-            <div class="call-details">
-                <div class="call-detail">
-                    <span class="call-detail-label">File:</span> llm_service.py:467
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.6MB
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">CPU:</span> 0.0%
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Parent:</span> main.py:284 generate_field_answer
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
-                </div>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11dbaa1d0>,), {'field_label': 'Name', 'user_id': '7ddf163e-1d05-43ae-aace-7d4ad85575f7', 'field_context': {'url': 'https://jobs.ashbyhq.com/wande...</code>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>{'status': 'success', 'answer': 'Eric Abram', 'confidence': 85.0, 'data_source': 'personal (cached)', 'processing_time': 4.696846008300781e-05, 'reasoning': 'Retrieved from cache', 'field_analysis': {...</code>
-            </div>
-
-            <div class="expandable" onclick="toggleExpand('stack-4803578256')">
-                <strong>📚 Call Stack (29 frames)</strong>
-            </div>
-            <div id="stack-4803578256" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:284 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
-            </div>
-
-        </div>
-
-        <div class="detailed-call">
-            <div class="call-header">
-                <div class="call-function">✅ generate_field_answer</div>
-                <div class="call-time">0.002s</div>
-            </div>
-            <div class="call-details">
-                <div class="call-detail">
-                    <span class="call-detail-label">File:</span> main.py:263
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.6MB
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">CPU:</span> 0.0%
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Parent:</span> routing.py:212 run_endpoint_function
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
-                </div>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(), {'user': <User(id=7ddf163e-1d05-43ae-aace-7d4ad85575f7, email=erlan2020@gmail.com)>, 'field_data': FieldAnswerRequest(label='Name', url='https://jobs.ashbyhq.com/wander/96d09210-9d42-4e67-a035-005...</code>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>answer='Eric Abram' data_source='personal (cached)' reasoning='Retrieved from cache' status='success' performance_metrics={'processing_time_seconds': 4.696846008300781e-05, 'cache_hit': True}...</code>
-            </div>
-
-            <div class="expandable" onclick="toggleExpand('stack-4803581584')">
-                <strong>📚 Call Stack (27 frames)</strong>
-            </div>
-            <div id="stack-4803581584" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
-            </div>
-
-        </div>
-
-        <div class="detailed-call">
-            <div class="call-header">
-                <div class="call-function">✅ generate_field_answer</div>
-                <div class="call-time">0.000s</div>
-            </div>
-            <div class="call-details">
-                <div class="call-detail">
-                    <span class="call-detail-label">File:</span> llm_service.py:467
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.6MB
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">CPU:</span> 0.0%
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Parent:</span> main.py:284 generate_field_answer
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
-                </div>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11dbaa1d0>,), {'field_label': 'Email', 'user_id': '7ddf163e-1d05-43ae-aace-7d4ad85575f7', 'field_context': {'url': 'https://jobs.ashbyhq.com/wand...</code>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>{'status': 'success', 'answer': 'ericabram33@gmail.com', 'confidence': 85.0, 'data_source': 'personal (cached)', 'processing_time': 5.1975250244140625e-05, 'reasoning': 'Retrieved from cache', 'field_...</code>
-            </div>
-
-            <div class="expandable" onclick="toggleExpand('stack-4803521424')">
-                <strong>📚 Call Stack (29 frames)</strong>
-            </div>
-            <div id="stack-4803521424" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:284 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
-            </div>
-
-        </div>
-
-        <div class="detailed-call">
-            <div class="call-header">
-                <div class="call-function">✅ generate_field_answer</div>
-                <div class="call-time">0.002s</div>
-            </div>
-            <div class="call-details">
-                <div class="call-detail">
-                    <span class="call-detail-label">File:</span> main.py:263
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.6MB
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">CPU:</span> 0.0%
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Parent:</span> routing.py:212 run_endpoint_function
-                </div>
-                <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
-                </div>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(), {'user': <User(id=7ddf163e-1d05-43ae-aace-7d4ad85575f7, email=erlan2020@gmail.com)>, 'field_data': FieldAnswerRequest(label='Email', url='https://jobs.ashbyhq.com/wander/96d09210-9d42-4e67-a035-00...</code>
-            </div>
-
-            <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>answer='ericabram33@gmail.com' data_source='personal (cached)' reasoning='Retrieved from cache' status='success' performance_metrics={'processing_time_seconds': 5.1975250244140625e-05, 'cache_hit': Tr...</code>
-            </div>
-
-            <div class="expandable" onclick="toggleExpand('stack-4803521040')">
-                <strong>📚 Call Stack (27 frames)</strong>
-            </div>
-            <div id="stack-4803521040" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            <div id="stack-4789854928" class="call-stack collapsed">
+<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
             </div>
 
         </div>
@@ -952,17 +237,17 @@
         <div class="detailed-call">
             <div class="call-header">
                 <div class="call-function">✅ _search_resume_vectors</div>
-                <div class="call-time">0.961s</div>
+                <div class="call-time">0.373s</div>
             </div>
             <div class="call-details">
                 <div class="call-detail">
                     <span class="call-detail-label">File:</span> llm_service.py:714
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
+                    <span class="call-detail-label">Thread:</span> 8638341632
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.7MB
+                    <span class="call-detail-label">Memory:</span> 226.2MB
                 </div>
                 <div class="call-detail">
                     <span class="call-detail-label">CPU:</span> 0.0%
@@ -971,23 +256,66 @@
                     <span class="call-detail-label">Parent:</span> llm_service.py:530 generate_field_answer
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
+                    <span class="call-detail-label">Endpoint:</span> N/A
                 </div>
             </div>
 
             <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11dbaa1d0>, 'Are you sure you want to join a hard working, fast paced, and fast growing start up?', '7ddf163e-1d05-43ae-aace-7d4ad85575f7'), {}...</code>
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11d3dfd90>, 'How many years of work experience do you have with Python (Programming Language)?', '6fe5bceb-8c76-4db6-a0ec-79c65c6a9346'), {}...</code>
             </div>
 
             <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>[{'document_id': 'resume_6', 'chunk_id': 'chunk_1', 'text': 'San Francisco, СА (willing to relocate) |  LinkedIn', 'score': 0.663055419922}]...</code>
+                <span class="call-detail-label">Output:</span> <code>[]...</code>
             </div>
 
-            <div class="expandable" onclick="toggleExpand('stack-4802340496')">
-                <strong>📚 Call Stack (32 frames)</strong>
+            <div class="expandable" onclick="toggleExpand('stack-4789832912')">
+                <strong>📚 Call Stack (30 frames)</strong>
             </div>
-            <div id="stack-4802340496" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:284 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:144 wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:530 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            <div id="stack-4789832912" class="call-stack collapsed">
+<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:338 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:144 wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:530 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            </div>
+
+        </div>
+
+        <div class="detailed-call">
+            <div class="call-header">
+                <div class="call-function">✅ _search_personal_vectors</div>
+                <div class="call-time">0.183s</div>
+            </div>
+            <div class="call-details">
+                <div class="call-detail">
+                    <span class="call-detail-label">File:</span> llm_service.py:733
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Thread:</span> 8638341632
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Memory:</span> 226.2MB
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">CPU:</span> 0.0%
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Parent:</span> llm_service.py:531 generate_field_answer
+                </div>
+                <div class="call-detail">
+                    <span class="call-detail-label">Endpoint:</span> N/A
+                </div>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11d3dfd90>, 'How many years of work experience do you have with Python (Programming Language)?', '6fe5bceb-8c76-4db6-a0ec-79c65c6a9346'), {}...</code>
+            </div>
+
+            <div class="call-detail">
+                <span class="call-detail-label">Output:</span> <code>[{'document_id': 'personal_info_7', 'chunk_id': 'chunk_3', 'text': 'I began my journey in Kyrgyzstan as a part-time backend Python developer while completing my Doctor’s Degree.', 'score': 0.582561254...</code>
+            </div>
+
+            <div class="expandable" onclick="toggleExpand('stack-4789780816')">
+                <strong>📚 Call Stack (30 frames)</strong>
+            </div>
+            <div id="stack-4789780816" class="call-stack collapsed">
+<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:338 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:144 wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/llm_service.py:531 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
             </div>
 
         </div>
@@ -995,42 +323,42 @@
         <div class="detailed-call">
             <div class="call-header">
                 <div class="call-function">✅ generate_field_answer</div>
-                <div class="call-time">2.394s</div>
+                <div class="call-time">1.321s</div>
             </div>
             <div class="call-details">
                 <div class="call-detail">
                     <span class="call-detail-label">File:</span> llm_service.py:467
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
+                    <span class="call-detail-label">Thread:</span> 8638341632
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.7MB
+                    <span class="call-detail-label">Memory:</span> 226.3MB
                 </div>
                 <div class="call-detail">
                     <span class="call-detail-label">CPU:</span> 0.0%
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Parent:</span> main.py:284 generate_field_answer
+                    <span class="call-detail-label">Parent:</span> main.py:338 generate_field_answer
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
+                    <span class="call-detail-label">Endpoint:</span> N/A
                 </div>
             </div>
 
             <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11dbaa1d0>,), {'field_label': 'Are you sure you want to join a hard working, fast paced, and fast growing start up?', 'user_id': '7ddf163e-1d05-4...</code>
+                <span class="call-detail-label">Input:</span> <code>(<app.services.llm_service.SmartLLMService object at 0x11d3dfd90>,), {'field_label': 'How many years of work experience do you have with Python (Programming Language)?', 'user_id': '6fe5bceb-8c76-4db6...</code>
             </div>
 
             <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>{'status': 'success', 'answer': "Yes, I am confident in my decision to join a hardworking, fast-paced, and fast-growing startup. I thrive in dynamic environments and am eager to contribute to the team...</code>
+                <span class="call-detail-label">Output:</span> <code>{'status': 'success', 'answer': 'I have several years of work experience with Python, starting from my time as a part-time backend developer while completing my Doctor’s Degree', 'confidence': 85.0, '...</code>
             </div>
 
-            <div class="expandable" onclick="toggleExpand('stack-4803576208')">
-                <strong>📚 Call Stack (29 frames)</strong>
+            <div class="expandable" onclick="toggleExpand('stack-4803868688')">
+                <strong>📚 Call Stack (27 frames)</strong>
             </div>
-            <div id="stack-4803576208" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:284 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            <div id="stack-4803868688" class="call-stack collapsed">
+<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1661 async_wrapper</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/main.py:338 generate_field_answer</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
             </div>
 
         </div>
@@ -1038,17 +366,17 @@
         <div class="detailed-call">
             <div class="call-header">
                 <div class="call-function">✅ generate_field_answer</div>
-                <div class="call-time">2.396s</div>
+                <div class="call-time">1.323s</div>
             </div>
             <div class="call-details">
                 <div class="call-detail">
-                    <span class="call-detail-label">File:</span> main.py:263
+                    <span class="call-detail-label">File:</span> main.py:317
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Thread:</span> 8638276096
+                    <span class="call-detail-label">Thread:</span> 8638341632
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Memory:</span> 229.7MB
+                    <span class="call-detail-label">Memory:</span> 226.3MB
                 </div>
                 <div class="call-detail">
                     <span class="call-detail-label">CPU:</span> 0.0%
@@ -1057,23 +385,23 @@
                     <span class="call-detail-label">Parent:</span> routing.py:212 run_endpoint_function
                 </div>
                 <div class="call-detail">
-                    <span class="call-detail-label">Endpoint:</span> /api/generate-field-answer
+                    <span class="call-detail-label">Endpoint:</span> N/A
                 </div>
             </div>
 
             <div class="call-detail">
-                <span class="call-detail-label">Input:</span> <code>(), {'user': <User(id=7ddf163e-1d05-43ae-aace-7d4ad85575f7, email=erlan2020@gmail.com)>, 'field_data': FieldAnswerRequest(label='Are you sure you want to join a hard working, fast paced, and fast grow...</code>
+                <span class="call-detail-label">Input:</span> <code>(), {'user': <User(id=6fe5bceb-8c76-4db6-a0ec-79c65c6a9346, email=ethanabduraimov@gmail.com)>, 'field_data': FieldAnswerRequest(label='How many years of work experience do you have with Python (Progra...</code>
             </div>
 
             <div class="call-detail">
-                <span class="call-detail-label">Output:</span> <code>answer="Yes, I am confident in my decision to join a hardworking, fast-paced, and fast-growing startup. I thrive in dynamic environments and am eager to contribute to the team's success" data_source='...</code>
+                <span class="call-detail-label">Output:</span> <code>answer='I have several years of work experience with Python, starting from my time as a part-time backend developer while completing my Doctor’s Degree' data_source='personal' reasoning='Optimized pro...</code>
             </div>
 
-            <div class="expandable" onclick="toggleExpand('stack-4803583056')">
-                <strong>📚 Call Stack (27 frames)</strong>
+            <div class="expandable" onclick="toggleExpand('stack-4801097808')">
+                <strong>📚 Call Stack (25 frames)</strong>
             </div>
-            <div id="stack-4803583056" class="call-stack collapsed">
-<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:93 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/cors.py:144 simple_response</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
+            <div id="stack-4801097808" class="call-stack collapsed">
+<div><string>:1 <module></div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:120 spawn_main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/spawn.py:133 _main</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:314 _bootstrap</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/process.py:108 run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/_subprocess.py:80 subprocess_started</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/uvicorn/server.py:66 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:190 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/runners.py:118 run</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:640 run_until_complete</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:607 run_forever</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/base_events.py:1922 _run_once</div><div>/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/asyncio/events.py:80 _run</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/base.py:141 coro</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:62 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:714 __call__</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:734 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:288 handle</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:76 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42 wrapped_app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/starlette/routing.py:73 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:301 app</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/venv/lib/python3.11/site-packages/fastapi/routing.py:212 run_endpoint_function</div><div>/Users/macbookpro/M4_Projects/AIEngineer/backend_ai_popup/app/services/integrated_usage_analyzer.py:1672 async_wrapper</div>
             </div>
 
         </div>
@@ -1081,7 +409,7 @@
         
         <div class="highlight">
             <h3>💡 Deep Tracking Features</h3>
-            <p><strong>Currently tracking:</strong> 13 detailed function calls</p>
+            <p><strong>Currently tracking:</strong> 7 detailed function calls</p>
             <ul>
                 <li>📚 <strong>Call Stacks:</strong> Complete execution context for each function</li>
                 <li>🔄 <strong>Execution Flow:</strong> Step-by-step function call sequences</li>
@@ -1094,9 +422,9 @@
         
         <div class="summary" style="margin-top: 30px;">
             <p style="text-align: center; color: #6c757d; font-size: 12px;">
-                Deep analysis report generated on 2025-06-23 10:57:53 | 
+                Deep analysis report generated on 2025-06-23 23:20:06 | 
                 Tracking 0 active requests |
-                13 function calls analyzed
+                7 function calls analyzed
             </p>
         </div>
     </div>

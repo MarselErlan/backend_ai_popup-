@@ -203,6 +203,19 @@ class FieldAnswerResponse(BaseModel):
     status: str
     performance_metrics: Optional[Dict[str, Any]] = None
 
+class TranslationRequest(BaseModel):
+    text: str
+    source_language: str = "en"  # Default: English
+    target_language: str = "ru"  # Default: Russian
+
+class TranslationResponse(BaseModel):
+    original_text: str
+    translated_text: str
+    source_language: str
+    target_language: str
+    confidence: Optional[float] = None
+    status: str
+
 # ============================================================================
 # USER AUTHENTICATION MODELS
 # ============================================================================
@@ -227,15 +240,68 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add CORS middleware - Universal access (no credentials)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow ALL websites - perfect for browser extensions
-    allow_credentials=False,  # Must be False when using "*" for security
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["*"]
-)
+# Custom CORS handling for hybrid scenarios
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+
+class CustomCORSMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app):
+        super().__init__(app)
+        self.localhost_origins = {
+            "http://localhost:5173",
+            "http://localhost:3000", 
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:3000"
+        }
+        # Explicit headers list to avoid issues with "*"
+        self.allowed_headers = [
+            "Accept", "Accept-Language", "Content-Language", "Content-Type",
+            "Authorization", "X-Requested-With", "Origin", "DNT", "Cache-Control",
+            "User-Agent", "If-Modified-Since", "Keep-Alive", "X-Requested-With",
+            "If-None-Match", "X-CSRF-Token", "X-Forwarded-For", "X-Real-IP"
+        ]
+    
+    async def dispatch(self, request, call_next):
+        origin = request.headers.get("origin")
+        
+        # Handle preflight requests
+        if request.method == "OPTIONS":
+            response = Response()
+            if origin in self.localhost_origins:
+                # Localhost gets credentials support
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+            else:
+                # All other origins get universal access
+                response.headers["Access-Control-Allow-Origin"] = "*"
+            
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = ", ".join(self.allowed_headers)
+            response.headers["Access-Control-Expose-Headers"] = ", ".join(self.allowed_headers)
+            response.headers["Access-Control-Max-Age"] = "86400"  # Cache preflight for 24 hours
+            return response
+        
+        # Process actual request
+        response = await call_next(request)
+        
+        # Add CORS headers to response
+        if origin in self.localhost_origins:
+            # Localhost gets credentials support
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+        else:
+            # All other origins get universal access
+            response.headers["Access-Control-Allow-Origin"] = "*"
+        
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = ", ".join(self.allowed_headers)
+        response.headers["Access-Control-Expose-Headers"] = ", ".join(self.allowed_headers)
+        
+        return response
+
+# Add custom CORS middleware
+app.add_middleware(CustomCORSMiddleware)
 
 # Add usage analysis middleware (DISABLED)
 # from app.middleware.usage_middleware import UsageAnalysisMiddleware
@@ -1592,6 +1658,69 @@ async def test_redis_field_answer(field_request: FieldAnswerRequest):
             answer="Error occurred",
             data_source="error",
             reasoning=str(e),
+            status="error"
+        )
+
+# ============================================================================
+# TEXT TRANSLATION ENDPOINT (For Browser Extension Text Highlighting)
+# ============================================================================
+
+@app.post("/api/translate", response_model=TranslationResponse)
+async def translate_text(translation_request: TranslationRequest):
+    """
+    🌐 Translate highlighted text from any website
+    
+    Supports English → Russian translation for browser extension
+    Uses OpenAI GPT for high-quality translation
+    """
+    try:
+        from openai import OpenAI
+        
+        # Initialize OpenAI client
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        
+        # Create translation prompt
+        translation_prompt = f"""
+        Please translate the following text from {translation_request.source_language} to {translation_request.target_language}.
+        Provide only the translation, no explanations or additional text.
+        
+        Text to translate: "{translation_request.text}"
+        
+        Translation:
+        """
+        
+        # Get translation from OpenAI
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a professional translator. Provide accurate, natural translations without any additional text or explanations."},
+                {"role": "user", "content": translation_prompt}
+            ],
+            max_tokens=500,
+            temperature=0.3  # Lower temperature for more consistent translations
+        )
+        
+        translated_text = response.choices[0].message.content.strip()
+        
+        logger.info(f"✅ Translated '{translation_request.text[:50]}...' from {translation_request.source_language} to {translation_request.target_language}")
+        
+        return TranslationResponse(
+            original_text=translation_request.text,
+            translated_text=translated_text,
+            source_language=translation_request.source_language,
+            target_language=translation_request.target_language,
+            confidence=0.95,  # OpenAI typically provides high-quality translations
+            status="success"
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Translation failed: {str(e)}")
+        return TranslationResponse(
+            original_text=translation_request.text,
+            translated_text=f"Translation failed: {str(e)}",
+            source_language=translation_request.source_language,
+            target_language=translation_request.target_language,
+            confidence=0.0,
             status="error"
         )
 
