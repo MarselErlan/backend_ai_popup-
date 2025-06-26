@@ -66,36 +66,25 @@ class RedisVectorStore:
     
     def store_embeddings(self, document_id: str, user_id: str, chunk_data: List[Dict[str, Any]], document_type: str = "resume"):
         """
-        Store document embeddings in Redis
-        
-        Args:
-            document_id: Unique document identifier
-            user_id: User identifier for filtering
-            chunk_data: List of chunks with embeddings
-            document_type: Type of document (resume, personal_info, etc.)
+        Store document embeddings in Redis using namespace pattern:
+        doc_vectors:{user_id}:{document_type}:{chunk_id}
         """
         try:
             stored_count = 0
-            
             for chunk in chunk_data:
                 chunk_id = chunk.get("chunk_id", f"chunk_{stored_count}")
                 text = chunk.get("text", "")
                 embedding = chunk.get("embedding")
-                
                 if embedding is None:
                     logger.warning(f"No embedding for chunk {chunk_id}, skipping")
                     continue
-                
                 # Convert numpy array to bytes
                 if isinstance(embedding, np.ndarray):
                     embedding_bytes = embedding.astype(np.float32).tobytes()
                 else:
                     embedding_bytes = np.array(embedding, dtype=np.float32).tobytes()
-                
-                # Create Redis key
-                redis_key = f"{self.index_name}:{document_id}:{chunk_id}"
-                
-                # Store document data
+                # New Redis key pattern: namespace/folder per user and doc type
+                redis_key = f"{self.index_name}:{user_id}:{document_type}:{chunk_id}"
                 doc_data = {
                     "document_id": document_id,
                     "user_id": user_id,
@@ -104,13 +93,10 @@ class RedisVectorStore:
                     "document_type": document_type,
                     "embedding": embedding_bytes
                 }
-                
                 self.redis_client.hset(redis_key, mapping=doc_data)
                 stored_count += 1
-            
-            logger.info(f"✅ Stored {stored_count} chunks for document {document_id}")
+            logger.info(f"✅ Stored {stored_count} chunks for user {user_id} ({document_type}) in namespace {self.index_name}:{user_id}:{document_type}:")
             return stored_count
-            
         except Exception as e:
             logger.error(f"❌ Error storing embeddings: {e}")
             raise
@@ -212,21 +198,21 @@ class RedisVectorStore:
         """Search for similar vectors filtered by document type"""
         return self.search_similar(query_embedding, user_id, top_k, min_score, document_type=document_type)
     
-    def delete_document(self, document_id: str, user_id: str):
-        """Delete all chunks for a document"""
+    def delete_document(self, document_id: str, user_id: str, document_type: str = "resume"):
+        """
+        Delete all chunks for a user's document type (namespace):
+        doc_vectors:{user_id}:{document_type}:*
+        """
         try:
-            # Find all keys for this document
-            pattern = f"{self.index_name}:{document_id}:*"
+            pattern = f"{self.index_name}:{user_id}:{document_type}:*"
             keys = self.redis_client.keys(pattern)
-            
             if keys:
                 deleted_count = self.redis_client.delete(*keys)
-                logger.info(f"🗑️ Deleted {deleted_count} chunks for document {document_id}")
+                logger.info(f"🗑️ Deleted {deleted_count} chunks for user {user_id} ({document_type}) in namespace {self.index_name}:{user_id}:{document_type}:")
                 return deleted_count
             else:
-                logger.info(f"No chunks found for document {document_id}")
+                logger.info(f"No chunks found for user {user_id} ({document_type}) in namespace {self.index_name}:{user_id}:{document_type}:")
                 return 0
-                
         except Exception as e:
             logger.error(f"❌ Error deleting document: {e}")
             raise

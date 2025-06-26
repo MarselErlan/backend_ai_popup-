@@ -206,30 +206,27 @@ class EmbeddingService:
     ) -> None:
         """
         Process document content into vector embeddings and store in Redis
-        
-        Args:
-            document_id: Unique identifier for the document
-            user_id: User identifier
-            content: Text content to process
-            reprocess: Whether to reprocess existing embeddings
+        Uses namespace/folder pattern: doc_vectors:{user_id}:{document_type}:{chunk_id}
+        Re-embedding deletes all old vectors for that user/type.
         """
         try:
+            # Determine document_type
+            if document_id.startswith("resume_"):
+                document_type = "resume"
+            elif document_id.startswith("personal_info"):
+                document_type = "personal_info"
+            else:
+                document_type = "resume"
             # Delete existing embeddings if reprocessing
             if reprocess:
-                self.vector_store.delete_document(document_id, user_id)
-            
-            # Determine document type from document_id
-            document_type = "resume" if document_id.startswith("resume_") else "personal_info"
-            
+                self.vector_store.delete_document(document_id, user_id, document_type)
             # Split into chunks
             chunks = self._chunk_text(content)
             if not chunks:
-                logger.warning(f"No chunks generated for document {document_id}")
+                logger.warning(f"No chunks generated for user {user_id} ({document_type})")
                 return
-                
             # Get embeddings
             embeddings = self._get_embeddings(chunks)
-            
             # Prepare chunks with embeddings
             chunk_data = []
             for i, (text, embedding) in enumerate(zip(chunks, embeddings)):
@@ -238,14 +235,11 @@ class EmbeddingService:
                     "text": text,
                     "embedding": embedding
                 })
-            
-            # Store in Redis with correct document type
+            # Store in Redis with correct user namespace
             self.vector_store.store_embeddings(document_id, user_id, chunk_data, document_type)
-            
-            logger.info(f"Successfully processed document {document_id} into {len(chunks)} chunks (user: {user_id}, type: {document_type})")
-            
+            logger.info(f"Successfully processed document for user {user_id} ({document_type}) into {len(chunks)} chunks")
         except Exception as e:
-            logger.error(f"Error processing document {document_id}: {e}")
+            logger.error(f"Error processing document for user {user_id} ({document_type}): {e}")
             raise
     
     def search_similar(

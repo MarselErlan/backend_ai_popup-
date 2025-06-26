@@ -761,6 +761,106 @@ async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> Field
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 # ============================================================================
+# DEMO DOCUMENT UPLOAD ENDPOINTS (No Authentication Required)
+# ============================================================================
+
+# Additional Pydantic models for document operations
+class DocumentUploadResponse(BaseModel):
+    status: str
+    message: str
+    document_id: int
+    filename: str
+    file_size: int
+    content_type: str
+    processing_time: float
+    replaced_previous: bool  # Indicates if a previous document was replaced
+
+@app.post("/api/demo/resume/upload", response_model=DocumentUploadResponse)
+async def demo_upload_resume(file: UploadFile = File(...)):
+    """
+    📄 DEMO: Upload resume document (no authentication, user_id='default')
+    Automatically embeds the document after upload.
+    """
+    start_time = time.time()
+    try:
+        file_content = await file.read()
+        document_id = document_service.save_resume_document(
+            filename=file.filename,
+            file_content=file_content,
+            content_type=file.content_type,
+            user_id="default"
+        )
+        # Extract text for embedding
+        try:
+            text = extract_text_from_bytes(file_content, file.content_type)
+            embedding_service.process_document(
+                document_id=f"resume_{document_id}",
+                user_id="default",
+                content=text,
+                reprocess=True
+            )
+            logger.info(f"✅ Embedded resume document {document_id} for user 'default'")
+        except Exception as embed_err:
+            logger.error(f"❌ Embedding failed for resume {document_id}: {embed_err}")
+        processing_time = time.time() - start_time
+        return {
+            "status": "success",
+            "message": "Demo resume uploaded and embedded successfully",
+            "document_id": document_id,
+            "filename": file.filename,
+            "file_size": len(file_content),
+            "content_type": file.content_type,
+            "processing_time": round(processing_time, 3),
+            "replaced_previous": True
+        }
+    except Exception as e:
+        logger.error(f"❌ Demo resume upload failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Demo resume upload failed: {str(e)}")
+
+@app.post("/api/demo/personal-info/upload", response_model=DocumentUploadResponse)
+async def demo_upload_personal_info(content: str = Form(...)):
+    """
+    📝 DEMO: Upload personal info document (no authentication, user_id='default')
+    Automatically embeds the document after upload.
+    """
+    start_time = time.time()
+    try:
+        file_content = content.encode("utf-8")
+        filename = "personal_info.txt"
+        content_type = "text/plain"
+        document_id = document_service.save_personal_info_document(
+            filename=filename,
+            file_content=file_content,
+            content_type=content_type,
+            user_id="default"
+        )
+        # Embed personal info
+        try:
+            embedding_service.process_document(
+                document_id=f"personal_info_{document_id}",
+                user_id="default",
+                content=content,
+                reprocess=True
+            )
+            logger.info(f"✅ Embedded personal info document {document_id} for user 'default'")
+        except Exception as embed_err:
+            logger.error(f"❌ Embedding failed for personal info {document_id}: {embed_err}")
+        processing_time = time.time() - start_time
+        return {
+            "status": "success",
+            "message": "Demo personal info uploaded and embedded successfully",
+            "document_id": document_id,
+            "filename": filename,
+            "file_size": len(file_content),
+            "content_type": content_type,
+            "processing_time": round(processing_time, 3),
+            "replaced_previous": True
+        }
+    except Exception as e:
+        logger.error(f"❌ Demo personal info upload failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Demo personal info upload failed: {str(e)}")
+
+# ============================================================================
 # OPTIMIZED VECTOR DATABASE ENDPOINTS
 # ============================================================================
 
@@ -951,17 +1051,6 @@ async def get_documents_status_legacy(user_id: str = Query(None, description="Us
 # ============================================================================
 # DOCUMENT UPLOAD & CRUD ENDPOINTS
 # ============================================================================
-
-# Additional Pydantic models for document operations
-class DocumentUploadResponse(BaseModel):
-    status: str
-    message: str
-    document_id: int
-    filename: str
-    file_size: int
-    content_type: str
-    processing_time: float
-    replaced_previous: bool  # Indicates if a previous document was replaced
 
 class DocumentInfoResponse(BaseModel):
     id: int

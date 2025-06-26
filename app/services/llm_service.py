@@ -522,46 +522,104 @@ class SmartLLMService:
             
             # Optimize search strategy based on field type
             if field_type in [FieldType.EMAIL, FieldType.PHONE, FieldType.NAME, FieldType.ADDRESS]:
-                # For contact info, prioritize personal data
                 personal_results = await self._search_personal_vectors(field_label, user_id)
                 resume_results = await self._search_resume_vectors(field_label, user_id) if not personal_results else []
             elif field_type in [FieldType.EXPERIENCE, FieldType.SKILL, FieldType.EDUCATION, FieldType.PROFESSIONAL]:
-                # For professional info, prioritize resume data
                 resume_results = await self._search_resume_vectors(field_label, user_id)
                 personal_results = await self._search_personal_vectors(field_label, user_id) if not resume_results else []
             else:
-                # For generic fields, search both
                 resume_results, personal_results = await asyncio.gather(
                     self._search_resume_vectors(field_label, user_id),
                     self._search_personal_vectors(field_label, user_id)
                 )
             
-            # Combine results with priority
+            # Log top vector search results for debugging
+            if field_type == FieldType.NAME:
+                logger.info(f"[DEBUG] Top resume_results for 'name': {[r.get('content', r.get('text', ''))[:100] for r in resume_results]}")
+                logger.info(f"[DEBUG] Top personal_results for 'name': {[r.get('content', r.get('text', ''))[:100] for r in personal_results]}")
             all_results = resume_results + personal_results
+            combined_text = "\n".join([
+                result.get('content', result.get('text', ''))[:300]
+                for result in all_results[:2]
+            ]) if all_results else ""
             
             # Generate enhanced prompt based on field type and available data
             if all_results:
-                combined_text = "\n".join([
-                    result.get('content', result.get('text', ''))[:300]  # Limit to avoid token limits
-                    for result in all_results[:2]  # Top 2 results only
-                ])
-                
-                # Enhanced prompt engineering
-                prompt = self._create_enhanced_prompt(field_label, field_type, combined_text)
+                # Make prompt for name fields more explicit
+                if field_type == FieldType.NAME:
+                    prompt = f"Extract the full name from the following data. Return only the name.\n\nData:\n{combined_text}"
+                else:
+                    prompt = self._create_enhanced_prompt(field_label, field_type, combined_text)
                 response = await asyncio.create_task(
                     asyncio.to_thread(self.llm.invoke, [HumanMessage(content=prompt)])
                 )
-                
-                final_answer = self._clean_answer(response.content, field_label, field_type)
+                # Pass combined_text as fallback to _clean_answer
+                final_answer = self._clean_answer(response.content, field_label, field_type, fallback_text=combined_text)
+                # FINAL: Always run raw text fallback for name extraction
+                if field_type == FieldType.NAME:
+                    from app.services.document_service import DocumentService
+                    import re
+                    import os
+                    POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
+                    doc_service = DocumentService(POSTGRES_DB_URL)
+                    resume_doc = doc_service.get_user_resume(user_id)
+                    personal_doc = doc_service.get_personal_info_document(user_id)
+                    raw_text = ""
+                    if resume_doc and hasattr(resume_doc, 'file_content'):
+                        try:
+                            from app.utils.text_extractor import extract_text_from_file
+                            raw_text += extract_text_from_file(resume_doc.file_content, resume_doc.content_type) + "\n"
+                        except Exception as e:
+                            logger.warning(f"[Fallback3] Could not extract text from resume: {e}")
+                    if personal_doc and hasattr(personal_doc, 'file_content'):
+                        try:
+                            raw_text += personal_doc.file_content.decode(errors='ignore')
+                        except Exception as e:
+                            logger.warning(f"[Fallback3] Could not decode personal info: {e}")
+                    logger.info(f"[Fallback3] Raw text for name extraction (first 300 chars): {raw_text[:300]}")
+                    # Heuristic: Try first non-empty line as name
+                    lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
+                    if lines:
+                        first_line = lines[0]
+                        logger.info(f"[Fallback3] First non-empty line: '{first_line}'")
+                        # Check if it looks like a name: 2-4 words, each starting with a capital letter
+                        if re.match(r'^([A-Z][a-z]+\s){1,3}[A-Z][a-z]+$', first_line):
+                            logger.info(f"[Fallback3] Using first line as name: {first_line}")
+                            final_answer = first_line
+                            found_valid = True
+                        else:
+                            found_valid = False
+                    else:
+                        found_valid = False
+                    # If not found, use regex patterns as before
+                    if not found_valid:
+                        name_patterns = [
+                            r'\b([A-Z][a-z]+\s+[A-Z][a-z]+\s+[A-Z][a-z]+)\b',
+                            r'\b([A-Z][a-z]+\s+[A-Z]\.[ ]?[A-Z][a-z]+)\b',
+                            r'\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b',
+                            r'Name[:\s]+([A-Z][a-z]+\s+[A-Z][a-z]+)',
+                            r'Full Name[:\s]+([A-Z][a-z]+\s+[A-Z][a-z]+)',
+                        ]
+                        for pattern in name_patterns:
+                            logger.info(f"[Fallback3] Trying pattern: {pattern}")
+                            match = re.search(pattern, raw_text)
+                            if match:
+                                candidate = match.group(1).strip()
+                                logger.info(f"[Fallback3] Regex match: {candidate}")
+                                if candidate.lower() != field_label.lower() and len(candidate.split()) >= 2:
+                                    logger.info(f"[Fallback3] Extracted name from raw document text: {candidate}")
+                                    final_answer = candidate
+                                    found_valid = True
+                                    break
+                    if not found_valid:
+                        logger.warning(f"[Fallback3] No valid name found in raw document text for field '{field_label}'")
                 confidence = 85.0
                 data_source = "resume + personal" if resume_results and personal_results else ("resume" if resume_results else "personal")
             else:
-                # Fallback with enhanced prompt
                 fallback_prompt = self._create_fallback_prompt(field_label, field_type)
                 response = await asyncio.create_task(
                     asyncio.to_thread(self.llm.invoke, [HumanMessage(content=fallback_prompt)])
                 )
-                
                 final_answer = self._clean_answer(response.content, field_label, field_type)
                 confidence = 60.0
                 data_source = "generated"
@@ -769,14 +827,14 @@ Answer:"""
             "retry_attempts": self.metrics.retry_attempts
         }
 
-    def _clean_answer(self, raw_answer: str, field_label: str, field_type: FieldType) -> str:
-        """Enhanced answer cleaning with field-type-specific logic"""
+    def _clean_answer(self, raw_answer: str, field_label: str, field_type: FieldType, fallback_text: str = "") -> str:
+        """Enhanced answer cleaning with field-type-specific logic and fallback extraction"""
         import re
         
         if not raw_answer:
-            return "Not available"
-        
-        cleaned = raw_answer.strip()
+            cleaned = ""
+        else:
+            cleaned = raw_answer.strip()
         
         # Field-type-specific cleaning
         if field_type == FieldType.EMAIL:
@@ -790,16 +848,22 @@ Answer:"""
                 return phone_match.group()
         
         elif field_type == FieldType.NAME:
-            # Enhanced name extraction
+            # Enhanced name extraction: First Last, First M. Last, First Middle Last, etc.
             name_patterns = [
-                r'(?:is|are|was|were)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)',
-                r'\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b',
-                r'\b([A-Z][a-z]+)\b'
+                r'\b([A-Z][a-z]+\s+[A-Z][a-z]+\s+[A-Z][a-z]+)\b',  # First Middle Last
+                r'\b([A-Z][a-z]+\s+[A-Z]\.[ ]?[A-Z][a-z]+)\b',      # First M. Last
+                r'\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b',                  # First Last
+                r'Name[:\s]+([A-Z][a-z]+\s+[A-Z][a-z]+)',             # Name: First Last
+                r'Full Name[:\s]+([A-Z][a-z]+\s+[A-Z][a-z]+)',        # Full Name: First Last
+                r'([A-Z][a-z]+)',                                      # Single capitalized word (fallback)
             ]
             for pattern in name_patterns:
                 match = re.search(pattern, cleaned)
                 if match:
-                    return match.group(1)
+                    candidate = match.group(1).strip()
+                    # Avoid returning the field label itself
+                    if candidate.lower() != field_label.lower() and len(candidate.split()) >= 2:
+                        return candidate
         
         # Generic cleaning
         prefixes_to_remove = [
@@ -822,6 +886,16 @@ Answer:"""
         # Remove quotes
         if (cleaned.startswith('"') and cleaned.endswith('"')) or (cleaned.startswith("'") and cleaned.endswith("'")):
             cleaned = cleaned[1:-1].strip()
+        
+        # Fallback: If answer is empty or just the field label, try extracting from fallback_text
+        if (not cleaned or cleaned.lower() == field_label.lower()) and field_type == FieldType.NAME and fallback_text:
+            for pattern in name_patterns:
+                match = re.search(pattern, fallback_text)
+                if match:
+                    candidate = match.group(1).strip()
+                    if candidate.lower() != field_label.lower() and len(candidate.split()) >= 2:
+                        logger.info(f"[Fallback] Extracted name from vector data: {candidate}")
+                        return candidate
         
         return cleaned if cleaned else "Not available"
 
