@@ -28,6 +28,7 @@ except ImportError:
     HF_AVAILABLE = False
 
 from app.services.document_service import DocumentService
+from app.services.embedding_service import EmbeddingService
 
 
 class PersonalInfoExtractorOptimized:
@@ -63,6 +64,9 @@ class PersonalInfoExtractorOptimized:
         
         # Cache for processed embeddings
         self._embedding_cache = {}
+        
+        # Add Redis-based embedding service for vector search
+        self.embedding_service = EmbeddingService()
         
         logger.info("✅ Optimized Personal Info extractor initialized")
     
@@ -389,61 +393,22 @@ class PersonalInfoExtractorOptimized:
             return {"status": "error", "error": str(e)}
     
     def search_personal_info(self, query: str, k: int = 5) -> Dict[str, Any]:
-        """Optimized personal info search with caching"""
+        """
+        Search personal info vectors using Redis-based EmbeddingService (namespace/folder pattern)
+        """
         try:
-            # Load the latest vector store - check multiple naming patterns
-            vectorstore_files = list(self.vectordb_path.glob(f"personal_info_faiss_{self.user_id}_*"))
-            if not vectorstore_files:
-                # Fallback to any personal info vector store
-                vectorstore_files = list(self.vectordb_path.glob("personal_info_faiss_*"))
-            if not vectorstore_files:
-                # Fallback to legacy naming pattern
-                vectorstore_files = list(self.vectordb_path.glob("faiss_store_*"))
-            
-            if not vectorstore_files:
-                return {"status": "not_found", "message": "No personal info vector store found"}
-            
-            # Get the latest vector store
-            latest_vectorstore = max(vectorstore_files, key=lambda x: x.stat().st_mtime)
-            
-            # Load vector store with caching
-            cache_key = f"vectorstore_{latest_vectorstore.name}"
-            if cache_key not in self._embedding_cache:
-                if not self.embeddings:
-                    return {"status": "error", "error": "Embeddings not initialized"}
-                
-                vectorstore = FAISS.load_local(
-                    str(latest_vectorstore),
-                    self.embeddings,
-                    allow_dangerous_deserialization=True
-                )
-                self._embedding_cache[cache_key] = vectorstore
-            else:
-                vectorstore = self._embedding_cache[cache_key]
-                self.cache_hits += 1
-            
-            # Perform optimized similarity search
-            docs = vectorstore.similarity_search(query, k=k)
-            
-            results = []
-            for doc in docs:
-                results.append({
-                    "content": doc.page_content,
-                    "metadata": doc.metadata,
-                    "relevance": "high"
-                })
-            
-            return {
-                "status": "success",
-                "query": query,
-                "results": results,
-                "total_results": len(results),
-                "optimized": True
-            }
-            
+            user_id = self.user_id
+            results = self.embedding_service.search_similar_by_document_type(
+                query=query,
+                user_id=user_id,
+                document_type="personal_info",
+                top_k=k
+            )
+            logger.info(f"[Redis] Found {len(results)} personal info chunks for user {user_id} (query: '{query}')")
+            return {"results": results, "source": "redis_vector_store"}
         except Exception as e:
-            logger.error(f"❌ Optimized personal info search failed: {e}")
-            return {"status": "error", "error": str(e)}
+            logger.error(f"[Redis] Personal info vector search error: {e}")
+            return {"results": [], "source": "redis_vector_store", "error": str(e)}
     
     def get_performance_metrics(self) -> Dict[str, Any]:
         """Get performance metrics"""

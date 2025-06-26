@@ -29,6 +29,7 @@ except ImportError:
     HF_AVAILABLE = False
 
 from app.services.document_service import DocumentService
+from app.services.embedding_service import EmbeddingService
 
 
 class ResumeExtractorOptimized:
@@ -64,6 +65,9 @@ class ResumeExtractorOptimized:
         
         # Cache for processed embeddings
         self._embedding_cache = {}
+        
+        # Add Redis-based embedding service for vector search
+        self.embedding_service = EmbeddingService()
         
         logger.info("✅ Optimized Resume extractor initialized")
     
@@ -397,61 +401,22 @@ class ResumeExtractorOptimized:
             return {"status": "error", "error": str(e)}
     
     def search_resume(self, query: str, k: int = 5) -> Dict[str, Any]:
-        """Optimized resume search with caching"""
+        """
+        Search resume vectors using Redis-based EmbeddingService (namespace/folder pattern)
+        """
         try:
-            # Load the latest vector store - check multiple naming patterns
-            vectorstore_files = list(self.vectordb_path.glob(f"resume_faiss_{self.user_id}_*"))
-            if not vectorstore_files:
-                # Fallback to any resume vector store
-                vectorstore_files = list(self.vectordb_path.glob("resume_faiss_*"))
-            if not vectorstore_files:
-                # Fallback to legacy naming pattern
-                vectorstore_files = list(self.vectordb_path.glob("faiss_store_*"))
-            
-            if not vectorstore_files:
-                return {"status": "not_found", "message": "No vector store found"}
-            
-            # Get the latest vector store
-            latest_vectorstore = max(vectorstore_files, key=lambda x: x.stat().st_mtime)
-            
-            # Load vector store with caching
-            cache_key = f"vectorstore_{latest_vectorstore.name}"
-            if cache_key not in self._embedding_cache:
-                if not self.embeddings:
-                    return {"status": "error", "error": "Embeddings not initialized"}
-                
-                vectorstore = FAISS.load_local(
-                    str(latest_vectorstore), 
-                    self.embeddings, 
-                    allow_dangerous_deserialization=True
-                )
-                self._embedding_cache[cache_key] = vectorstore
-            else:
-                vectorstore = self._embedding_cache[cache_key]
-                self.cache_hits += 1
-            
-            # Perform optimized similarity search
-            docs = vectorstore.similarity_search(query, k=k)
-            
-            results = []
-            for doc in docs:
-                results.append({
-                    "content": doc.page_content,
-                    "metadata": doc.metadata,
-                    "relevance": "high"  # Simplified relevance scoring
-                })
-            
-            return {
-                "status": "success",
-                "query": query,
-                "results": results,
-                "total_results": len(results),
-                "optimized": True
-            }
-            
+            user_id = self.user_id
+            results = self.embedding_service.search_similar_by_document_type(
+                query=query,
+                user_id=user_id,
+                document_type="resume",
+                top_k=k
+            )
+            logger.info(f"[Redis] Found {len(results)} resume chunks for user {user_id} (query: '{query}')")
+            return {"results": results, "source": "redis_vector_store"}
         except Exception as e:
-            logger.error(f"❌ Optimized resume search failed: {e}")
-            return {"status": "error", "error": str(e)}
+            logger.error(f"[Redis] Resume vector search error: {e}")
+            return {"results": [], "source": "redis_vector_store", "error": str(e)}
     
     def get_performance_metrics(self) -> Dict[str, Any]:
         """Get performance metrics"""
