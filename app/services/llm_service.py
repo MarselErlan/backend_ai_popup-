@@ -38,6 +38,7 @@ from app.services.embedding_service import EmbeddingService
 from app.services.vector_store import RedisVectorStore
 from app.services.document_service import DocumentService
 from app.services.integrated_usage_analyzer import deep_track_function
+from app.services.chunk_confidence_extraction_pipeline import extract_with_chunk_confidence
 
 
 class FieldType(Enum):
@@ -473,28 +474,16 @@ class SmartLLMService:
         field_context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        🎯 OPTIMIZED Generate intelligent field answer
-        
-        IMPROVEMENTS:
-        - Intelligent caching with TTL
-        - Enhanced error handling with retry logic
-        - Better prompt engineering
-        - Field type optimization
-        - Performance monitoring
+        Generate intelligent field answer using the chunk confidence extraction pipeline.
         """
         start_time = time.time()
         self.metrics.total_requests += 1
-        
-        # Detect field type for optimization
-        field_type = self._detect_field_type(field_label)
-        
         # Check cache first
         cache_key = self._generate_cache_key(field_label, user_id, field_context)
         cached_entry = self._get_cached_response(cache_key)
-        
         if cached_entry:
             processing_time = time.time() - start_time
-            logger.info(f"🎯 Cache hit for field: {field_label} (type: {field_type.value})")
+            logger.info(f"🎯 Cache hit for field: {field_label}")
             return {
                 "status": "success",
                 "answer": cached_entry.answer,
@@ -502,272 +491,73 @@ class SmartLLMService:
                 "data_source": f"{cached_entry.data_source} (cached)",
                 "processing_time": processing_time,
                 "reasoning": "Retrieved from cache",
-                "field_analysis": {
-                    "field_label": field_label,
-                    "field_type": field_type.value,
-                    "cached": True
-                },
                 "performance_metrics": {
                     "processing_time_seconds": processing_time,
                     "cache_hit": True
                 }
             }
-        
-        logger.info(f"🧠 OPTIMIZED LLM SERVICE - Processing: '{field_label}' (type: {field_type.value})")
-        logger.info(f"   👤 User: {user_id}")
-        
+        logger.info(f"🧠 Chunk confidence pipeline - Processing: '{field_label}' for user {user_id}")
         try:
-            # Use optimized direct approach based on field type
-            llm_start_time = time.time()
-            
-            # Optimize search strategy based on field type
-            if field_type in [FieldType.EMAIL, FieldType.PHONE, FieldType.NAME, FieldType.ADDRESS]:
-                personal_results = await self._search_personal_vectors(field_label, user_id)
-                resume_results = await self._search_resume_vectors(field_label, user_id) if not personal_results else []
-            elif field_type in [FieldType.EXPERIENCE, FieldType.SKILL, FieldType.EDUCATION, FieldType.PROFESSIONAL]:
-                resume_results = await self._search_resume_vectors(field_label, user_id)
-                personal_results = await self._search_personal_vectors(field_label, user_id) if not resume_results else []
-            else:
-                resume_results, personal_results = await asyncio.gather(
-                    self._search_resume_vectors(field_label, user_id),
-                    self._search_personal_vectors(field_label, user_id)
-                )
-            
-            # Log top vector search results for debugging
-            if field_type == FieldType.NAME:
-                logger.info(f"[DEBUG] Top resume_results for 'name': {[r.get('content', r.get('text', ''))[:100] for r in resume_results]}")
-                logger.info(f"[DEBUG] Top personal_results for 'name': {[r.get('content', r.get('text', ''))[:100] for r in personal_results]}")
-            all_results = resume_results + personal_results
-            combined_text = "\n".join([
-                result.get('content', result.get('text', ''))[:300]
-                for result in all_results[:2]
-            ]) if all_results else ""
-            
-            # Generate enhanced prompt based on field type and available data
-            if all_results:
-                # Make prompt for name fields more explicit
-                if field_type == FieldType.NAME:
-                    prompt = f"Extract the full name from the following data. Return only the name.\n\nData:\n{combined_text}"
-                else:
-                    prompt = self._create_enhanced_prompt(field_label, field_type, combined_text)
-                response = await asyncio.create_task(
-                    asyncio.to_thread(self.llm.invoke, [HumanMessage(content=prompt)])
-                )
-                # Pass combined_text as fallback to _clean_answer
-                final_answer = self._clean_answer(response.content, field_label, field_type, fallback_text=combined_text)
-                # FINAL: Always run raw text fallback for name extraction
-                if field_type == FieldType.NAME:
-                    from app.services.document_service import DocumentService
-                    import re
-                    import os
-                    POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
-                    doc_service = DocumentService(POSTGRES_DB_URL)
-                    resume_doc = doc_service.get_user_resume(user_id)
-                    personal_doc = doc_service.get_personal_info_document(user_id)
-                    raw_text = ""
-                    if resume_doc and hasattr(resume_doc, 'file_content'):
-                        try:
-                            from app.utils.text_extractor import extract_text_from_file
-                            raw_text += extract_text_from_file(resume_doc.file_content, resume_doc.content_type) + "\n"
-                        except Exception as e:
-                            logger.warning(f"[Fallback3] Could not extract text from resume: {e}")
-                    if personal_doc and hasattr(personal_doc, 'file_content'):
-                        try:
-                            raw_text += personal_doc.file_content.decode(errors='ignore')
-                        except Exception as e:
-                            logger.warning(f"[Fallback3] Could not decode personal info: {e}")
-                    logger.info(f"[Fallback3] Raw text for name extraction (first 300 chars): {raw_text[:300]}")
-                    # Heuristic: Try first non-empty line as name
-                    lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
-                    if lines:
-                        first_line = lines[0]
-                        logger.info(f"[Fallback3] First non-empty line: '{first_line}'")
-                        # Check if it looks like a name: 2-4 words, each starting with a capital letter
-                        if re.match(r'^([A-Z][a-z]+\s){1,3}[A-Z][a-z]+$', first_line):
-                            logger.info(f"[Fallback3] Using first line as name: {first_line}")
-                            final_answer = first_line
-                            found_valid = True
-                        else:
-                            found_valid = False
-                    else:
-                        found_valid = False
-                    # If not found, use regex patterns as before
-                    if not found_valid:
-                        name_patterns = [
-                            r'\b([A-Z][a-z]+\s+[A-Z][a-z]+\s+[A-Z][a-z]+)\b',
-                            r'\b([A-Z][a-z]+\s+[A-Z]\.[ ]?[A-Z][a-z]+)\b',
-                            r'\b([A-Z][a-z]+\s+[A-Z][a-z]+)\b',
-                            r'Name[:\s]+([A-Z][a-z]+\s+[A-Z][a-z]+)',
-                            r'Full Name[:\s]+([A-Z][a-z]+\s+[A-Z][a-z]+)',
-                        ]
-                        for pattern in name_patterns:
-                            logger.info(f"[Fallback3] Trying pattern: {pattern}")
-                            match = re.search(pattern, raw_text)
-                            if match:
-                                candidate = match.group(1).strip()
-                                logger.info(f"[Fallback3] Regex match: {candidate}")
-                                if candidate.lower() != field_label.lower() and len(candidate.split()) >= 2:
-                                    logger.info(f"[Fallback3] Extracted name from raw document text: {candidate}")
-                                    final_answer = candidate
-                                    found_valid = True
-                                    break
-                    if not found_valid:
-                        logger.warning(f"[Fallback3] No valid name found in raw document text for field '{field_label}'")
-                confidence = 85.0
-                data_source = "resume + personal" if resume_results and personal_results else ("resume" if resume_results else "personal")
-            else:
-                fallback_prompt = self._create_fallback_prompt(field_label, field_type)
-                response = await asyncio.create_task(
-                    asyncio.to_thread(self.llm.invoke, [HumanMessage(content=fallback_prompt)])
-                )
-                final_answer = self._clean_answer(response.content, field_label, field_type)
-                confidence = 60.0
-                data_source = "generated"
-            
-            llm_time = time.time() - llm_start_time
+            # Use the new chunk confidence extraction pipeline
+            result = await asyncio.to_thread(extract_with_chunk_confidence, field_label, user_id)
+            answer = result["answer"]
+            confidence = result["confidence"]
+            source = result["source"]
+            logs = result["logs"]
             processing_time = time.time() - start_time
-            
+
+            # If no answer found, use LLM to generate a professional answer
+            if (not answer or answer.lower() in ["not found", "not found."] or confidence == 0):
+                llm_prompt = (
+                    f"You are a professional assistant. Generate a helpful, context-aware answer to the following question "
+                    f"for a job application form. If the question is open-ended, provide a positive, relevant response. "
+                    f"Question: {field_label}\n\n"
+                    f"IMPORTANT:\n- Do not say 'I am an AI language model'.\n- Be concise and professional.\n\n"
+                    f"Answer:"
+                )
+                llm_response = await asyncio.to_thread(self.llm.invoke, llm_prompt)
+                answer = llm_response.content.strip()
+                confidence = 70
+                source = "llm_fallback"
+                logs.append(f"LLM fallback generated answer: {answer}")
+
             # Cache the response
-            cache_ttl = 3600 if confidence > 70 else 1800  # Cache high-confidence answers longer
-            self._cache_response(cache_key, final_answer, confidence, data_source, field_type, cache_ttl)
-            
-            # Update metrics
+            self._cache_response(cache_key, answer, confidence, source, FieldType.GENERIC, 3600)
             self.metrics.successful_requests += 1
             self.metrics.total_processing_time += processing_time
-            self.metrics.total_llm_time += llm_time
-            
-            logger.info(f"✅ OPTIMIZED LLM completed in {processing_time:.3f}s (LLM: {llm_time:.3f}s)")
-            logger.info(f"   📝 Answer: {final_answer[:100]}{'...' if len(final_answer) > 100 else ''}")
-            logger.info(f"   📊 Data source: {data_source}")
-            logger.info(f"   🎯 Confidence: {confidence:.1f}%")
-            logger.info(f"   🔧 Results: resume={len(resume_results)}, personal={len(personal_results)}")
-            
+            logger.info(f"✅ Chunk confidence pipeline answer: '{answer}' (confidence: {confidence}%)")
+            logger.info(f"   Source: {source}")
+            logger.info(f"   Logs: {logs}")
             return {
                 "status": "success",
-                "answer": final_answer,
+                "answer": answer,
                 "confidence": confidence,
-                "data_source": data_source,
+                "data_source": source,
                 "processing_time": processing_time,
-                "reasoning": f"Optimized processing for {field_type.value} field type",
-                "field_analysis": {
-                    "field_label": field_label,
-                    "field_type": field_type.value,
-                    "tools_used": {
-                        "resume_search": bool(resume_results),
-                        "personal_search": bool(personal_results)
-                    },
-                    "cached": False
-                },
+                "reasoning": f"Chunk confidence pipeline (source: {source})",
+                "logs": logs,
                 "performance_metrics": {
                     "processing_time_seconds": processing_time,
-                    "llm_time_seconds": llm_time,
-                    "vector_search_time_seconds": self.metrics.total_vector_search_time,
-                    "tool_calls": (1 if resume_results else 0) + (1 if personal_results else 0),
-                    "llm_interactions": 1,
                     "cache_hit": False
                 }
             }
-            
         except Exception as e:
             processing_time = time.time() - start_time
             self.metrics.failed_requests += 1
-            self.metrics.retry_attempts += 1
-            
-            logger.error(f"❌ OPTIMIZED LLM SERVICE ERROR: {str(e)}")
-            logger.error(f"   Field: {field_label} (type: {field_type.value})")
-            logger.error(f"   User: {user_id}")
-            logger.error(f"   Processing time: {processing_time:.3f}s")
-            
+            logger.error(f"❌ Chunk confidence pipeline error: {str(e)}")
             return {
                 "status": "error",
                 "answer": "Unable to generate answer due to system error",
-                "confidence": 0.0,
+                "confidence": 0,
                 "data_source": "error",
                 "processing_time": processing_time,
                 "reasoning": f"Error occurred: {str(e)}",
-                "error": str(e),
-                "field_analysis": {
-                    "field_type": field_type.value,
-                    "error": True
+                "logs": [],
+                "performance_metrics": {
+                    "processing_time_seconds": processing_time,
+                    "cache_hit": False
                 }
             }
-
-    def _create_enhanced_prompt(self, field_label: str, field_type: FieldType, user_data: str) -> str:
-        """Create enhanced, field-type-specific prompts"""
-        base_instructions = """
-CRITICAL INSTRUCTIONS:
-- NEVER mention data availability or lack thereof
-- Extract ONLY the specific information requested
-- Be direct and professional
-- No meta-commentary or explanations
-- Return ONLY the answer
-"""
-        
-        if field_type == FieldType.EMAIL:
-            return f"""Extract the email address for: "{field_label}"
-
-User data:
-{user_data}
-
-{base_instructions}
-
-Email address:"""
-        
-        elif field_type == FieldType.PHONE:
-            return f"""Extract the phone number for: "{field_label}"
-
-User data:
-{user_data}
-
-{base_instructions}
-
-Phone number:"""
-        
-        elif field_type == FieldType.NAME:
-            return f"""Extract the name for: "{field_label}"
-
-User data:
-{user_data}
-
-{base_instructions}
-
-Name:"""
-        
-        else:
-            return f"""Answer this question professionally: "{field_label}"
-
-Available user data:
-{user_data}
-
-{base_instructions}
-
-Answer:"""
-
-    def _create_fallback_prompt(self, field_label: str, field_type: FieldType) -> str:
-        """Create intelligent fallback prompts when no user data is available"""
-        if field_type == FieldType.EXPERIENCE:
-            return f"""Provide a professional response for: "{field_label}"
-
-Give a thoughtful answer about professional experience that would be appropriate for a job application.
-Be specific and professional. No meta-commentary.
-
-Answer:"""
-        
-        elif field_type in [FieldType.SKILL, FieldType.PROFESSIONAL]:
-            return f"""Provide a professional response for: "{field_label}"
-
-Give a thoughtful answer about professional skills/capabilities that would be appropriate for a job application.
-Be specific and professional. No meta-commentary.
-
-Answer:"""
-        
-        else:
-            return f"""Provide a professional response for: "{field_label}"
-
-Give a thoughtful, professional answer suitable for a job application or professional context.
-Be specific and helpful. No meta-commentary.
-
-Answer:"""
 
     @deep_track_function
     async def _search_resume_vectors(self, query: str, user_id: str) -> List[Dict[str, Any]]:
