@@ -43,43 +43,6 @@ class UserSession(Base):
     last_used_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = Column(Boolean, default=True)
 
-class TrackedUrl(Base):
-    """Model for tracking URLs saved from browser extension"""
-    __tablename__ = "tracked_urls"
+# TrackedUrl model removed - URL tracking feature disabled
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String, ForeignKey("users.id"), index=True)
-    url = Column(String, nullable=False)
-    title = Column(String, nullable=True)  # Page title from browser
-    domain = Column(String, nullable=True)  # Extracted domain
-    status = Column(String, default="not_applied")  # "not_applied", "applied", "in_progress"
-    applied_at = Column(DateTime, nullable=True)  # When status changed to applied
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    notes = Column(String, nullable=True)  # User notes
-    is_active = Column(Boolean, default=True)
-
-class FormDb(BaseModel):
-    """Database model for form entries"""
-    id: str
-    url: str
-    status: str  # "applied" or "not_applied"
-    applied_counter: int = 0
-    applied_date: Optional[str] = None  # ISO date string
-    created_at: str
-    
-    class Config:
-        from_attributes = True
-
-class FormField(BaseModel):
-    """Model for a form field extracted during analysis"""
-    field_type: str
-    purpose: str
-    selector: str
-    validation: Optional[str] = None
-
-class PostgresResult(BaseModel):
-    """Result model for PostgreSQL operations"""
-    status: str
-    message: str
-    id: Optional[str] = None
+# FormDb, FormField, and PostgresResult models removed - URL tracking feature disabled

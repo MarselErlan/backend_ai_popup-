@@ -49,8 +49,7 @@ from app.services.embedding_service import EmbeddingService
 # Import LLM service
 from app.services.llm_service import SmartLLMService
 
-# Import URL tracking endpoints
-from app.api.url_tracking_endpoints import router as url_tracking_router
+# URL tracking endpoints removed
 
 # Load environment variables
 load_dotenv()
@@ -307,8 +306,7 @@ app.add_middleware(CustomCORSMiddleware)
 
 # Deep tracking middleware removed
 
-# Include URL tracking router
-app.include_router(url_tracking_router)
+# URL tracking router removed
 
 # Initialize services
 document_service = DocumentService(POSTGRES_DB_URL)
