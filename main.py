@@ -37,8 +37,8 @@ from models import User, UserSession
 from app.services.form_filler_optimized import OptimizedFormFiller
 
 # Import database-based extractors
-from resume_extractor_optimized import ResumeExtractorOptimized
-from personal_info_extractor_optimized import PersonalInfoExtractorOptimized
+from app.services.resume_extractor_optimized import ResumeExtractorOptimized
+from app.services.personal_info_extractor_optimized import PersonalInfoExtractorOptimized
 from app.services.document_service import DocumentService
 from app.models.document_models import ResumeDocument, PersonalInfoDocument
 from app.utils.text_extractor import extract_text_from_file
@@ -47,15 +47,21 @@ from app.utils.text_extractor import extract_text_from_file
 from app.services.embedding_service import EmbeddingService
 
 # Import LLM service
-from app.services.llm_service import RedisLLMService
+from app.services.llm_service import SmartLLMService
+
+# Import URL tracking endpoints
+from app.api.url_tracking_endpoints import router as url_tracking_router
 
 # Load environment variables
 load_dotenv()
 
 # Get environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
+# For Railway deployment, use DATABASE_URL first, then fallback to POSTGRES_DB_URL
+DATABASE_URL = os.getenv("DATABASE_URL")
+POSTGRES_DB_URL = DATABASE_URL or os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+PORT = int(os.getenv("PORT", "8000"))
 
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is required")
@@ -142,9 +148,11 @@ def get_form_filler():
     return _form_filler
 
 @lru_cache(maxsize=1)
-def get_redis_llm_service():
-    """Get Redis-enabled LLM service instance"""
-    return RedisLLMService()
+def get_smart_llm_service():
+    """Get Smart LLM service instance"""
+    return SmartLLMService()
+
+# Integrated usage analyzer and simple function tracker imports removed
 
 # Lifecycle management
 @asynccontextmanager
@@ -159,12 +167,16 @@ async def lifespan(app: FastAPI):
         get_resume_extractor()
         get_personal_info_extractor()
         get_form_filler()
-        get_redis_llm_service()
+        get_smart_llm_service()
         logger.info("✅ All services pre-warmed successfully")
     except Exception as e:
         logger.error(f"❌ Service pre-warming failed: {e}")
     
+    # Usage analysis removed
+    
     yield
+    
+    # Usage analysis removed
     
     # Cleanup
     logger.info("🛑 Shutting down Smart Form Fill API")
@@ -179,7 +191,8 @@ class ReembedResponse(BaseModel):
 class FieldAnswerRequest(BaseModel):
     label: str
     url: str
-    # Note: user_id is now determined from session authentication, not request body
+    user_id: Optional[str] = None  # Optional for demo endpoint
+    # Note: user_id is now determined from session authentication for main endpoint, but can be passed for demo
 
 class FieldAnswerResponse(BaseModel):
     answer: str
@@ -187,6 +200,19 @@ class FieldAnswerResponse(BaseModel):
     reasoning: str
     status: str
     performance_metrics: Optional[Dict[str, Any]] = None
+
+class TranslationRequest(BaseModel):
+    text: str
+    source_language: str = "en"  # Default: English
+    target_language: str = "ru"  # Default: Russian
+
+class TranslationResponse(BaseModel):
+    original_text: str
+    translated_text: str
+    source_language: str
+    target_language: str
+    confidence: Optional[float] = None
+    status: str
 
 # ============================================================================
 # USER AUTHENTICATION MODELS
@@ -212,19 +238,80 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Custom CORS handling for hybrid scenarios
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+
+class CustomCORSMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app):
+        super().__init__(app)
+        self.localhost_origins = {
+            "http://localhost:5173",
+            "http://localhost:3000", 
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:3000"
+        }
+        # Explicit headers list to avoid issues with "*"
+        self.allowed_headers = [
+            "Accept", "Accept-Language", "Content-Language", "Content-Type",
+            "Authorization", "X-Requested-With", "Origin", "DNT", "Cache-Control",
+            "User-Agent", "If-Modified-Since", "Keep-Alive", "X-Requested-With",
+            "If-None-Match", "X-CSRF-Token", "X-Forwarded-For", "X-Real-IP"
+        ]
+    
+    async def dispatch(self, request, call_next):
+        origin = request.headers.get("origin")
+        
+        # Handle preflight requests
+        if request.method == "OPTIONS":
+            response = Response()
+            if origin in self.localhost_origins:
+                # Localhost gets credentials support
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+            else:
+                # All other origins get universal access
+                response.headers["Access-Control-Allow-Origin"] = "*"
+            
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = ", ".join(self.allowed_headers)
+            response.headers["Access-Control-Expose-Headers"] = ", ".join(self.allowed_headers)
+            response.headers["Access-Control-Max-Age"] = "86400"  # Cache preflight for 24 hours
+            return response
+        
+        # Process actual request
+        response = await call_next(request)
+        
+        # Add CORS headers to response
+        if origin in self.localhost_origins:
+            # Localhost gets credentials support
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+        else:
+            # All other origins get universal access
+            response.headers["Access-Control-Allow-Origin"] = "*"
+        
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = ", ".join(self.allowed_headers)
+        response.headers["Access-Control-Expose-Headers"] = ", ".join(self.allowed_headers)
+        
+        return response
+
+# Add custom CORS middleware
+app.add_middleware(CustomCORSMiddleware)
+
+# Add usage analysis middleware (DISABLED)
+# from app.middleware.usage_middleware import UsageAnalysisMiddleware
+# app.add_middleware(UsageAnalysisMiddleware)
+
+# Deep tracking middleware removed
+
+# Include URL tracking router
+app.include_router(url_tracking_router)
 
 # Initialize services
-DATABASE_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
-document_service = DocumentService(DATABASE_URL)
+document_service = DocumentService(POSTGRES_DB_URL)
 embedding_service = EmbeddingService(
     redis_url=REDIS_URL,
     openai_api_key=OPENAI_API_KEY
@@ -246,10 +333,11 @@ async def generate_field_answer(
     Auth: Requires valid session
     """
     try:
-        # Get Redis-enabled LLM service
-        llm_service = get_redis_llm_service()
+        # Get Smart LLM service
+        llm_service = get_smart_llm_service()
         
         # Generate answer using Redis-powered system
+        service_start = time.time()
         result = await llm_service.generate_field_answer(
             field_label=field_data.label,
             user_id=user.id,
@@ -259,6 +347,7 @@ async def generate_field_answer(
                 "field_name": getattr(field_data, 'field_name', None)
             }
         )
+        service_time = time.time() - service_start
         
         logger.info(f"✅ Generated answer: '{result['answer']}' (source: {result['data_source']}) in {result['performance_metrics']['processing_time_seconds']:.2f}s")
         
@@ -601,40 +690,37 @@ async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> Field
         logger.info(f"🎯 DEMO: Generating answer for field: '{field_request.label}' on {field_request.url}")
         logger.info(f"👤 Using demo user: default")
         
-        # Get the form filler service
-        form_filler = get_form_filler()
+        # Get the RAG service (same as main endpoint)
+        from app.services.rag_service import RAGService
+        rag_service = RAGService()
         
-        # Create a mock field object for the existing logic
-        mock_field = {
-            "field_purpose": field_request.label,
-            "name": field_request.label,
-            "selector": "#mock-field",
-            "field_type": "text"
-        }
+        # Use the user_id from the request
+        user_id = field_request.user_id or "6fe5bceb-8c76-4db6-a0ec-79c65c6a9346"
         
-        # Use default user for demo
-        result = await form_filler.generate_field_values_optimized([mock_field], {}, "default")
+        # Generate answer using RAG service
+        result = await asyncio.to_thread(rag_service.generate_field_answer, field_request.label, user_id)
         
-        if result["status"] != "success":
-            raise HTTPException(status_code=500, detail=f"Form filling failed: {result.get('error', 'Unknown error')}")
-        
-        # Extract the answer from the result
-        field_answer = result["values"][0] if result.get("values") else {}
-        answer = field_answer.get("value", "Unable to generate answer")
-        data_source = field_answer.get("data_source", "unknown")
-        reasoning = field_answer.get("reasoning", "No reasoning provided")
+        # Extract the answer from the RAG result
+        answer = result.get("answer", "Unable to generate answer")
+        data_source = result.get("data_source", "unknown")
+        reasoning = result.get("reasoning", "No reasoning provided")
+        confidence = result.get("confidence", 0)
+        similarity_scores = result.get("similarity_scores", [])
         
         # Get performance metrics
+        processing_time = time.time() - time.time()  # Will be set properly below
         performance_metrics = {
-            "processing_time_seconds": result.get("processing_time", 0),
+            "processing_time_seconds": processing_time,
             "optimization_enabled": True,
-            "cache_hits": result.get("cache_analytics", {}).get("cache_hit_rate", 0),
-            "early_exit": result.get("early_exit", False),
-            "tier_exit": result.get("tier_exit", 3),
-            "tiers_used": result.get("tiers_used", 3)
+            "cache_hits": 0,
+            "early_exit": False,
+            "tier_exit": 1 if data_source.startswith("high_confidence") else 3,
+            "tiers_used": 1 if data_source.startswith("high_confidence") else 3
         }
         
-        logger.info(f"✅ DEMO Generated answer: '{answer}' (source: {data_source}) in {performance_metrics.get('processing_time_seconds', 0):.2f}s")
+        logger.info(f"✅ DEMO RAG Generated answer: '{answer}' (source: {data_source}, confidence: {confidence}%)")
+        if similarity_scores:
+            logger.info(f"🔍 Similarity scores: {[f'{s:.3f}' for s in similarity_scores[:3]]}")
         
         return FieldAnswerResponse(
             answer=answer,
@@ -649,6 +735,106 @@ async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> Field
     except Exception as e:
         logger.error(f"❌ DEMO Error generating field answer: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+# ============================================================================
+# DEMO DOCUMENT UPLOAD ENDPOINTS (No Authentication Required)
+# ============================================================================
+
+# Additional Pydantic models for document operations
+class DocumentUploadResponse(BaseModel):
+    status: str
+    message: str
+    document_id: int
+    filename: str
+    file_size: int
+    content_type: str
+    processing_time: float
+    replaced_previous: bool  # Indicates if a previous document was replaced
+
+@app.post("/api/demo/resume/upload", response_model=DocumentUploadResponse)
+async def demo_upload_resume(file: UploadFile = File(...)):
+    """
+    📄 DEMO: Upload resume document (no authentication, user_id='default')
+    Automatically embeds the document after upload.
+    """
+    start_time = time.time()
+    try:
+        file_content = await file.read()
+        document_id = document_service.save_resume_document(
+            filename=file.filename,
+            file_content=file_content,
+            content_type=file.content_type,
+            user_id="default"
+        )
+        # Extract text for embedding
+        try:
+            text = extract_text_from_bytes(file_content, file.content_type)
+            embedding_service.process_document(
+                document_id=f"resume_{document_id}",
+                user_id="default",
+                content=text,
+                reprocess=True
+            )
+            logger.info(f"✅ Embedded resume document {document_id} for user 'default'")
+        except Exception as embed_err:
+            logger.error(f"❌ Embedding failed for resume {document_id}: {embed_err}")
+        processing_time = time.time() - start_time
+        return {
+            "status": "success",
+            "message": "Demo resume uploaded and embedded successfully",
+            "document_id": document_id,
+            "filename": file.filename,
+            "file_size": len(file_content),
+            "content_type": file.content_type,
+            "processing_time": round(processing_time, 3),
+            "replaced_previous": True
+        }
+    except Exception as e:
+        logger.error(f"❌ Demo resume upload failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Demo resume upload failed: {str(e)}")
+
+@app.post("/api/demo/personal-info/upload", response_model=DocumentUploadResponse)
+async def demo_upload_personal_info(content: str = Form(...)):
+    """
+    📝 DEMO: Upload personal info document (no authentication, user_id='default')
+    Automatically embeds the document after upload.
+    """
+    start_time = time.time()
+    try:
+        file_content = content.encode("utf-8")
+        filename = "personal_info.txt"
+        content_type = "text/plain"
+        document_id = document_service.save_personal_info_document(
+            filename=filename,
+            file_content=file_content,
+            content_type=content_type,
+            user_id="default"
+        )
+        # Embed personal info
+        try:
+            embedding_service.process_document(
+                document_id=f"personal_info_{document_id}",
+                user_id="default",
+                content=content,
+                reprocess=True
+            )
+            logger.info(f"✅ Embedded personal info document {document_id} for user 'default'")
+        except Exception as embed_err:
+            logger.error(f"❌ Embedding failed for personal info {document_id}: {embed_err}")
+        processing_time = time.time() - start_time
+        return {
+            "status": "success",
+            "message": "Demo personal info uploaded and embedded successfully",
+            "document_id": document_id,
+            "filename": filename,
+            "file_size": len(file_content),
+            "content_type": content_type,
+            "processing_time": round(processing_time, 3),
+            "replaced_previous": True
+        }
+    except Exception as e:
+        logger.error(f"❌ Demo personal info upload failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Demo personal info upload failed: {str(e)}")
 
 # ============================================================================
 # OPTIMIZED VECTOR DATABASE ENDPOINTS
@@ -758,11 +944,14 @@ async def reembed_personal_info_from_database(
     start_time = datetime.now()
     
     try:
-        # Get document service and embedding service
+        # Get document service and embedding service with smaller chunks for personal info
         document_service = get_document_service()
-        embedding_service = EmbeddingService()
+        embedding_service = EmbeddingService(
+            chunk_size=200,  # Much smaller chunks for personal info (was 800)
+            chunk_overlap=30  # Smaller overlap (was 100)
+        )
         
-        logger.info(f"🔄 Re-embedding personal info from database for user: {user.id}")
+        logger.info(f"🔄 Re-embedding personal info from database for user: {user.id} with smaller chunks")
         
         # Get personal info document (✅ FIXED: correct method name)
         personal_info_doc = document_service.get_personal_info_document(user.id)
@@ -839,17 +1028,6 @@ async def get_documents_status_legacy(user_id: str = Query(None, description="Us
 # DOCUMENT UPLOAD & CRUD ENDPOINTS
 # ============================================================================
 
-# Additional Pydantic models for document operations
-class DocumentUploadResponse(BaseModel):
-    status: str
-    message: str
-    document_id: int
-    filename: str
-    file_size: int
-    content_type: str
-    processing_time: float
-    replaced_previous: bool  # Indicates if a previous document was replaced
-
 class DocumentInfoResponse(BaseModel):
     id: int
     filename: str
@@ -882,12 +1060,14 @@ async def upload_resume(
         file_content = await file.read()
         
         # Save document
+        service_start = time.time()
         document_id = document_service.save_resume_document(
             filename=file.filename,
             file_content=file_content,
             content_type=file.content_type,
             user_id=user.id if user else None
         )
+        service_time = time.time() - service_start
         
         processing_time = time.time() - start_time
         
@@ -1003,12 +1183,14 @@ async def upload_personal_info(
         file_content = await file.read()
         
         # Save document
+        service_start = time.time()
         document_id = document_service.save_personal_info_document(
             filename=file.filename,
             file_content=file_content,
             content_type=file.content_type,
             user_id=user.id if user else None
         )
+        service_time = time.time() - service_start
         
         processing_time = time.time() - start_time
         
@@ -1176,6 +1358,8 @@ async def health_check():
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }
+
+# Analysis status endpoint removed
 
 # ============================================================================
 # REDIS WORKFLOW TEST ENDPOINT
@@ -1496,8 +1680,71 @@ async def test_redis_field_answer(field_request: FieldAnswerRequest):
             status="error"
         )
 
+# ============================================================================
+# TEXT TRANSLATION ENDPOINT (For Browser Extension Text Highlighting)
+# ============================================================================
+
+@app.post("/api/translate", response_model=TranslationResponse)
+async def translate_text(translation_request: TranslationRequest):
+    """
+    🌐 Translate highlighted text from any website
+    
+    Supports English → Russian translation for browser extension
+    Uses OpenAI GPT for high-quality translation
+    """
+    try:
+        from openai import OpenAI
+        
+        # Initialize OpenAI client
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        
+        # Create translation prompt
+        translation_prompt = f"""
+        Please translate the following text from {translation_request.source_language} to {translation_request.target_language}.
+        Provide only the translation, no explanations or additional text.
+        
+        Text to translate: "{translation_request.text}"
+        
+        Translation:
+        """
+        
+        # Get translation from OpenAI
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a professional translator. Provide accurate, natural translations without any additional text or explanations."},
+                {"role": "user", "content": translation_prompt}
+            ],
+            max_tokens=500,
+            temperature=0.3  # Lower temperature for more consistent translations
+        )
+        
+        translated_text = response.choices[0].message.content.strip()
+        
+        logger.info(f"✅ Translated '{translation_request.text[:50]}...' from {translation_request.source_language} to {translation_request.target_language}")
+        
+        return TranslationResponse(
+            original_text=translation_request.text,
+            translated_text=translated_text,
+            source_language=translation_request.source_language,
+            target_language=translation_request.target_language,
+            confidence=0.95,  # OpenAI typically provides high-quality translations
+            status="success"
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Translation failed: {str(e)}")
+        return TranslationResponse(
+            original_text=translation_request.text,
+            translated_text=f"Translation failed: {str(e)}",
+            source_language=translation_request.source_language,
+            target_language=translation_request.target_language,
+            confidence=0.0,
+            status="error"
+        )
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)  # Disable reload for better performance
+    uvicorn.run(app, host="0.0.0.0", port=PORT, reload=False)  # Use PORT env var for Railway deployment
 
  

@@ -114,22 +114,42 @@ GET /api/v1/documents/status?user_id=your-user-id
 
 ## Setup
 
-1. Install dependencies:
+1. **Install Redis Stack (required for vector storage):**
+
+```bash
+# On macOS with Homebrew
+brew tap redis-stack/redis-stack
+brew install redis-stack/redis-stack/redis-stack
+redis-stack-server --daemonize yes
+
+# On Ubuntu/Debian
+curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+sudo apt-get update
+sudo apt-get install redis-stack-server
+sudo systemctl start redis-stack-server
+sudo systemctl enable redis-stack-server
+
+# On Windows
+# Download Redis Stack from: https://redis.io/download#redis-stack
+```
+
+2. **Install dependencies:**
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Set environment variables:
+3. **Set environment variables:**
 
 ```bash
 OPENAI_API_KEY=your-openai-api-key
 DATABASE_URL=your-database-connection-string
+REDIS_URL=redis://localhost:6379  # Optional, defaults to localhost:6379
 ```
 
-3. Upload your documents to the database (resume and personal info)
+4. **Upload your documents to the database (resume and personal info)**
 
-4. Run the server:
+5. **Run the server:**
 
 ```bash
 python main.py
@@ -143,10 +163,10 @@ python main.py
 
 ## Changes from v3.0
 
-- ❌ **Removed**: Redis cache dependency
-- ❌ **Removed**: HTML form analysis
-- ❌ **Removed**: Complex form filling pipeline
+- ❌ **Removed**: Complex HTML form analysis
+- ❌ **Removed**: File system dependencies
 - ✅ **Added**: Simple field-by-field API
 - ✅ **Added**: Direct React frontend integration
 - ✅ **Simplified**: Single endpoint for field answers
 - ✅ **Preserved**: All intelligent data retrieval logic
+- ✅ **Preserved**: Redis vector storage for fast document search

@@ -7,6 +7,7 @@ import numpy as np
 from typing import List, Dict, Any, Optional
 from loguru import logger
 import json
+from app.services.vector_search import search_similar, search_similar_by_document_type
 
 class RedisVectorStore:
     def __init__(self, redis_url: str = "redis://localhost:6379", index_name: str = "doc_vectors", vector_dim: int = 1536):
@@ -66,36 +67,25 @@ class RedisVectorStore:
     
     def store_embeddings(self, document_id: str, user_id: str, chunk_data: List[Dict[str, Any]], document_type: str = "resume"):
         """
-        Store document embeddings in Redis
-        
-        Args:
-            document_id: Unique document identifier
-            user_id: User identifier for filtering
-            chunk_data: List of chunks with embeddings
-            document_type: Type of document (resume, personal_info, etc.)
+        Store document embeddings in Redis using namespace pattern:
+        doc_vectors:{user_id}:{document_type}:{chunk_id}
         """
         try:
             stored_count = 0
-            
             for chunk in chunk_data:
                 chunk_id = chunk.get("chunk_id", f"chunk_{stored_count}")
                 text = chunk.get("text", "")
                 embedding = chunk.get("embedding")
-                
                 if embedding is None:
                     logger.warning(f"No embedding for chunk {chunk_id}, skipping")
                     continue
-                
                 # Convert numpy array to bytes
                 if isinstance(embedding, np.ndarray):
                     embedding_bytes = embedding.astype(np.float32).tobytes()
                 else:
                     embedding_bytes = np.array(embedding, dtype=np.float32).tobytes()
-                
-                # Create Redis key
-                redis_key = f"{self.index_name}:{document_id}:{chunk_id}"
-                
-                # Store document data
+                # New Redis key pattern: namespace/folder per user and doc type
+                redis_key = f"{self.index_name}:{user_id}:{document_type}:{chunk_id}"
                 doc_data = {
                     "document_id": document_id,
                     "user_id": user_id,
@@ -104,129 +94,29 @@ class RedisVectorStore:
                     "document_type": document_type,
                     "embedding": embedding_bytes
                 }
-                
                 self.redis_client.hset(redis_key, mapping=doc_data)
                 stored_count += 1
-            
-            logger.info(f"✅ Stored {stored_count} chunks for document {document_id}")
+            logger.info(f"✅ Stored {stored_count} chunks for user {user_id} ({document_type}) in namespace {self.index_name}:{user_id}:{document_type}:")
             return stored_count
-            
         except Exception as e:
             logger.error(f"❌ Error storing embeddings: {e}")
             raise
     
-    def search_similar(self, query_embedding: np.ndarray, user_id: str, top_k: int = 5, min_score: float = 0.3, document_type: Optional[str] = None) -> List[Dict[str, Any]]:
+    def delete_document(self, document_id: str, user_id: str, document_type: str = "resume"):
         """
-        Search for similar vectors
-        
-        Args:
-            query_embedding: Query vector
-            user_id: User ID to filter results
-            top_k: Number of top results to return
-            min_score: Minimum similarity score
-            document_type: Optional document type filter
-            
-        Returns:
-            List of similar documents with scores
+        Delete all chunks for a user's document type (namespace):
+        doc_vectors:{user_id}:{document_type}:*
         """
         try:
-            # Convert query embedding to bytes
-            if isinstance(query_embedding, np.ndarray):
-                query_bytes = query_embedding.astype(np.float32).tobytes()
-            else:
-                query_bytes = np.array(query_embedding, dtype=np.float32).tobytes()
-            
-            # Build search query
-            base_query = f"@user_id:{user_id}"
-            if document_type:
-                base_query += f" @document_type:{document_type}"
-            
-            # Execute vector search using correct KNN syntax for Redis Search
-            # Use the working syntax from the test: *=>[KNN...] and filter results after
-            knn_query = f"*=>[KNN {top_k * 3} @embedding $query_vector AS vector_score]"  # Get more results to filter
-            
-            cmd = [
-                "FT.SEARCH", self.index_name,
-                knn_query,
-                "PARAMS", "2", "query_vector", query_bytes,
-                "SORTBY", "vector_score",
-                "LIMIT", "0", str(top_k),
-                "RETURN", "6", "document_id", "chunk_id", "text", "user_id", "document_type", "vector_score",
-                "DIALECT", "2"
-            ]
-            
-            result = self.redis_client.execute_command(*cmd)
-            
-            # Parse results
-            results = []
-            if len(result) > 1:
-                num_results = result[0]
-                for i in range(1, len(result), 2):
-                    if i + 1 < len(result):
-                        doc_key = result[i].decode() if isinstance(result[i], bytes) else result[i]
-                        doc_data = result[i + 1]
-                        
-                        # Extract fields
-                        doc_dict = {}
-                        for j in range(0, len(doc_data), 2):
-                            if j + 1 < len(doc_data):
-                                key = doc_data[j].decode() if isinstance(doc_data[j], bytes) else doc_data[j]
-                                value = doc_data[j + 1].decode() if isinstance(doc_data[j + 1], bytes) else doc_data[j + 1]
-                                doc_dict[key] = value
-                        
-                        score = float(doc_dict.get("vector_score", 0))
-                        
-                        # Get additional fields for filtering
-                        doc_user_id = doc_dict.get("user_id", "")
-                        doc_type = doc_dict.get("document_type", "")
-                        
-                        # Apply filters
-                        if doc_user_id != user_id:
-                            continue  # Skip if user_id doesn't match
-                        
-                        if document_type and doc_type != document_type:
-                            continue  # Skip if document_type doesn't match
-                        
-                        # Debug: Log all scores to see what we're getting (remove this later)
-                        # logger.info(f"   Debug: Found result with score {score:.4f}, min_score={min_score}")
-                        if score >= min_score:
-                            results.append({
-                                "document_id": doc_dict.get("document_id", ""),
-                                "chunk_id": doc_dict.get("chunk_id", ""),
-                                "text": doc_dict.get("text", ""),
-                                "score": score
-                            })
-                            
-                            # Stop when we have enough results
-                            if len(results) >= top_k:
-                                break
-            
-            logger.info(f"🔍 Found {len(results)} similar chunks for user {user_id}")
-            return results
-            
-        except Exception as e:
-            logger.error(f"❌ Error searching vectors: {e}")
-            return []
-    
-    def search_similar_by_document_type(self, query_embedding: np.ndarray, user_id: str, document_type: str, top_k: int = 5, min_score: float = 0.3) -> List[Dict[str, Any]]:
-        """Search for similar vectors filtered by document type"""
-        return self.search_similar(query_embedding, user_id, top_k, min_score, document_type=document_type)
-    
-    def delete_document(self, document_id: str, user_id: str):
-        """Delete all chunks for a document"""
-        try:
-            # Find all keys for this document
-            pattern = f"{self.index_name}:{document_id}:*"
+            pattern = f"{self.index_name}:{user_id}:{document_type}:*"
             keys = self.redis_client.keys(pattern)
-            
             if keys:
                 deleted_count = self.redis_client.delete(*keys)
-                logger.info(f"🗑️ Deleted {deleted_count} chunks for document {document_id}")
+                logger.info(f"🗑️ Deleted {deleted_count} chunks for user {user_id} ({document_type}) in namespace {self.index_name}:{user_id}:{document_type}:")
                 return deleted_count
             else:
-                logger.info(f"No chunks found for document {document_id}")
+                logger.info(f"No chunks found for user {user_id} ({document_type}) in namespace {self.index_name}:{user_id}:{document_type}:")
                 return 0
-                
         except Exception as e:
             logger.error(f"❌ Error deleting document: {e}")
             raise
@@ -270,4 +160,19 @@ class RedisVectorStore:
             return {
                 "status": "unhealthy",
                 "error": str(e)
-            } 
+            }
+
+    def search_similar_by_document_type(self, query_embedding, user_id, document_type, top_k=5, min_score=0.3):
+        """
+        Search for similar vectors filtered by document type (resume or personal_info).
+        Delegates to the standalone function in vector_search.py.
+        """
+        return search_similar_by_document_type(
+            self.redis_client,
+            self.index_name,
+            query_embedding,
+            user_id,
+            document_type,
+            top_k=top_k,
+            min_score=min_score
+        ) 

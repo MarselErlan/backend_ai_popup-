@@ -1,0 +1,139 @@
+{
+  "critical_endpoints": [
+    {
+      "name": "health_check",
+      "method": "GET",
+      "url": "http://localhost:8000/health",
+      "status": 200,
+      "processing_time": 0.0016536712646484375,
+      "response": {
+        "status": "healthy",
+        "version": "4.1.0-optimized",
+        "timestamp": "2025-06-21T10:19:41.516549",
+        "services": {
+          "document_service": "healthy",
+          "resume_extractor": "cached",
+          "personal_info_extractor": "cached",
+          "form_filler": "cached"
+        },
+        "optimization_status": "enabled"
+      }
+    },
+    {
+      "name": "root",
+      "method": "GET",
+      "url": "http://localhost:8000/",
+      "status": 200,
+      "processing_time": 0.00043702125549316406,
+      "response": {
+        "message": "Smart Form Fill API - OPTIMIZED VERSION",
+        "version": "4.1.0-optimized",
+        "status": "operational",
+        "performance_enhancements": [
+          "Singleton pattern with cached services",
+          "Connection pooling",
+          "Pre-warmed services",
+          "Optimized vector operations",
+          "Performance metrics tracking"
+        ],
+        "docs": "/docs",
+        "health": "/health"
+      }
+    },
+    {
+      "name": "demo_field_answer",
+      "method": "POST",
+      "url": "http://localhost:8000/api/demo/generate-field-answer",
+      "status": 200,
+      "processing_time": 3.300762891769409,
+      "response": {
+        "answer": "My name is [Candidate's Name], and I am thrilled to be applying for the [Position Title] role at [Company Name]. I am excited about the opportunity to bring my [relevant experience/skills] to a dynamic and innovative company like yours.",
+        "data_source": "generated",
+        "reasoning": "Generated based on context",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 3.297603130340576,
+          "optimization_enabled": true,
+          "cache_hits": 0.0,
+          "early_exit": false,
+          "tier_exit": 3,
+          "tiers_used": 3
+        }
+      }
+    }
+  ],
+  "working_endpoints": [
+    {
+      "name": "register",
+      "method": "POST",
+      "url": "http://localhost:8000/api/simple/register",
+      "status": 200,
+      "processing_time": 0.27609801292419434,
+      "response": {
+        "status": "registered",
+        "user_id": "ae49f7ca-5734-49fe-bff2-e5e68b5a8c3d",
+        "email": "final_test@example.com",
+        "message": "Registration successful. Please login to continue."
+      }
+    },
+    {
+      "name": "login",
+      "method": "POST",
+      "url": "http://localhost:8000/api/simple/login",
+      "status": 200,
+      "processing_time": 0.22055506706237793,
+      "response": {
+        "status": "authenticated",
+        "user_id": "ae49f7ca-5734-49fe-bff2-e5e68b5a8c3d",
+        "email": "final_test@example.com",
+        "message": "Authentication successful - use check-and-update endpoint for session"
+      }
+    },
+    {
+      "name": "create_session",
+      "method": "POST",
+      "url": "http://localhost:8000/api/session/create",
+      "status": 200,
+      "processing_time": 0.011127233505249023,
+      "response": {
+        "status": "created",
+        "session_id": "888d9c26-4136-4bb1-96d5-31a79a309eae",
+        "user_id": "ae49f7ca-5734-49fe-bff2-e5e68b5a8c3d",
+        "message": "Session created successfully - store this session_id"
+      }
+    },
+    {
+      "name": "document_status",
+      "method": "GET",
+      "url": "http://localhost:8000/api/v1/documents/status",
+      "status": 200,
+      "processing_time": 0.020409107208251953,
+      "response": {
+        "status": "success",
+        "data": {
+          "resume": null,
+          "personal_info": null
+        }
+      }
+    }
+  ],
+  "broken_endpoints": [
+    {
+      "name": "get_resume",
+      "method": "GET",
+      "url": "http://localhost:8000/api/v1/resume",
+      "status": 404,
+      "processing_time": 0.005479335784912109,
+      "response": {
+        "detail": "No resume found for this user"
+      }
+    }
+  ],
+  "performance_issues": [],
+  "recommendations": [
+    "\u2705 All critical endpoints are working",
+    "\ud83d\udd27 FIX NEEDED: 1 endpoints are broken",
+    "   \u2022 get_resume: HTTP 404",
+    "\ud83c\udf89 EXCELLENT: 87.5% of endpoints are working"
+  ]
+}

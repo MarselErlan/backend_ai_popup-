@@ -15,8 +15,8 @@ from loguru import logger
 import time
 import re
 
-from resume_extractor_optimized import ResumeExtractorOptimized
-from personal_info_extractor_optimized import PersonalInfoExtractorOptimized
+from app.services.resume_extractor_optimized import ResumeExtractorOptimized
+from app.services.personal_info_extractor_optimized import PersonalInfoExtractorOptimized
 from app.services.document_service import DocumentService
 
 
