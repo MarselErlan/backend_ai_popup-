@@ -52,7 +52,10 @@ from app.services.llm_service import SmartLLMService
 # URL tracking endpoints removed
 
 # Load environment variables
-load_dotenv()
+# For Railway deployment, check if we're in Railway environment first
+# If not in Railway, then load .env file
+if not os.getenv("RAILWAY_ENVIRONMENT"):
+    load_dotenv()
 
 # Get environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -61,6 +64,13 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 POSTGRES_DB_URL = DATABASE_URL or os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 PORT = int(os.getenv("PORT", "8000"))
+
+# Debug logging for Railway deployment
+if os.getenv("RAILWAY_ENVIRONMENT"):
+    print(f"🚂 Railway Environment: {os.getenv('RAILWAY_ENVIRONMENT')}")
+    print(f"🔑 OPENAI_API_KEY: {'✅ SET' if OPENAI_API_KEY else '❌ NOT SET'}")
+    print(f"🗄️ DATABASE_URL: {'✅ SET' if DATABASE_URL else '❌ NOT SET'}")
+    print(f"🔴 REDIS_URL: {'✅ SET' if REDIS_URL else '❌ NOT SET'}")
 
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is required")
