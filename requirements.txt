@@ -1,43 +1,18 @@
-aiohappyeyeballs==2.6.1
-aiohttp==3.12.13
-aiosignal==1.3.2
-annotated-types==0.7.0
-anyio==4.9.0
-attrs==25.3.0
-bcrypt==4.3.0
-beautifulsoup4==4.13.4
-certifi==2025.4.26
-cffi==1.17.1
-chardet==5.2.0
-charset-normalizer==3.4.2
-click==8.2.1
-coverage==7.9.1
-dataclasses-json==0.6.7
-deprecation==2.1.0
-distro==1.9.0
-docx2txt==0.9
-faiss-cpu==1.11.0
+# Production Dependencies for Smart Form Fill API
+# Core FastAPI and web framework
 fastapi==0.115.13
-filelock==3.18.0
-frozenlist==1.7.0
-fsspec==2025.5.1
-greenlet==3.2.3
-h11==0.16.0
-h2==4.2.0
-hf-xet==1.1.3
+uvicorn==0.34.3
+starlette==0.46.2
+python-multipart==0.0.20
+
+# Database and Redis
+psycopg2-binary==2.9.10
+SQLAlchemy==2.0.41
+redis==6.2.0
 hiredis==2.4.0
-hpack==4.1.0
-httpcore==1.0.9
-httpx==0.28.1
-httpx-sse==0.4.0
-hyperframe==6.1.0
-idna==3.10
-iniconfig==2.1.0
-Jinja2==3.1.6
-jiter==0.10.0
-joblib==1.5.1
-jsonpatch==1.33
-jsonpointer==3.0.0
+
+# OpenAI and LangChain (AI/ML)
+openai==1.88.0
 langchain==0.3.25
 langchain-community==0.3.25
 langchain-core==0.3.65
@@ -45,123 +20,77 @@ langchain-openai==0.3.24
 langchain-text-splitters==0.3.8
 langsmith==0.3.45
 langgraph==0.4.8
-loguru==0.7.3
-lxml==5.4.0
-MarkupSafe==3.0.2
-marshmallow==3.26.1
-more-itertools==10.7.0
-mpmath==1.3.0
-multidict==6.4.4
-mypy_extensions==1.1.0
-networkx==3.5
+tiktoken==0.9.0
+
+# Vector operations and embeddings
 numpy==2.3.0
-openai==1.88.0
-orjson==3.10.18
-packaging==24.2
+faiss-cpu==1.11.0
+
+# Document processing
+PyPDF2==3.0.1
+python-docx==1.1.2
+docx2txt==0.9
+chardet==5.2.0
+
+# Authentication and security
+PyJWT==2.10.1
 passlib==1.7.4
-pathlib==1.0.1
-pillow==11.2.1
-pluggy==1.6.0
-propcache==0.3.2
-psycopg2-binary==2.9.10
-pycparser==2.22
+bcrypt==4.3.0
+python-ulid==1.1.0
+
+# HTTP and requests
+httpx==0.28.1
+requests==2.32.4
+aiohttp==3.12.13
+
+# Data validation and serialization
 pydantic==2.11.7
 pydantic-settings==2.9.1
 pydantic_core==2.33.2
-pyee==13.0.0
-Pygments==2.19.1
-PyJWT==2.10.1
-PyMuPDF==1.26.1
-PyPDF2==3.0.1
-pytest==8.4.0
-python-dateutil==2.9.0.post0
-python-docx==1.1.2
+
+# Utilities
 python-dotenv==1.1.0
-python-multipart==0.0.20
-python-ulid==1.1.0
+loguru==0.7.3
+tenacity==9.1.2
+
+# Required dependencies (automatically pulled in)
+certifi==2025.4.26
+charset-normalizer==3.4.2
+idna==3.10
+urllib3==2.4.0
+typing_extensions==4.14.0
+anyio==4.9.0
+sniffio==1.3.1
+h11==0.16.0
+click==8.2.1
+packaging==24.2
+annotated-types==0.7.0
+greenlet==3.2.3
+jiter==0.10.0
+orjson==3.10.18
 PyYAML==6.0.2
 redis==6.2.0
 regex==2024.11.6
-requests==2.32.4
-requests-toolbelt==1.0.0
-safetensors==0.5.3
-scipy==1.15.3
-six==1.17.0
-sniffio==1.3.1
-soupsieve==2.7
-SQLAlchemy==2.0.41
-starlette==0.46.2
-StrEnum==0.4.15
-sympy==1.14.0
-tenacity==9.1.2
-threadpoolctl==3.6.0
-tiktoken==0.9.0
-torch==2.2.2
-tqdm==4.67.1
-types-cffi==1.17.0.20250523
-types-setuptools==80.9.0.20250529
+dataclasses-json==0.6.7
+marshmallow==3.26.1
 typing-inspect==0.9.0
 typing-inspection==0.4.1
-typing_extensions==4.14.0
-urllib3==2.4.0
-uvicorn==0.34.3
-websockets==14.2
+python-dateutil==2.9.0.post0
+six==1.17.0
+filelock==3.18.0
+fsspec==2025.5.1
+tqdm==4.67.1
+networkx==3.5
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+distro==1.9.0
+httpcore==1.0.9
+httpx-sse==0.4.0
+aiosignal==1.3.2
+attrs==25.3.0
+frozenlist==1.7.0
+multidict==6.4.4
+propcache==0.3.2
 yarl==1.20.1
-zstandard==0.23.0
-
-
-# Testing Dependencies for Smart Form Fill API
-# Install with: pip install -r requirements-test.txt
-
-# Core testing framework
-pytest>=7.0.0
-pytest-asyncio>=0.21.0
-pytest-cov>=4.0.0
-pytest-html>=3.1.0
-pytest-xdist>=3.0.0
-pytest-timeout>=2.1.0
-pytest-mock>=3.10.0
-
-# Test utilities and mocking
-requests>=2.28.0
-responses>=0.23.0
-httpx>=0.24.0
-factory-boy>=3.2.0
-
-# Code quality and coverage
-coverage>=7.0.0
-pytest-clarity>=1.0.0
-pytest-sugar>=0.9.0
-
-# Performance and load testing
-pytest-benchmark>=4.0.0
-locust>=2.0.0
-
-# Database testing
-pytest-postgresql>=4.1.0
-pytest-redis>=3.0.0
-
-# Fixtures and test data
-Faker>=18.0.0
-freezegun>=1.2.0
-
-# Report generation
-reportlab>=4.0.0  # For PDF test fixtures
-jinja2>=3.1.0     # For HTML reports
-
-# Development utilities
-pre-commit>=3.0.0
-black>=23.0.0
-isort>=5.12.0
-flake8>=6.0.0
-mypy>=1.0.0
-
-# Documentation testing
-pytest-doctestplus>=0.12.0
-
-# Environment management
-python-dotenv>=1.0.0
-
-# Optional: Visual testing (if needed)
-# selenium>=4.0.0
-# playwright>=1.0.0 
+aiohappyeyeballs==2.6.1
+requests-toolbelt==1.0.0
