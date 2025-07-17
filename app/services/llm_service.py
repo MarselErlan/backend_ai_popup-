@@ -37,8 +37,8 @@ from app.utils.logger import logger
 from app.services.embedding_service import EmbeddingService
 from app.services.vector_store import RedisVectorStore
 from app.services.document_service import DocumentService
-from app.services.integrated_usage_analyzer import deep_track_function
-from app.services.chunk_confidence_extraction_pipeline import extract_with_chunk_confidence
+# Integrated usage analyzer import removed
+from app.services.rag_service import RAGService
 
 
 class FieldType(Enum):
@@ -465,7 +465,6 @@ class SmartLLMService:
         # Compile the graph
         self.app = workflow.compile()
 
-    @deep_track_function
     @async_retry(max_retries=3, delay=1.0, backoff=2.0)
     async def generate_field_answer(
         self,
@@ -496,14 +495,15 @@ class SmartLLMService:
                     "cache_hit": True
                 }
             }
-        logger.info(f"🧠 Chunk confidence pipeline - Processing: '{field_label}' for user {user_id}")
+        logger.info(f"🧠 RAG Pipeline - Processing: '{field_label}' for user {user_id}")
         try:
-            # Use the new chunk confidence extraction pipeline
-            result = await asyncio.to_thread(extract_with_chunk_confidence, field_label, user_id)
+            # Use the new RAG service with proper vector similarity search
+            rag_service = RAGService(openai_api_key=self.openai_api_key)
+            result = await asyncio.to_thread(rag_service.generate_field_answer, field_label, user_id)
             answer = result["answer"]
             confidence = result["confidence"]
-            source = result["source"]
-            logs = result["logs"]
+            source = result["data_source"]
+            reasoning = result["reasoning"]
             processing_time = time.time() - start_time
 
             # If no answer found, use LLM to generate a professional answer
@@ -519,23 +519,22 @@ class SmartLLMService:
                 answer = llm_response.content.strip()
                 confidence = 70
                 source = "llm_fallback"
-                logs.append(f"LLM fallback generated answer: {answer}")
+                reasoning = f"LLM fallback: {reasoning}"
 
             # Cache the response
             self._cache_response(cache_key, answer, confidence, source, FieldType.GENERIC, 3600)
             self.metrics.successful_requests += 1
             self.metrics.total_processing_time += processing_time
-            logger.info(f"✅ Chunk confidence pipeline answer: '{answer}' (confidence: {confidence}%)")
+            logger.info(f"✅ RAG Pipeline answer: '{answer}' (confidence: {confidence}%)")
             logger.info(f"   Source: {source}")
-            logger.info(f"   Logs: {logs}")
+            logger.info(f"   Reasoning: {reasoning}")
             return {
                 "status": "success",
                 "answer": answer,
                 "confidence": confidence,
                 "data_source": source,
                 "processing_time": processing_time,
-                "reasoning": f"Chunk confidence pipeline (source: {source})",
-                "logs": logs,
+                "reasoning": f"RAG pipeline: {reasoning}",
                 "performance_metrics": {
                     "processing_time_seconds": processing_time,
                     "cache_hit": False
@@ -544,7 +543,7 @@ class SmartLLMService:
         except Exception as e:
             processing_time = time.time() - start_time
             self.metrics.failed_requests += 1
-            logger.error(f"❌ Chunk confidence pipeline error: {str(e)}")
+            logger.error(f"❌ RAG Pipeline error: {str(e)}")
             return {
                 "status": "error",
                 "answer": "Unable to generate answer due to system error",
@@ -552,14 +551,12 @@ class SmartLLMService:
                 "data_source": "error",
                 "processing_time": processing_time,
                 "reasoning": f"Error occurred: {str(e)}",
-                "logs": [],
                 "performance_metrics": {
                     "processing_time_seconds": processing_time,
                     "cache_hit": False
                 }
             }
 
-    @deep_track_function
     async def _search_resume_vectors(self, query: str, user_id: str) -> List[Dict[str, Any]]:
         """Optimized resume vector search with better error handling"""
         try:
@@ -569,7 +566,7 @@ class SmartLLMService:
                 user_id=user_id,
                 document_type="resume",
                 top_k=3,  # Reduced for performance
-                min_score=0.4  # Higher threshold for better quality
+                min_score=0.1  # Very low threshold to find any results
             )
             
             return results
@@ -578,7 +575,6 @@ class SmartLLMService:
             logger.error(f"Resume vector search error: {e}")
             return []
 
-    @deep_track_function
     async def _search_personal_vectors(self, query: str, user_id: str) -> List[Dict[str, Any]]:
         """Optimized personal info vector search with better error handling"""
         try:
@@ -588,7 +584,7 @@ class SmartLLMService:
                 user_id=user_id,
                 document_type="personal_info",
                 top_k=3,  # Reduced for performance
-                min_score=0.4  # Higher threshold for better quality
+                min_score=0.1  # Very low threshold to find any results
             )
             
             return results

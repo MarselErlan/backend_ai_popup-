@@ -57,8 +57,11 @@ load_dotenv()
 
 # Get environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
+# For Railway deployment, use DATABASE_URL first, then fallback to POSTGRES_DB_URL
+DATABASE_URL = os.getenv("DATABASE_URL")
+POSTGRES_DB_URL = DATABASE_URL or os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+PORT = int(os.getenv("PORT", "8000"))
 
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is required")
@@ -149,11 +152,7 @@ def get_smart_llm_service():
     """Get Smart LLM service instance"""
     return SmartLLMService()
 
-# Import usage analyzer
-from app.services.integrated_usage_analyzer import start_analysis, stop_analysis, deep_track_function
-
-# Import simple function tracker
-from app.services.simple_function_tracker import track_service_call, track_class_creation, track_method_call
+# Integrated usage analyzer and simple function tracker imports removed
 
 # Lifecycle management
 @asynccontextmanager
@@ -173,13 +172,11 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ Service pre-warming failed: {e}")
     
-    # Start usage analysis
-    start_analysis()
+    # Usage analysis removed
     
     yield
     
-    # Stop usage analysis and generate report
-    stop_analysis()
+    # Usage analysis removed
     
     # Cleanup
     logger.info("🛑 Shutting down Smart Form Fill API")
@@ -194,7 +191,8 @@ class ReembedResponse(BaseModel):
 class FieldAnswerRequest(BaseModel):
     label: str
     url: str
-    # Note: user_id is now determined from session authentication, not request body
+    user_id: Optional[str] = None  # Optional for demo endpoint
+    # Note: user_id is now determined from session authentication for main endpoint, but can be passed for demo
 
 class FieldAnswerResponse(BaseModel):
     answer: str
@@ -307,17 +305,13 @@ app.add_middleware(CustomCORSMiddleware)
 # from app.middleware.usage_middleware import UsageAnalysisMiddleware
 # app.add_middleware(UsageAnalysisMiddleware)
 
-# Add deep tracking middleware for execution traces (DISABLED)
-# from app.services.integrated_usage_analyzer import DeepTrackingMiddleware
-# app.add_middleware(DeepTrackingMiddleware)
+# Deep tracking middleware removed
 
 # Include URL tracking router
 app.include_router(url_tracking_router)
 
 # Initialize services
-DATABASE_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
-document_service = DocumentService(DATABASE_URL)
+document_service = DocumentService(POSTGRES_DB_URL)
 embedding_service = EmbeddingService(
     redis_url=REDIS_URL,
     openai_api_key=OPENAI_API_KEY
@@ -328,7 +322,6 @@ embedding_service = EmbeddingService(
 # ============================================================================
 
 @app.post("/api/generate-field-answer", response_model=FieldAnswerResponse)
-@deep_track_function
 async def generate_field_answer(
     field_data: FieldAnswerRequest,
     user: User = Depends(get_session_user)
@@ -343,9 +336,6 @@ async def generate_field_answer(
         # Get Smart LLM service
         llm_service = get_smart_llm_service()
         
-        # Track LLM service instantiation
-        track_class_creation("RedisLLMService", "llm_service", f"(redis_url={REDIS_URL[:20]}...)")
-        
         # Generate answer using Redis-powered system
         service_start = time.time()
         result = await llm_service.generate_field_answer(
@@ -358,17 +348,6 @@ async def generate_field_answer(
             }
         )
         service_time = time.time() - service_start
-        
-        # Track the service call
-        track_service_call(
-            "generate_field_answer",
-            "llm_service",
-            service_time,
-            f"(field_label={field_data.label}, user_id={user.id}, url={field_data.url})",
-            f"answer={result['answer'][:50]}..., source={result['data_source']}",
-            True
-        )
-        track_method_call("RedisLLMService", "generate_field_answer", "llm_service")
         
         logger.info(f"✅ Generated answer: '{result['answer']}' (source: {result['data_source']}) in {result['performance_metrics']['processing_time_seconds']:.2f}s")
         
@@ -711,40 +690,37 @@ async def demo_generate_field_answer(field_request: FieldAnswerRequest) -> Field
         logger.info(f"🎯 DEMO: Generating answer for field: '{field_request.label}' on {field_request.url}")
         logger.info(f"👤 Using demo user: default")
         
-        # Get the form filler service
-        form_filler = get_form_filler()
+        # Get the RAG service (same as main endpoint)
+        from app.services.rag_service import RAGService
+        rag_service = RAGService()
         
-        # Create a mock field object for the existing logic
-        mock_field = {
-            "field_purpose": field_request.label,
-            "name": field_request.label,
-            "selector": "#mock-field",
-            "field_type": "text"
-        }
+        # Use the user_id from the request
+        user_id = field_request.user_id or "6fe5bceb-8c76-4db6-a0ec-79c65c6a9346"
         
-        # Use default user for demo
-        result = await form_filler.generate_field_values_optimized([mock_field], {}, "default")
+        # Generate answer using RAG service
+        result = await asyncio.to_thread(rag_service.generate_field_answer, field_request.label, user_id)
         
-        if result["status"] != "success":
-            raise HTTPException(status_code=500, detail=f"Form filling failed: {result.get('error', 'Unknown error')}")
-        
-        # Extract the answer from the result
-        field_answer = result["values"][0] if result.get("values") else {}
-        answer = field_answer.get("value", "Unable to generate answer")
-        data_source = field_answer.get("data_source", "unknown")
-        reasoning = field_answer.get("reasoning", "No reasoning provided")
+        # Extract the answer from the RAG result
+        answer = result.get("answer", "Unable to generate answer")
+        data_source = result.get("data_source", "unknown")
+        reasoning = result.get("reasoning", "No reasoning provided")
+        confidence = result.get("confidence", 0)
+        similarity_scores = result.get("similarity_scores", [])
         
         # Get performance metrics
+        processing_time = time.time() - time.time()  # Will be set properly below
         performance_metrics = {
-            "processing_time_seconds": result.get("processing_time", 0),
+            "processing_time_seconds": processing_time,
             "optimization_enabled": True,
-            "cache_hits": result.get("cache_analytics", {}).get("cache_hit_rate", 0),
-            "early_exit": result.get("early_exit", False),
-            "tier_exit": result.get("tier_exit", 3),
-            "tiers_used": result.get("tiers_used", 3)
+            "cache_hits": 0,
+            "early_exit": False,
+            "tier_exit": 1 if data_source.startswith("high_confidence") else 3,
+            "tiers_used": 1 if data_source.startswith("high_confidence") else 3
         }
         
-        logger.info(f"✅ DEMO Generated answer: '{answer}' (source: {data_source}) in {performance_metrics.get('processing_time_seconds', 0):.2f}s")
+        logger.info(f"✅ DEMO RAG Generated answer: '{answer}' (source: {data_source}, confidence: {confidence}%)")
+        if similarity_scores:
+            logger.info(f"🔍 Similarity scores: {[f'{s:.3f}' for s in similarity_scores[:3]]}")
         
         return FieldAnswerResponse(
             answer=answer,
@@ -1093,17 +1069,6 @@ async def upload_resume(
         )
         service_time = time.time() - service_start
         
-        # Track the service call
-        track_service_call(
-            "save_resume_document",
-            "document_service", 
-            service_time,
-            f"(filename={file.filename}, size={len(file_content)}, user_id={user.id})",
-            f"document_id={document_id}",
-            True
-        )
-        track_method_call("DocumentService", "save_resume_document", "document_service")
-        
         processing_time = time.time() - start_time
         
         return {
@@ -1226,17 +1191,6 @@ async def upload_personal_info(
             user_id=user.id if user else None
         )
         service_time = time.time() - service_start
-        
-        # Track the service call
-        track_service_call(
-            "save_personal_info_document",
-            "document_service", 
-            service_time,
-            f"(filename={file.filename}, size={len(file_content)}, user_id={user.id})",
-            f"document_id={document_id}",
-            True
-        )
-        track_method_call("DocumentService", "save_personal_info_document", "document_service")
         
         processing_time = time.time() - start_time
         
@@ -1405,31 +1359,7 @@ async def health_check():
             "timestamp": datetime.now().isoformat()
         }
 
-@app.get("/api/analysis/status")
-async def get_analysis_status():
-    """
-    📊 Get current usage analysis status
-    """
-    try:
-        from app.services.integrated_usage_analyzer import get_analyzer
-        analyzer = get_analyzer()
-        status = analyzer.get_status()
-        
-        return {
-            "status": "success",
-            "analysis": status,
-            "toggle_info": {
-                "enable": "Set environment variable ENABLE_USAGE_ANALYSIS=true",
-                "disable": "Set environment variable ENABLE_USAGE_ANALYSIS=false",
-                "current": "enabled" if status.get("enabled", False) else "disabled"
-            }
-        }
-    except Exception as e:
-        logger.error(f"❌ Analysis status check failed: {e}")
-        return {
-            "status": "error",
-            "error": str(e)
-        }
+# Analysis status endpoint removed
 
 # ============================================================================
 # REDIS WORKFLOW TEST ENDPOINT
@@ -1815,6 +1745,6 @@ async def translate_text(translation_request: TranslationRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)  # Disable reload for better performance
+    uvicorn.run(app, host="0.0.0.0", port=PORT, reload=False)  # Use PORT env var for Railway deployment
 
  
