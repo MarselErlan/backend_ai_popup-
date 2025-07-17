@@ -1,0 +1,1698 @@
+{
+  "test_summary": {
+    "total_tests": 17,
+    "successful_tests": 17,
+    "success_rate": 100.0,
+    "total_processing_time": 84.2851209640503,
+    "average_processing_time": 4.957948292002959,
+    "final_grade": "\ud83c\udfc6 EXCELLENT - Ultimate Smart LLM Service is performing at world-class level!"
+  },
+  "detailed_results": [
+    {
+      "field_label": "Email Address",
+      "expected_type": "email",
+      "success": true,
+      "answer": "future.success@dreammail.com",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 6.86885404586792,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "future.success@dreammail.com",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 6.868431091308594,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Email Address",
+            "field_type": "email",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "future.success@dreammail.com",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 1.9250710010528564
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 1,
+            "search_cache_hits": 0,
+            "search_cache_misses": 2,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 1,
+            "vector_searches_performed": 8,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 2,
+              "answer_cache": 0,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 1,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 1,
+            "avg_processing_time": 0.0,
+            "total_processing_time": 0.0,
+            "success_rate": 0.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 1,
+              "search_cache_hits": 0,
+              "search_cache_misses": 2,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 1,
+              "vector_searches_performed": 8,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 2,
+                "answer_cache": 0,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Phone Number",
+      "expected_type": "phone",
+      "success": true,
+      "answer": "+1-123-456-7890",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 6.960843086242676,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "+1-123-456-7890",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 6.9603588581085205,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Phone Number",
+            "field_type": "phone",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "+1-123-456-7890",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 1.9159419536590576
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 2,
+            "search_cache_hits": 0,
+            "search_cache_misses": 4,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 2,
+            "vector_searches_performed": 16,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 4,
+              "answer_cache": 1,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 2,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 2,
+            "avg_processing_time": 6.868431091308594,
+            "total_processing_time": 6.868431091308594,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 2,
+              "search_cache_hits": 0,
+              "search_cache_misses": 4,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 2,
+              "vector_searches_performed": 16,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 4,
+                "answer_cache": 1,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Full Name",
+      "expected_type": "name",
+      "success": true,
+      "answer": "John Doe",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 6.863095998764038,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "John Doe",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 6.862669944763184,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Full Name",
+            "field_type": "name",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "John Doe",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 1.1256959438323975
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 3,
+            "search_cache_hits": 0,
+            "search_cache_misses": 6,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 3,
+            "vector_searches_performed": 24,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 6,
+              "answer_cache": 2,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 3,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 3,
+            "avg_processing_time": 6.914394974708557,
+            "total_processing_time": 13.828789949417114,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 3,
+              "search_cache_hits": 0,
+              "search_cache_misses": 6,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 3,
+              "vector_searches_performed": 24,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 6,
+                "answer_cache": 2,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "First Name",
+      "expected_type": "name",
+      "success": true,
+      "answer": "John",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 3.4808242321014404,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "John",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 3.480247974395752,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "First Name",
+            "field_type": "name",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "John",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 1.0769250392913818
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 4,
+            "search_cache_hits": 0,
+            "search_cache_misses": 8,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 4,
+            "vector_searches_performed": 32,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 8,
+              "answer_cache": 3,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 4,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 4,
+            "avg_processing_time": 6.8971532980601,
+            "total_processing_time": 20.691459894180298,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 4,
+              "search_cache_hits": 0,
+              "search_cache_misses": 8,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 4,
+              "vector_searches_performed": 32,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 8,
+                "answer_cache": 3,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Last Name",
+      "expected_type": "name",
+      "success": true,
+      "answer": "Doe",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 3.0761799812316895,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "Doe",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 3.075723648071289,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Last Name",
+            "field_type": "name",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "Doe",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 0.8926818370819092
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 5,
+            "search_cache_hits": 0,
+            "search_cache_misses": 10,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 5,
+            "vector_searches_performed": 40,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 10,
+              "answer_cache": 4,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 5,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 5,
+            "avg_processing_time": 6.0429269671440125,
+            "total_processing_time": 24.17170786857605,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 5,
+              "search_cache_hits": 0,
+              "search_cache_misses": 10,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 5,
+              "vector_searches_performed": 40,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 10,
+                "answer_cache": 4,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Postal Code",
+      "expected_type": "postal_code",
+      "success": true,
+      "answer": "12345",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 3.019465923309326,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "12345",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 3.0189688205718994,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Postal Code",
+            "field_type": "postal_code",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "12345",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 0.7037649154663086
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 6,
+            "search_cache_hits": 0,
+            "search_cache_misses": 12,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 6,
+            "vector_searches_performed": 48,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 12,
+              "answer_cache": 5,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 6,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 6,
+            "avg_processing_time": 5.449486303329468,
+            "total_processing_time": 27.24743151664734,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 6,
+              "search_cache_hits": 0,
+              "search_cache_misses": 12,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 6,
+              "vector_searches_performed": 48,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 12,
+                "answer_cache": 5,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Home Address",
+      "expected_type": "address",
+      "success": true,
+      "answer": "Given the instructions and the lack of specific data provided, I'll generate a compelling placeholder for the field required:\n\n\"100 Innovation Drive, Tech City, CA 94043\"",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 3.2114598751068115,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "Given the instructions and the lack of specific data provided, I'll generate a compelling placeholder for the field required:\n\n\"100 Innovation Drive, Tech City, CA 94043\"",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 3.210970163345337,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Home Address",
+            "field_type": "address",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "Given the instructions and the lack of specific data provided, I'll generate a compelling placeholder for the field required:\n\n\"100 Innovation Drive, Tech City, CA 94043\"",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 1.6305739879608154
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 7,
+            "search_cache_hits": 0,
+            "search_cache_misses": 14,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 7,
+            "vector_searches_performed": 56,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 14,
+              "answer_cache": 6,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 7,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 7,
+            "avg_processing_time": 5.044400056203206,
+            "total_processing_time": 30.26640033721924,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 7,
+              "search_cache_hits": 0,
+              "search_cache_misses": 14,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 7,
+              "vector_searches_performed": 56,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 14,
+                "answer_cache": 6,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Current Job Title",
+      "expected_type": "general",
+      "success": true,
+      "answer": "Digital Marketing Specialist",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 3.390170097351074,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "Digital Marketing Specialist",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 3.389681339263916,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Current Job Title",
+            "field_type": "general",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "Digital Marketing Specialist",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 1.620811939239502
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 8,
+            "search_cache_hits": 0,
+            "search_cache_misses": 16,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 8,
+            "vector_searches_performed": 64,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 16,
+              "answer_cache": 7,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 8,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 8,
+            "avg_processing_time": 4.782481500080654,
+            "total_processing_time": 33.477370500564575,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 8,
+              "search_cache_hits": 0,
+              "search_cache_misses": 16,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 8,
+              "vector_searches_performed": 64,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 16,
+                "answer_cache": 7,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Company Name",
+      "expected_type": "general",
+      "success": true,
+      "answer": "Innovative Solutions Inc.",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 2.7978391647338867,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "Innovative Solutions Inc.",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 2.79718279838562,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Company Name",
+            "field_type": "name",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "Innovative Solutions Inc.",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 1.0386948585510254
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 9,
+            "search_cache_hits": 0,
+            "search_cache_misses": 18,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 9,
+            "vector_searches_performed": 72,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 18,
+              "answer_cache": 8,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 9,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 9,
+            "avg_processing_time": 4.608381479978561,
+            "total_processing_time": 36.86705183982849,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 9,
+              "search_cache_hits": 0,
+              "search_cache_misses": 18,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 9,
+              "vector_searches_performed": 72,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 18,
+                "answer_cache": 8,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Work Experience",
+      "expected_type": "general",
+      "success": true,
+      "answer": "As a highly motivated professional with a passion for innovation and problem-solving, I have consistently leveraged my analytical skills to drive successful outcomes in challenging environments. While my formal professional experience is still in development, I have engaged in several freelance projects and volunteer roles that have honed my abilities in project management, strategic planning, and team collaboration. Notably, I led a team of volunteers in a community project that resulted in a 30% increase in local engagement, showcasing my leadership and organizational skills. My commitment to continuous learning and improvement, combined with my ability to adapt and thrive in dynamic settings, makes me an ideal candidate eager to contribute effectively to your team and grow with your organization.",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 6.675029993057251,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "As a highly motivated professional with a passion for innovation and problem-solving, I have consistently leveraged my analytical skills to drive successful outcomes in challenging environments. While my formal professional experience is still in development, I have engaged in several freelance projects and volunteer roles that have honed my abilities in project management, strategic planning, and team collaboration. Notably, I led a team of volunteers in a community project that resulted in a 30% increase in local engagement, showcasing my leadership and organizational skills. My commitment to continuous learning and improvement, combined with my ability to adapt and thrive in dynamic settings, makes me an ideal candidate eager to contribute effectively to your team and grow with your organization.",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 6.67451024055481,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Work Experience",
+            "field_type": "general",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "As a highly motivated professional with a passion for innovation and problem-solving, I have consistently leveraged my analytical skills to drive successful outcomes in challenging environments. While my formal professional experience is still in development, I have engaged in several freelance projects and volunteer roles that have honed my abilities in project management, strategic planning, and team collaboration. Notably, I led a team of volunteers in a community project that resulted in a 30% increase in local engagement, showcasing my leadership and organizational skills. My commitment to continuous learning and improvement, combined with my ability to adapt and thrive in dynamic settings, makes me an ideal candidate eager to contribute effectively to your team and grow with your organization.",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 4.90339994430542
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 10,
+            "search_cache_hits": 0,
+            "search_cache_misses": 20,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 10,
+            "vector_searches_performed": 80,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 20,
+              "answer_cache": 9,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 10,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 10,
+            "avg_processing_time": 4.40713718202379,
+            "total_processing_time": 39.66423463821411,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 10,
+              "search_cache_hits": 0,
+              "search_cache_misses": 20,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 10,
+              "vector_searches_performed": 80,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 20,
+                "answer_cache": 9,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Technical Skills",
+      "expected_type": "general",
+      "success": true,
+      "answer": "Proficient in Python, Java, and SQL with a strong foundation in data structures and algorithms. Passionate about developing scalable software solutions and have experience with full-stack development, including React and Node.js. Eager to leverage my technical skills to contribute to innovative projects and collaborative team efforts.",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 3.813203811645508,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "Proficient in Python, Java, and SQL with a strong foundation in data structures and algorithms. Passionate about developing scalable software solutions and have experience with full-stack development, including React and Node.js. Eager to leverage my technical skills to contribute to innovative projects and collaborative team efforts.",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 3.812633752822876,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Technical Skills",
+            "field_type": "general",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "Proficient in Python, Java, and SQL with a strong foundation in data structures and algorithms. Passionate about developing scalable software solutions and have experience with full-stack development, including React and Node.js. Eager to leverage my technical skills to contribute to innovative projects and collaborative team efforts.",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 2.252962827682495
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 11,
+            "search_cache_hits": 0,
+            "search_cache_misses": 22,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 11,
+            "vector_searches_performed": 88,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 22,
+              "answer_cache": 10,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 11,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 11,
+            "avg_processing_time": 4.633874487876892,
+            "total_processing_time": 46.33874487876892,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 11,
+              "search_cache_hits": 0,
+              "search_cache_misses": 22,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 11,
+              "vector_searches_performed": 88,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 22,
+                "answer_cache": 10,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Education Background",
+      "expected_type": "general",
+      "success": true,
+      "answer": "Bachelor of Science in Computer Science from Stanford University, with a focus on artificial intelligence and machine learning. Graduated with honors in 2021.",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 2.9889938831329346,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "Bachelor of Science in Computer Science from Stanford University, with a focus on artificial intelligence and machine learning. Graduated with honors in 2021.",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 2.988447904586792,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Education Background",
+            "field_type": "general",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "Bachelor of Science in Computer Science from Stanford University, with a focus on artificial intelligence and machine learning. Graduated with honors in 2021.",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 1.411329984664917
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 12,
+            "search_cache_hits": 0,
+            "search_cache_misses": 24,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 12,
+            "vector_searches_performed": 96,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 24,
+              "answer_cache": 11,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 12,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 12,
+            "avg_processing_time": 4.559216239235618,
+            "total_processing_time": 50.1513786315918,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 12,
+              "search_cache_hits": 0,
+              "search_cache_misses": 24,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 12,
+              "vector_searches_performed": 96,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 24,
+                "answer_cache": 11,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Why do you want to work at our startup?",
+      "expected_type": "general",
+      "success": true,
+      "answer": "I'm deeply passionate about the innovation and agility that startups like yours embody. The opportunity to work in an environment where creativity is encouraged, and every contribution directly influences success is incredibly motivating. Your company's mission aligns perfectly with my professional aspirations and personal values, particularly your commitment to [specific aspect of the company's mission or product]. I'm excited about the prospect of bringing my unique skills and experiences to your team, where I can contribute to meaningful projects and collaborate with like-minded professionals to drive growth and achieve breakthroughs. This role represents the perfect convergence of my passion for [industry/field] and my desire to be part of a dynamic, forward-thinking company that's making a real difference.",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 7.137186050415039,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "I'm deeply passionate about the innovation and agility that startups like yours embody. The opportunity to work in an environment where creativity is encouraged, and every contribution directly influences success is incredibly motivating. Your company's mission aligns perfectly with my professional aspirations and personal values, particularly your commitment to [specific aspect of the company's mission or product]. I'm excited about the prospect of bringing my unique skills and experiences to your team, where I can contribute to meaningful projects and collaborate with like-minded professionals to drive growth and achieve breakthroughs. This role represents the perfect convergence of my passion for [industry/field] and my desire to be part of a dynamic, forward-thinking company that's making a real difference.",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 7.13661003112793,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Why do you want to work at our startup?",
+            "field_type": "general",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "I'm deeply passionate about the innovation and agility that startups like yours embody. The opportunity to work in an environment where creativity is encouraged, and every contribution directly influences success is incredibly motivating. Your company's mission aligns perfectly with my professional aspirations and personal values, particularly your commitment to [specific aspect of the company's mission or product]. I'm excited about the prospect of bringing my unique skills and experiences to your team, where I can contribute to meaningful projects and collaborate with like-minded professionals to drive growth and achieve breakthroughs. This role represents the perfect convergence of my passion for [industry/field] and my desire to be part of a dynamic, forward-thinking company that's making a real difference.",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 5.405496120452881
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 13,
+            "search_cache_hits": 0,
+            "search_cache_misses": 26,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 13,
+            "vector_searches_performed": 104,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 26,
+              "answer_cache": 12,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 13,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 13,
+            "avg_processing_time": 4.428318878014882,
+            "total_processing_time": 53.13982653617859,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 13,
+              "search_cache_hits": 0,
+              "search_cache_misses": 26,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 13,
+              "vector_searches_performed": 104,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 26,
+                "answer_cache": 12,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Describe your experience with fast-paced environments",
+      "expected_type": "general",
+      "success": true,
+      "answer": "I thrive in fast-paced environments, drawing on my ability to quickly adapt, prioritize tasks, and maintain a high level of organization even under pressure. My enthusiasm for tackling new challenges and learning on the fly fuels my productivity and ensures I consistently meet deadlines without compromising on quality. This dynamic setting not only matches my energetic work style but also drives my personal growth by constantly pushing me to develop new skills and innovative solutions.",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 5.654407978057861,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "I thrive in fast-paced environments, drawing on my ability to quickly adapt, prioritize tasks, and maintain a high level of organization even under pressure. My enthusiasm for tackling new challenges and learning on the fly fuels my productivity and ensures I consistently meet deadlines without compromising on quality. This dynamic setting not only matches my energetic work style but also drives my personal growth by constantly pushing me to develop new skills and innovative solutions.",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 5.652962923049927,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Describe your experience with fast-paced environments",
+            "field_type": "general",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "I thrive in fast-paced environments, drawing on my ability to quickly adapt, prioritize tasks, and maintain a high level of organization even under pressure. My enthusiasm for tackling new challenges and learning on the fly fuels my productivity and ensures I consistently meet deadlines without compromising on quality. This dynamic setting not only matches my energetic work style but also drives my personal growth by constantly pushing me to develop new skills and innovative solutions.",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 3.8713481426239014
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 14,
+            "search_cache_hits": 0,
+            "search_cache_misses": 28,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 14,
+            "vector_searches_performed": 112,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 28,
+              "answer_cache": 13,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 14,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 14,
+            "avg_processing_time": 4.636648966715886,
+            "total_processing_time": 60.27643656730652,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 14,
+              "search_cache_hits": 0,
+              "search_cache_misses": 28,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 14,
+              "vector_searches_performed": 112,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 28,
+                "answer_cache": 13,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "What makes you a good fit for this role?",
+      "expected_type": "general",
+      "success": true,
+      "answer": "Given the absence of specific professional and personal data, I'll create a compelling and enthusiastic response based on the instructions provided:\n\nMy unique blend of skills and experiences makes me an excellent fit for this role. I bring a passion for innovation and a proven track record of success in challenging environments. My ability to quickly adapt to new technologies and methodologies, combined with my commitment to continuous learning and improvement, allows me to contribute significantly from day one. I thrive in collaborative settings, where I can share my insights and learn from my peers, driving projects to successful completion. My dedication to excellence, combined with my eagerness to take on new challenges, aligns perfectly with the dynamic nature of this position. I am excited about the opportunity to leverage my skills to contribute to your team's success and grow within the company.",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 5.7485339641571045,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "Given the absence of specific professional and personal data, I'll create a compelling and enthusiastic response based on the instructions provided:\n\nMy unique blend of skills and experiences makes me an excellent fit for this role. I bring a passion for innovation and a proven track record of success in challenging environments. My ability to quickly adapt to new technologies and methodologies, combined with my commitment to continuous learning and improvement, allows me to contribute significantly from day one. I thrive in collaborative settings, where I can share my insights and learn from my peers, driving projects to successful completion. My dedication to excellence, combined with my eagerness to take on new challenges, aligns perfectly with the dynamic nature of this position. I am excited about the opportunity to leverage my skills to contribute to your team's success and grow within the company.",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 5.747810125350952,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "What makes you a good fit for this role?",
+            "field_type": "general",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "Given the absence of specific professional and personal data, I'll create a compelling and enthusiastic response based on the instructions provided:\n\nMy unique blend of skills and experiences makes me an excellent fit for this role. I bring a passion for innovation and a proven track record of success in challenging environments. My ability to quickly adapt to new technologies and methodologies, combined with my commitment to continuous learning and improvement, allows me to contribute significantly from day one. I thrive in collaborative settings, where I can share my insights and learn from my peers, driving projects to successful completion. My dedication to excellence, combined with my eagerness to take on new challenges, aligns perfectly with the dynamic nature of this position. I am excited about the opportunity to leverage my skills to contribute to your team's success and grow within the company.",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 4.343310117721558
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 15,
+            "search_cache_hits": 0,
+            "search_cache_misses": 30,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 15,
+            "vector_searches_performed": 120,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 30,
+              "answer_cache": 14,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 15,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 15,
+            "avg_processing_time": 4.709242820739746,
+            "total_processing_time": 65.92939949035645,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 15,
+              "search_cache_hits": 0,
+              "search_cache_misses": 30,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 15,
+              "vector_searches_performed": 120,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 30,
+                "answer_cache": 14,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "Are you authorized to work in the US?",
+      "expected_type": "general",
+      "success": true,
+      "answer": "Yes, I am fully authorized to work in the US without any restrictions. I'm eager to bring my skills and passion to a team that values innovation and hard work.",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 7.375444173812866,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "Yes, I am fully authorized to work in the US without any restrictions. I'm eager to bring my skills and passion to a team that values innovation and hard work.",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 7.374534845352173,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "Are you authorized to work in the US?",
+            "field_type": "general",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "Yes, I am fully authorized to work in the US without any restrictions. I'm eager to bring my skills and passion to a team that values innovation and hard work.",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 1.8536477088928223
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 16,
+            "search_cache_hits": 0,
+            "search_cache_misses": 32,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 16,
+            "vector_searches_performed": 128,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 32,
+              "answer_cache": 15,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 16,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 16,
+            "avg_processing_time": 4.778480641047159,
+            "total_processing_time": 71.6772096157074,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 16,
+              "search_cache_hits": 0,
+              "search_cache_misses": 32,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 16,
+              "vector_searches_performed": 128,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 32,
+                "answer_cache": 15,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    },
+    {
+      "field_label": "What are your salary expectations?",
+      "expected_type": "general",
+      "success": true,
+      "answer": "Given the competitive nature of the industry and my commitment to delivering exceptional results, I'm seeking a salary that not only reflects the skills and experience I bring to the table but also aligns with the market rates for similar roles. I'm open to discussing a range that is mutually beneficial and reflects the value I'm excited to add to the team.",
+      "data_source": "generated",
+      "tier_used": "TIER 3 - ULTIMATE LLM",
+      "confidence_score": 75.0,
+      "processing_time": 5.220725059509277,
+      "performance_grade": "C (ACCEPTABLE)",
+      "full_result": {
+        "answer": "Given the competitive nature of the industry and my commitment to delivering exceptional results, I'm seeking a salary that not only reflects the skills and experience I bring to the table but also aligns with the market rates for similar roles. I'm open to discussing a range that is mutually beneficial and reflects the value I'm excited to add to the team.",
+        "data_source": "generated",
+        "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+        "status": "success",
+        "performance_metrics": {
+          "processing_time_seconds": 5.220082998275757,
+          "tier_used": "TIER 3 - ULTIMATE LLM",
+          "confidence_score": 75.0,
+          "field_analysis": {
+            "field_label": "What are your salary expectations?",
+            "field_type": "general",
+            "confidence_score": 75.0,
+            "data_sources": [
+              "resume_vectordb",
+              "personal_info_vectordb",
+              "llm_generation"
+            ],
+            "extracted_answer": "Given the competitive nature of the industry and my commitment to delivering exceptional results, I'm seeking a salary that not only reflects the skills and experience I bring to the table but also aligns with the market rates for similar roles. I'm open to discussing a range that is mutually beneficial and reflects the value I'm excited to add to the team.",
+            "reasoning": "Ultimate LLM generation using GPT-4 with professional context (confidence: 75.0%)",
+            "processing_time": 3.1723639965057373
+          },
+          "cache_stats": {
+            "answer_cache_hits": 0,
+            "answer_cache_misses": 17,
+            "search_cache_hits": 0,
+            "search_cache_misses": 34,
+            "analysis_cache_hits": 0,
+            "analysis_cache_misses": 0,
+            "context_cache_hits": 0,
+            "context_cache_misses": 0,
+            "total_requests": 17,
+            "vector_searches_performed": 136,
+            "vector_searches_avoided": 0,
+            "total_time_saved": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage_kb": 0.0,
+            "cache_sizes": {
+              "search_cache": 34,
+              "answer_cache": 16,
+              "analysis_cache": 0,
+              "context_cache": 0
+            },
+            "performance_improvement": "0.0s saved"
+          },
+          "system_performance": {
+            "total_requests": 17,
+            "cache_exits": 0,
+            "tier_1_exits": 0,
+            "tier_2_exits": 0,
+            "tier_3_completions": 17,
+            "avg_processing_time": 4.940734028816223,
+            "total_processing_time": 79.05174446105957,
+            "success_rate": 1.0,
+            "error_count": 0,
+            "tier_1_exit_rate": 0.0,
+            "tier_2_exit_rate": 0.0,
+            "tier_3_completion_rate": 1.0,
+            "cache_analytics": {
+              "answer_cache_hits": 0,
+              "answer_cache_misses": 17,
+              "search_cache_hits": 0,
+              "search_cache_misses": 34,
+              "analysis_cache_hits": 0,
+              "analysis_cache_misses": 0,
+              "context_cache_hits": 0,
+              "context_cache_misses": 0,
+              "total_requests": 17,
+              "vector_searches_performed": 136,
+              "vector_searches_avoided": 0,
+              "total_time_saved": 0.0,
+              "cache_hit_rate": 0.0,
+              "memory_usage_kb": 0.0,
+              "cache_sizes": {
+                "search_cache": 34,
+                "answer_cache": 16,
+                "analysis_cache": 0,
+                "context_cache": 0
+              },
+              "performance_improvement": "0.0s saved"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "system_metrics": {
+    "performance_stats": {
+      "total_requests": 17,
+      "cache_exits": 0,
+      "tier_1_exits": 0,
+      "tier_2_exits": 0,
+      "tier_3_completions": 17,
+      "avg_processing_time": 4.957166321137372,
+      "total_processing_time": 84.27182745933533,
+      "success_rate": 1.0,
+      "error_count": 0,
+      "tier_1_exit_rate": 0.0,
+      "tier_2_exit_rate": 0.0,
+      "tier_3_completion_rate": 1.0,
+      "cache_analytics": {
+        "answer_cache_hits": 0,
+        "answer_cache_misses": 17,
+        "search_cache_hits": 0,
+        "search_cache_misses": 34,
+        "analysis_cache_hits": 0,
+        "analysis_cache_misses": 0,
+        "context_cache_hits": 0,
+        "context_cache_misses": 0,
+        "total_requests": 17,
+        "vector_searches_performed": 136,
+        "vector_searches_avoided": 0,
+        "total_time_saved": 0.0,
+        "cache_hit_rate": 0.0,
+        "memory_usage_kb": 0.0,
+        "cache_sizes": {
+          "search_cache": 34,
+          "answer_cache": 17,
+          "analysis_cache": 0,
+          "context_cache": 0
+        },
+        "performance_improvement": "0.0s saved"
+      }
+    },
+    "cache_stats": {
+      "answer_cache_hits": 0,
+      "answer_cache_misses": 17,
+      "search_cache_hits": 0,
+      "search_cache_misses": 34,
+      "analysis_cache_hits": 0,
+      "analysis_cache_misses": 0,
+      "context_cache_hits": 0,
+      "context_cache_misses": 0,
+      "total_requests": 17,
+      "vector_searches_performed": 136,
+      "vector_searches_avoided": 0,
+      "total_time_saved": 0.0,
+      "cache_hit_rate": 0.0,
+      "memory_usage_kb": 0.0,
+      "cache_sizes": {
+        "search_cache": 34,
+        "answer_cache": 17,
+        "analysis_cache": 0,
+        "context_cache": 0
+      },
+      "performance_improvement": "0.0s saved"
+    }
+  },
+  "tier_usage": {
+    "TIER 3 - ULTIMATE LLM": 17
+  },
+  "data_source_usage": {
+    "generated": 17
+  },
+  "performance_grades": {
+    "C (ACCEPTABLE)": 17
+  }
+}
