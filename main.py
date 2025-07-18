@@ -82,10 +82,20 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # For Railway deployment, force the correct DATABASE_URL 
 if os.getenv("RAILWAY_ENVIRONMENT"):
     DATABASE_URL = "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway"
+    
+    # Use Railway Redis URL in production - try multiple methods
+    REDIS_URL = os.getenv("REDIS_URL")
+    if not REDIS_URL and os.getenv("REDISPASSWORD") and os.getenv("REDISHOST") and os.getenv("REDISPORT"):
+        REDIS_URL = f"redis://:{os.getenv('REDISPASSWORD')}@{os.getenv('REDISHOST')}:{os.getenv('REDISPORT')}"
+    elif not REDIS_URL:
+        # Fallback to localhost for development
+        REDIS_URL = "redis://localhost:6379"
+    
     print(f"🚂 Railway: Using hardcoded DATABASE_URL")
+    print(f"🔴 Railway: Redis URL configured from environment")
 else:
     DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway")
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+    REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 PORT = int(os.getenv("PORT", "8000"))
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(',')
 
@@ -99,6 +109,12 @@ if os.getenv("RAILWAY_ENVIRONMENT"):
     # Debug: Show the actual DATABASE_URL being used
     print(f"🔍 Raw DATABASE_URL from env: {repr(os.getenv('DATABASE_URL'))}")
     print(f"🔍 Final DATABASE_URL variable: {repr(DATABASE_URL)}")
+    
+    # Debug Redis configuration
+    print(f"🔍 Raw REDIS_URL from env: {repr(os.getenv('REDIS_URL'))}")
+    print(f"🔍 REDISHOST: {repr(os.getenv('REDISHOST'))}")
+    print(f"🔍 REDISPORT: {repr(os.getenv('REDISPORT'))}")
+    print(f"🔍 Final REDIS_URL variable: {repr(REDIS_URL)}")
     
     # Log DATABASE_URL format without exposing credentials
     if DATABASE_URL:
