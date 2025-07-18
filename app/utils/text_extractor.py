@@ -7,20 +7,28 @@ import PyPDF2
 from docx import Document
 import chardet
 
-async def extract_text_from_file(content: bytes, file_ext: str) -> str:
+async def extract_text_from_file(content: bytes, content_type: str) -> str:
     """
     Extract text from various file types
     Supports: PDF, DOCX, DOC, TXT
     """
     try:
-        if file_ext == '.pdf':
+        # Handle content types
+        if content_type == 'application/pdf':
             return extract_from_pdf(content)
-        elif file_ext in ['.docx', '.doc']:
+        elif content_type in ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']:
             return extract_from_docx(content)
-        elif file_ext == '.txt':
+        elif content_type == 'text/plain':
+            return extract_from_txt(content)
+        # Handle file extensions (fallback)
+        elif content_type == '.pdf':
+            return extract_from_pdf(content)
+        elif content_type in ['.docx', '.doc']:
+            return extract_from_docx(content)
+        elif content_type == '.txt':
             return extract_from_txt(content)
         else:
-            raise ValueError(f"Unsupported file type: {file_ext}")
+            raise ValueError(f"Unsupported file type: {content_type}")
     except Exception as e:
         raise Exception(f"Error extracting text: {str(e)}")
 

@@ -9,6 +9,13 @@ from loguru import logger
 import json
 from app.services.vector_search import search_similar, search_similar_by_document_type
 
+# Optional sklearn import for fallback vector search
+try:
+    from sklearn.metrics.pairwise import cosine_similarity
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+
 class RedisVectorStore:
     def __init__(self, redis_url: str = "redis://localhost:6379", index_name: str = "doc_vectors", vector_dim: int = 1536):
         """
@@ -22,6 +29,7 @@ class RedisVectorStore:
         self.redis_url = redis_url
         self.index_name = index_name
         self.vector_dim = vector_dim
+        self.redis_search_available = False  # Will be set in _create_index
         
         # Initialize Redis connection
         self.redis_client = redis.from_url(redis_url, decode_responses=False)
@@ -32,6 +40,16 @@ class RedisVectorStore:
     def _create_index(self):
         """Create RediSearch index for vector similarity search"""
         try:
+            # Check if RediSearch is available
+            try:
+                self.redis_client.execute_command("FT._LIST")
+                self.redis_search_available = True
+                logger.info("✅ RediSearch module detected")
+            except redis.exceptions.ResponseError:
+                self.redis_search_available = False
+                logger.warning("⚠️ RediSearch module not available - using fallback storage")
+                return
+            
             # Check if index already exists
             try:
                 self.redis_client.execute_command("FT.INFO", self.index_name)
@@ -39,7 +57,9 @@ class RedisVectorStore:
                 return
             except redis.exceptions.ResponseError as e:
                 if "Unknown index name" not in str(e):
-                    raise
+                    logger.warning(f"⚠️ RediSearch not available: {e}")
+                    self.redis_search_available = False
+                    return
             
             # Create new index with vector field
             cmd = [
@@ -63,7 +83,8 @@ class RedisVectorStore:
             
         except Exception as e:
             logger.error(f"❌ Error creating Redis index: {e}")
-            raise
+            logger.warning("⚠️ Falling back to simple Redis storage without vector search")
+            self.redis_search_available = False
     
     def store_embeddings(self, document_id: str, user_id: str, chunk_data: List[Dict[str, Any]], document_type: str = "resume"):
         """
@@ -146,15 +167,32 @@ class RedisVectorStore:
             # Test Redis connection
             ping_result = self.redis_client.ping()
             
-            # Test index
-            index_info = self.redis_client.execute_command("FT.INFO", self.index_name)
-            
-            return {
-                "status": "healthy",
-                "redis_ping": ping_result,
-                "index_exists": True,
-                "index_name": self.index_name
-            }
+            # Test index only if RediSearch is available
+            if self.redis_search_available:
+                try:
+                    index_info = self.redis_client.execute_command("FT.INFO", self.index_name)
+                    return {
+                        "status": "healthy",
+                        "redis_ping": ping_result,
+                        "redis_search_available": True,
+                        "index_exists": True,
+                        "index_name": self.index_name
+                    }
+                except Exception as e:
+                    return {
+                        "status": "degraded",
+                        "redis_ping": ping_result,
+                        "redis_search_available": False,
+                        "index_error": str(e)
+                    }
+            else:
+                return {
+                    "status": "degraded",
+                    "redis_ping": ping_result,
+                    "redis_search_available": False,
+                    "index_exists": False,
+                    "note": "RediSearch not available - using simple Redis storage"
+                }
             
         except Exception as e:
             return {
@@ -165,8 +203,13 @@ class RedisVectorStore:
     def search_similar_by_document_type(self, query_embedding, user_id, document_type, top_k=5, min_score=0.3):
         """
         Search for similar vectors filtered by document type (resume or personal_info).
-        Delegates to the standalone function in vector_search.py.
+        Delegates to the standalone function in vector_search.py if RediSearch is available,
+        otherwise uses fallback vector search.
         """
+        if not self.redis_search_available:
+            logger.info("Using fallback vector search (slower but functional)")
+            return self.fallback_vector_search(query_embedding, user_id, document_type, top_k)
+            
         return search_similar_by_document_type(
             self.redis_client,
             self.index_name,
@@ -175,4 +218,94 @@ class RedisVectorStore:
             document_type,
             top_k=top_k,
             min_score=min_score
-        ) 
+        )
+
+    # Add fallback vector search using basic similarity
+    def fallback_vector_search(self, query_embedding, user_id, document_type, top_k=5):
+        """
+        Fallback vector search using basic cosine similarity when RediSearch is not available.
+        This is slower but provides basic functionality.
+        """
+        try:
+            import numpy as np
+            
+            # Use global sklearn availability flag
+            use_sklearn = SKLEARN_AVAILABLE
+            if not use_sklearn:
+                logger.warning("sklearn not available, using manual cosine similarity")
+            
+            # Get all documents for the user and document type
+            pattern = f"{self.index_name}:{user_id}:{document_type}:*"
+            keys = self.redis_client.keys(pattern)
+            
+            if not keys:
+                logger.info(f"No documents found for user {user_id}, document_type {document_type}")
+                return []
+            
+            results = []
+            query_embedding = np.array(query_embedding, dtype=np.float32)
+            
+            for key in keys:
+                try:
+                    doc_data = self.redis_client.hgetall(key)
+                    if b'embedding' in doc_data:
+                        # Convert bytes back to numpy array
+                        stored_embedding = np.frombuffer(doc_data[b'embedding'], dtype=np.float32)
+                        
+                        # Calculate cosine similarity
+                        if use_sklearn:
+                            similarity = cosine_similarity(
+                                query_embedding.reshape(1, -1),
+                                stored_embedding.reshape(1, -1)
+                            )[0][0]
+                        else:
+                            # Manual cosine similarity calculation
+                            dot_product = np.dot(query_embedding, stored_embedding)
+                            norms = np.linalg.norm(query_embedding) * np.linalg.norm(stored_embedding)
+                            similarity = dot_product / norms if norms > 0 else 0
+                        
+                        results.append({
+                            'id': key.decode(),
+                            'score': float(similarity),
+                            'text': doc_data.get(b'text', b'').decode('utf-8', errors='ignore'),
+                            'document_id': doc_data.get(b'document_id', b'').decode('utf-8', errors='ignore'),
+                            'chunk_id': doc_data.get(b'chunk_id', b'').decode('utf-8', errors='ignore'),
+                        })
+                except Exception as e:
+                    logger.warning(f"Error processing key {key}: {e}")
+                    continue
+            
+            # Sort by similarity score and return top_k
+            results.sort(key=lambda x: x['score'], reverse=True)
+            logger.info(f"Fallback search found {len(results)} results, returning top {top_k}")
+            return results[:top_k]
+            
+        except Exception as e:
+            logger.error(f"Fallback vector search failed: {e}")
+            return []
+    
+    def delete_all_documents(self, user_id: str, document_type: str = None):
+        """
+        Delete all documents for a user, optionally filtered by document type
+        """
+        try:
+            if document_type:
+                pattern = f"{self.index_name}:{user_id}:{document_type}:*"
+            else:
+                pattern = f"{self.index_name}:{user_id}:*"
+            
+            # Find all keys matching the pattern
+            keys = self.redis_client.keys(pattern)
+            
+            if keys:
+                # Delete all matching keys
+                deleted_count = self.redis_client.delete(*keys)
+                logger.info(f"✅ Deleted {deleted_count} documents for user {user_id} ({document_type or 'all types'})")
+                return deleted_count
+            else:
+                logger.info(f"ℹ️ No documents found for user {user_id} ({document_type or 'all types'})")
+                return 0
+                
+        except Exception as e:
+            logger.error(f"❌ Error deleting documents for user {user_id}: {e}")
+            raise 

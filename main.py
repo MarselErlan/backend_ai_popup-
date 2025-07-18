@@ -67,6 +67,7 @@ async def lifespan(app: FastAPI):
         get_personal_info_extractor()
         get_form_filler()
         get_smart_llm_service()
+        get_embedding_service()
         logger.info("✅ All services pre-warmed successfully")
     except Exception as e:
         logger.error(f"❌ Service pre-warming failed: {e}")
@@ -123,6 +124,70 @@ if os.getenv("RAILWAY_ENVIRONMENT"):
 
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is required")
+
+# Test Redis connection and capabilities
+try:
+    import redis
+    redis_client = redis.from_url(REDIS_URL)
+    redis_client.ping()
+    print("✅ Redis connection successful")
+    
+    # Get Redis server info
+    try:
+        info = redis_client.info()
+        print(f"🔍 Redis version: {info.get('redis_version', 'unknown')}")
+        print(f"🔍 Redis mode: {info.get('redis_mode', 'unknown')}")
+    except Exception as e:
+        print(f"⚠️ Could not get Redis info: {e}")
+    
+    # Check for RediSearch capability
+    try:
+        redis_client.execute_command("FT._LIST")
+        print("✅ RediSearch module available - full vector search enabled")
+    except redis.exceptions.ResponseError as e:
+        print(f"⚠️ RediSearch module not available: {e}")
+        print("   📝 Note: Vector search will use fallback method or Pinecone")
+        print("   💡 Railway provides standard Redis, not Redis Stack")
+        
+        # Check what modules are available
+        try:
+            modules = redis_client.execute_command("MODULE", "LIST")
+            print(f"🔍 Available modules: {modules}")
+        except Exception:
+            print("🔍 No additional modules available")
+            
+except Exception as e:
+    print(f"❌ Redis connection failed: {e}")
+    print("⚠️ Redis features will be limited")
+
+# Check Pinecone availability
+pinecone_api_key = os.getenv("PINECONE_API_KEY")
+if pinecone_api_key:
+    try:
+        from app.services.pinecone_vector_store import PineconeVectorStore
+        print("✅ Pinecone API key found - production vector search enabled")
+        print("   🚀 Vector search will use Pinecone (fast & scalable)")
+    except ImportError as e:
+        print(f"⚠️ Pinecone not available: {e}")
+        print("   📝 Install with: pip install pinecone-client")
+else:
+    print("⚠️ PINECONE_API_KEY not set - using Redis fallback")
+    print("   💡 Add PINECONE_API_KEY to Railway dashboard for optimal performance")
+
+# Alternative: Check if PostgreSQL has pgvector extension
+try:
+    from sqlalchemy import create_engine, text
+    temp_engine = create_engine(DATABASE_URL)
+    with temp_engine.connect() as conn:
+        result = conn.execute(text("SELECT * FROM pg_available_extensions WHERE name = 'vector'"))
+        if result.fetchone():
+            print("✅ PostgreSQL pgvector extension available")
+            print("   💡 Could use PostgreSQL for vector storage instead of Redis")
+        else:
+            print("⚠️ PostgreSQL pgvector extension not available")
+    temp_engine.dispose()
+except Exception as e:
+    print(f"🔍 Could not check pgvector: {e}")
 
 # Session-based authentication dependency
 def get_session_user(db: Session = Depends(get_db), session_id: str = Header(None, alias="Authorization")):
@@ -210,6 +275,11 @@ def get_smart_llm_service():
     """Get Smart LLM service instance"""
     return SmartLLMService(redis_url=REDIS_URL)
 
+@lru_cache(maxsize=1)
+def get_embedding_service():
+    """Get embedding service instance"""
+    return EmbeddingService(redis_url=REDIS_URL, openai_api_key=OPENAI_API_KEY)
+
 # Integrated usage analyzer and simple function tracker imports removed
 
 # Lifecycle management
@@ -226,6 +296,7 @@ async def lifespan(app: FastAPI):
         get_personal_info_extractor()
         get_form_filler()
         get_smart_llm_service()
+        get_embedding_service()
         logger.info("✅ All services pre-warmed successfully")
     except Exception as e:
         logger.error(f"❌ Service pre-warming failed: {e}")
@@ -825,7 +896,8 @@ async def demo_upload_resume(file: UploadFile = File(...)):
         )
         # Extract text for embedding
         try:
-            text = extract_text_from_bytes(file_content, file.content_type)
+            text = await extract_text_from_file(file_content, file.content_type)
+            embedding_service = get_embedding_service()
             embedding_service.process_document(
                 document_id=f"resume_{document_id}",
                 user_id="default",
@@ -869,6 +941,7 @@ async def demo_upload_personal_info(content: str = Form(...)):
         )
         # Embed personal info
         try:
+            embedding_service = get_embedding_service()
             embedding_service.process_document(
                 document_id=f"personal_info_{document_id}",
                 user_id="default",
@@ -929,7 +1002,7 @@ async def reembed_resume(
         
         try:
             # Extract text from file content
-            text = extract_text_from_bytes(document.file_content, document.content_type)
+            text = await extract_text_from_file(document.file_content, document.content_type)
             
             # Process document with Redis storage
             embedding_service.process_document(
@@ -964,34 +1037,7 @@ async def reembed_resume(
             detail=f"Error processing resume: {str(e)}"
         )
 
-def extract_text_from_bytes(file_content: bytes, content_type: str) -> str:
-    """Extract text from file bytes based on content type"""
-    try:
-        if content_type == "application/pdf":
-            # PDF
-            with io.BytesIO(file_content) as file_obj:
-                reader = PyPDF2.PdfReader(file_obj)
-                text = ""
-                for page in reader.pages:
-                    text += page.extract_text() + "\n"
-                return text
-                
-        elif content_type in ["application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
-            # Word document
-            with io.BytesIO(file_content) as file_obj:
-                text = docx2txt.process(file_obj)
-                return text
-                
-        elif content_type == "text/plain":
-            # Plain text
-            return file_content.decode("utf-8")
-            
-        else:
-            raise ValueError(f"Unsupported content type: {content_type}")
-            
-    except Exception as e:
-        logger.error(f"❌ Error extracting text: {str(e)}")
-        raise
+
 
 @app.post("/api/v1/personal-info/reembed", response_model=ReembedResponse)
 async def reembed_personal_info_from_database(
@@ -1104,6 +1150,7 @@ async def upload_resume(
 ):
     """
     📄 Upload resume document to database (One per user - replaces existing)
+    Automatically processes document into vector embeddings (Pinecone/Redis)
     
     Supports:
     - PDF (.pdf)
@@ -1116,7 +1163,7 @@ async def upload_resume(
         # Read file content
         file_content = await file.read()
         
-        # Save document
+        # Save document to database
         service_start = time.time()
         document_id = document_service.save_resume_document(
             filename=file.filename,
@@ -1126,11 +1173,28 @@ async def upload_resume(
         )
         service_time = time.time() - service_start
         
+        # Extract text and process into vector embeddings
+        embed_start = time.time()
+        try:
+            text = await extract_text_from_file(file_content, file.content_type)
+            embedding_service = get_embedding_service()
+            embedding_service.process_document(
+                document_id=f"resume_{document_id}",
+                user_id=user.id,
+                content=text,
+                reprocess=True
+            )
+            logger.info(f"✅ Resume document {document_id} processed into vector store for user {user.id}")
+        except Exception as embed_err:
+            logger.error(f"❌ Vector embedding failed for resume {document_id}: {embed_err}")
+            # Continue without failing the upload
+        
+        embed_time = time.time() - embed_start
         processing_time = time.time() - start_time
         
         return {
             "status": "success",
-            "message": "Resume uploaded successfully",
+            "message": "Resume uploaded and processed successfully",
             "document_id": document_id,
             "filename": file.filename,
             "file_size": len(file_content),
@@ -1227,6 +1291,7 @@ async def upload_personal_info(
 ):
     """
     📄 Upload personal info document to database (One per user - replaces existing)
+    Automatically processes document into vector embeddings (Pinecone/Redis)
     
     Supports:
     - PDF (.pdf)
@@ -1239,7 +1304,7 @@ async def upload_personal_info(
         # Read file content
         file_content = await file.read()
         
-        # Save document
+        # Save document to database
         service_start = time.time()
         document_id = document_service.save_personal_info_document(
             filename=file.filename,
@@ -1249,11 +1314,28 @@ async def upload_personal_info(
         )
         service_time = time.time() - service_start
         
+        # Extract text and process into vector embeddings
+        embed_start = time.time()
+        try:
+            text = await extract_text_from_file(file_content, file.content_type)
+            embedding_service = get_embedding_service()
+            embedding_service.process_document(
+                document_id=f"personal_info_{document_id}",
+                user_id=user.id,
+                content=text,
+                reprocess=True
+            )
+            logger.info(f"✅ Personal info document {document_id} processed into vector store for user {user.id}")
+        except Exception as embed_err:
+            logger.error(f"❌ Vector embedding failed for personal info {document_id}: {embed_err}")
+            # Continue without failing the upload
+        
+        embed_time = time.time() - embed_start
         processing_time = time.time() - start_time
         
         return {
             "status": "success",
-            "message": "Personal info document uploaded successfully",
+            "message": "Personal info document uploaded and processed successfully",
             "document_id": document_id,
             "filename": file.filename,
             "file_size": len(file_content),
@@ -1350,6 +1432,190 @@ async def delete_user_personal_info(
     except Exception as e:
         logger.error(f"❌ Failed to delete personal info: {e}")
         raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
+
+# ============================================================================
+# VECTOR EMBEDDING MANAGEMENT ENDPOINTS
+# ============================================================================
+
+@app.post("/api/v1/resume/reembed")
+async def reembed_resume(
+    user: User = Depends(get_session_user)
+):
+    """
+    🔄 Re-process existing resume document into vector embeddings
+    Useful for updating embeddings with new models or after index changes
+    """
+    try:
+        document_service = get_document_service()
+        document = document_service.get_user_resume(user.id)
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="No resume found for this user")
+        
+        # Extract text and process into vector embeddings
+        try:
+            text = await extract_text_from_file(document.file_content, document.content_type)
+            embedding_service = get_embedding_service()
+            embedding_service.process_document(
+                document_id=f"resume_{document.id}",
+                user_id=user.id,
+                content=text,
+                reprocess=True
+            )
+            logger.info(f"✅ Resume document {document.id} re-embedded for user {user.id}")
+            
+            return {
+                "status": "success",
+                "message": "Resume re-embedded successfully",
+                "document_id": document.id,
+                "filename": document.filename
+            }
+        except Exception as embed_err:
+            logger.error(f"❌ Re-embedding failed for resume {document.id}: {embed_err}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Re-embedding failed: {str(embed_err)}"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error re-embedding resume: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error re-embedding resume: {str(e)}")
+
+@app.post("/api/v1/personal-info/reembed")
+async def reembed_personal_info(
+    user: User = Depends(get_session_user)
+):
+    """
+    🔄 Re-process existing personal info document into vector embeddings
+    Useful for updating embeddings with new models or after index changes
+    """
+    try:
+        document_service = get_document_service()
+        document = document_service.get_active_personal_info_document(user.id)
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="No personal info found for this user")
+        
+        # Extract text and process into vector embeddings
+        try:
+            text = await extract_text_from_file(document.file_content, document.content_type)
+            embedding_service = get_embedding_service()
+            embedding_service.process_document(
+                document_id=f"personal_info_{document.id}",
+                user_id=user.id,
+                content=text,
+                reprocess=True
+            )
+            logger.info(f"✅ Personal info document {document.id} re-embedded for user {user.id}")
+            
+            return {
+                "status": "success",
+                "message": "Personal info re-embedded successfully",
+                "document_id": document.id,
+                "filename": document.filename
+            }
+        except Exception as embed_err:
+            logger.error(f"❌ Re-embedding failed for personal info {document.id}: {embed_err}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Re-embedding failed: {str(embed_err)}"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error re-embedding personal info: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error re-embedding personal info: {str(e)}")
+
+@app.get("/api/v1/vector-store/stats")
+async def get_vector_store_stats(
+    user: User = Depends(get_session_user)
+):
+    """
+    📊 Get vector store statistics for user
+    Shows document counts and vector store type (Pinecone/Redis)
+    """
+    try:
+        embedding_service = get_embedding_service()
+        stats = embedding_service.get_document_stats(user.id)
+        
+        return {
+            "status": "success",
+            "user_id": user.id,
+            "vector_store_type": "Pinecone" if hasattr(embedding_service.vector_store, 'index') else "Redis",
+            "stats": stats
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting vector store stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting stats: {str(e)}")
+
+@app.delete("/api/v1/vector-store/clear")
+async def clear_user_vectors(
+    user: User = Depends(get_session_user)
+):
+    """
+    🗑️ Clear all vector embeddings for user
+    Removes all stored vectors but keeps documents in database
+    """
+    try:
+        embedding_service = get_embedding_service()
+        
+        # Clear resume vectors
+        try:
+            embedding_service.vector_store.delete_all_documents(user.id, "resume")
+            logger.info(f"✅ Cleared resume vectors for user {user.id}")
+        except Exception as e:
+            logger.warning(f"⚠️ Error clearing resume vectors: {e}")
+        
+        # Clear personal info vectors
+        try:
+            embedding_service.vector_store.delete_all_documents(user.id, "personal_info")
+            logger.info(f"✅ Cleared personal info vectors for user {user.id}")
+        except Exception as e:
+            logger.warning(f"⚠️ Error clearing personal info vectors: {e}")
+        
+        return {
+            "status": "success",
+            "message": "All vector embeddings cleared successfully",
+            "user_id": user.id
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error clearing vectors: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error clearing vectors: {str(e)}")
+
+@app.get("/api/v1/resume/search")
+async def search_resume_vectors(
+    query: str = Query(..., description="Search query"),
+    top_k: int = Query(5, description="Number of results to return"),
+    min_score: float = Query(0.1, description="Minimum similarity score"),
+    user: User = Depends(get_session_user)
+):
+    """
+    🔍 Search resume vectors using semantic similarity
+    Returns relevant chunks from user's resume documents
+    """
+    try:
+        embedding_service = get_embedding_service()
+        
+        results = embedding_service.search_similar_by_document_type(
+            query=query,
+            user_id=user.id,
+            document_type="resume",
+            top_k=top_k,
+            min_score=min_score
+        )
+        
+        logger.info(f"✅ Resume search completed - Found {len(results)} results for user {user.id}")
+        
+        return results
+        
+    except Exception as e:
+        logger.error(f"❌ Resume search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
 # ============================================================================
 # FULL JWT AUTHENTICATION ENDPOINTS (Optional)

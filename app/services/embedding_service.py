@@ -10,6 +10,7 @@ import openai
 from loguru import logger
 
 from app.services.vector_store import RedisVectorStore
+from app.services.pinecone_vector_store import PineconeVectorStore
 from app.services.document_service import DocumentService
 
 class EmbeddingService:
@@ -20,13 +21,29 @@ class EmbeddingService:
         redis_url: str = "redis://localhost:6379",
         openai_api_key: Optional[str] = None,
         chunk_size: int = 800,
-        chunk_overlap: int = 100
+        chunk_overlap: int = 100,
+        use_pinecone: bool = None
     ):
         # Initialize OpenAI
         openai.api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
         
+        # Determine which vector store to use
+        if use_pinecone is None:
+            # Auto-detect: use Pinecone if API key is available
+            use_pinecone = bool(os.getenv("PINECONE_API_KEY"))
+        
         # Initialize vector store
-        self.vector_store = RedisVectorStore(redis_url=redis_url)
+        if use_pinecone:
+            try:
+                self.vector_store = PineconeVectorStore()
+                logger.info("✅ Using Pinecone vector store")
+            except Exception as e:
+                logger.warning(f"⚠️ Pinecone initialization failed: {e}")
+                logger.info("🔄 Falling back to Redis vector store")
+                self.vector_store = RedisVectorStore(redis_url=redis_url)
+        else:
+            self.vector_store = RedisVectorStore(redis_url=redis_url)
+            logger.info("✅ Using Redis vector store")
         
         # Chunking parameters
         self.chunk_size = chunk_size

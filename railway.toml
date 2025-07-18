@@ -12,4 +12,5 @@ sleepApplication = false
 [env]
 DATABASE_URL = "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway"
 REDIS_URL = "redis://default:bzjztpnzvaybwVlISyGxYSNUnFAmgtAM@shuttle.proxy.rlwy.net:46918"
-ALLOWED_HOSTS = "amiable-endurance-production.up.railway.app,localhost,127.0.0.1" 
+ALLOWED_HOSTS = "amiable-endurance-production.up.railway.app,localhost,127.0.0.1"
+# Add PINECONE_API_KEY in Railway dashboard for production vector search 

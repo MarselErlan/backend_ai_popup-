@@ -36,6 +36,7 @@ from typing_extensions import TypedDict
 from app.utils.logger import logger
 from app.services.embedding_service import EmbeddingService
 from app.services.vector_store import RedisVectorStore
+from app.services.pinecone_vector_store import PineconeVectorStore
 from app.services.document_service import DocumentService
 # Integrated usage analyzer import removed
 from app.services.rag_service import RAGService
@@ -204,7 +205,19 @@ class SmartLLMService:
         """Initialize services with better error handling"""
         try:
             self.embedding_service = EmbeddingService(redis_url=self.redis_url, openai_api_key=self.openai_api_key)
-            self.vector_store = RedisVectorStore(redis_url=self.redis_url)
+            
+            # Initialize vector store (auto-detect Pinecone or use Redis)
+            if os.getenv("PINECONE_API_KEY"):
+                try:
+                    self.vector_store = PineconeVectorStore()
+                    logger.info("✅ SmartLLMService using Pinecone vector store")
+                except Exception as e:
+                    logger.warning(f"⚠️ Pinecone initialization failed: {e}")
+                    logger.info("🔄 SmartLLMService falling back to Redis vector store")
+                    self.vector_store = RedisVectorStore(redis_url=self.redis_url)
+            else:
+                self.vector_store = RedisVectorStore(redis_url=self.redis_url)
+                logger.info("✅ SmartLLMService using Redis vector store")
             
             # Initialize document service with fallback URL
             postgres_url = os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway")
