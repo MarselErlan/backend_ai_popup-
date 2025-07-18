@@ -19,7 +19,7 @@ class DocumentService:
     """Service for managing documents in database"""
     
     def __init__(self, database_url: str):
-        self.database_url = database_url or os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqT@localhost:5432/ai_popup")
+        self.database_url = database_url or os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway")
         self.engine = create_engine(self.database_url)
         
         # Create tables if they don't exist

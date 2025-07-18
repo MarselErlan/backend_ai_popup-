@@ -80,7 +80,7 @@ if not os.getenv("RAILWAY_ENVIRONMENT"):
 # Get environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # For Railway deployment, use DATABASE_URL first, then fallback to the new default
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqT@localhost:5432/ai_popup")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 PORT = int(os.getenv("PORT", "8000"))
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(',')

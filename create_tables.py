@@ -11,7 +11,7 @@ def create_tables(db_url: str = None):
     """Create all database tables using the provided database URL"""
     try:
         # Use provided URL or get from environment
-        database_url = db_url or os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqT@localhost:5432/ai_popup")
+        database_url = db_url or os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway")
         
         if not database_url:
             raise ValueError("Database URL is not provided")
