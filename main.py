@@ -83,16 +83,11 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if os.getenv("RAILWAY_ENVIRONMENT"):
     DATABASE_URL = "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway"
     
-    # Use Railway Redis URL in production - try multiple methods
-    REDIS_URL = os.getenv("REDIS_URL")
-    if not REDIS_URL and os.getenv("REDISPASSWORD") and os.getenv("REDISHOST") and os.getenv("REDISPORT"):
-        REDIS_URL = f"redis://:{os.getenv('REDISPASSWORD')}@{os.getenv('REDISHOST')}:{os.getenv('REDISPORT')}"
-    elif not REDIS_URL:
-        # Fallback to localhost for development
-        REDIS_URL = "redis://localhost:6379"
+    # Force Railway Redis URL for production
+    REDIS_URL = "redis://default:bzjztpnzvaybwVlISyGxYSNUnFAmgtAM@shuttle.proxy.rlwy.net:46918"
     
     print(f"🚂 Railway: Using hardcoded DATABASE_URL")
-    print(f"🔴 Railway: Redis URL configured from environment")
+    print(f"🔴 Railway: Using hardcoded REDIS_URL")
 else:
     DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway")
     REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
@@ -112,9 +107,7 @@ if os.getenv("RAILWAY_ENVIRONMENT"):
     
     # Debug Redis configuration
     print(f"🔍 Raw REDIS_URL from env: {repr(os.getenv('REDIS_URL'))}")
-    print(f"🔍 REDISHOST: {repr(os.getenv('REDISHOST'))}")
-    print(f"🔍 REDISPORT: {repr(os.getenv('REDISPORT'))}")
-    print(f"🔍 Final REDIS_URL variable: {repr(REDIS_URL)}")
+    print(f"🔍 Final REDIS_URL variable: {REDIS_URL.split('@')[0] if '@' in REDIS_URL else 'Invalid URL'}@[HIDDEN]")
     
     # Log DATABASE_URL format without exposing credentials
     if DATABASE_URL:
@@ -215,7 +208,7 @@ def get_form_filler():
 @lru_cache(maxsize=1)
 def get_smart_llm_service():
     """Get Smart LLM service instance"""
-    return SmartLLMService()
+    return SmartLLMService(redis_url=REDIS_URL)
 
 # Integrated usage analyzer and simple function tracker imports removed
 

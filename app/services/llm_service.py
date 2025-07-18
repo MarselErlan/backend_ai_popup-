@@ -170,8 +170,9 @@ class SmartLLMService:
     - Connection pooling and resource management
     """
     
-    def __init__(self, openai_api_key: Optional[str] = None, cache_size: int = 1000):
+    def __init__(self, openai_api_key: Optional[str] = None, cache_size: int = 1000, redis_url: Optional[str] = None):
         self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+        self.redis_url = redis_url or os.getenv("REDIS_URL", "redis://localhost:6379")
         
         # Enhanced performance tracking
         self.metrics = PerformanceMetrics()
@@ -202,8 +203,8 @@ class SmartLLMService:
     def _init_services(self):
         """Initialize services with better error handling"""
         try:
-            self.embedding_service = EmbeddingService()
-            self.vector_store = RedisVectorStore()
+            self.embedding_service = EmbeddingService(redis_url=self.redis_url, openai_api_key=self.openai_api_key)
+            self.vector_store = RedisVectorStore(redis_url=self.redis_url)
             
             # Initialize document service with fallback URL
             postgres_url = os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway")

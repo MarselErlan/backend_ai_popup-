@@ -15,7 +15,7 @@ def test_environment_variables():
     # Set environment variables for testing
     os.environ['DATABASE_URL'] = 'postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway'
     os.environ['OPENAI_API_KEY'] = 'test-key-for-testing'
-    os.environ['REDIS_URL'] = 'redis://localhost:6379'
+    os.environ['REDIS_URL'] = 'redis://localhost:6379'  # For testing only
     os.environ['PORT'] = '8000'
     
     # Test that environment variables are loaded correctly
