@@ -12,8 +12,8 @@ def test_environment_variables():
     """Test that all required environment variables are set"""
     logger.info("🧪 Testing environment variables...")
     
-    # Set up production environment variables
-    os.environ['DATABASE_URL'] = 'postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@postgres.railway.internal:5432/railway'
+    # Set environment variables for testing
+    os.environ['DATABASE_URL'] = 'postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway'
     os.environ['OPENAI_API_KEY'] = 'test-key-for-testing'
     os.environ['REDIS_URL'] = 'redis://localhost:6379'
     os.environ['PORT'] = '8000'
@@ -21,10 +21,10 @@ def test_environment_variables():
     # Test that environment variables are loaded correctly
     try:
         # Import after setting environment variables
-        from main import POSTGRES_DB_URL, OPENAI_API_KEY, REDIS_URL, PORT
+        from main import DATABASE_URL, OPENAI_API_KEY, REDIS_URL, PORT
         
         logger.info("✅ Environment variables loaded successfully:")
-        logger.info(f"   DATABASE_URL: {POSTGRES_DB_URL.split('@')[0]}@***")
+        logger.info(f"   DATABASE_URL: {DATABASE_URL.split('@')[0]}@***")
         logger.info(f"   OPENAI_API_KEY: {'SET' if OPENAI_API_KEY else 'NOT SET'}")
         logger.info(f"   REDIS_URL: {REDIS_URL}")
         logger.info(f"   PORT: {PORT}")

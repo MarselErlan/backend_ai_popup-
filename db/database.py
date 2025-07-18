@@ -1,16 +1,16 @@
 import os
 from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from models import Base
 from loguru import logger
 
-# Database URL - use PostgreSQL for production  
-POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
+# Database URL - use PostgreSQL for production
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway")
 
 # Create engine
 engine = create_engine(
-    POSTGRES_DB_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in POSTGRES_DB_URL else {}
+    DATABASE_URL,
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 )
 
 # Create session

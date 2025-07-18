@@ -206,7 +206,7 @@ class SmartLLMService:
             self.vector_store = RedisVectorStore()
             
             # Initialize document service with fallback URL
-            postgres_url = os.getenv("POSTGRES_DB_URL") or "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup"
+            postgres_url = os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway")
             self.document_service = DocumentService(postgres_url)
             
             logger.info("✅ All services initialized successfully")

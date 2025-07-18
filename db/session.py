@@ -1,14 +1,12 @@
 # File: db/session.py
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# Get database URL from environment variable
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway")
 
-POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL")
-
-engine = create_engine(POSTGRES_DB_URL)
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Dependency for FastAPI
