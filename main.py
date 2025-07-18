@@ -1496,14 +1496,38 @@ async def get_personal_info(user: User = Depends(get_session_user)):
             detail=f"Error retrieving personal info: {str(e)}"
         )
 
+@app.get("/api/v1/resume/download")
+async def download_user_resume(
+    user: User = Depends(get_session_user)
+):
+    """⬇️ Download user's resume document"""
+    try:
+        document_service = get_document_service()
+        document = document_service.get_user_resume(user.id)
+        
+        if not document:
+            raise HTTPException(status_code=404, detail="No resume found for this user")
+        
+        return StreamingResponse(
+            io.BytesIO(document.file_content),
+            media_type=document.content_type,
+            headers={"Content-Disposition": f"attachment; filename={document.filename}"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Failed to download resume: {e}")
+        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
+
 @app.get("/api/v1/personal-info/download")
 async def download_user_personal_info(
-    user_id: str = Query("default", description="User ID for simple auth")
+    user: User = Depends(get_session_user)
 ):
     """⬇️ Download user's personal info document"""
     try:
         document_service = get_document_service()
-        document = document_service.get_active_personal_info_document(user_id)
+        document = document_service.get_personal_info_document(user.id)
         
         if not document:
             raise HTTPException(status_code=404, detail="No personal info found for this user")
@@ -1522,14 +1546,14 @@ async def download_user_personal_info(
 
 @app.delete("/api/v1/personal-info")
 async def delete_user_personal_info(
-    user_id: str = Query("default", description="User ID for simple auth")
+    user: User = Depends(get_session_user)
 ):
     """🗑️ Delete user's personal info document"""
     try:
         document_service = get_document_service()
         with document_service.get_session() as session:
             result = session.query(PersonalInfoDocument).filter(
-                PersonalInfoDocument.user_id == user_id,
+                PersonalInfoDocument.user_id == user.id,
                 PersonalInfoDocument.is_active == True
             ).update({"is_active": False})
             
