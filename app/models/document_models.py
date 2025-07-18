@@ -12,7 +12,7 @@ class ResumeDocument(Base):
     __tablename__ = "resume_documents"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(String(100), index=True)
+    user_id = Column(Integer, index=True)  # Changed from String to Integer to match new auth system
     filename = Column(String(255))
     file_content = Column(LargeBinary)
     content_type = Column(String(100))
@@ -24,7 +24,7 @@ class PersonalInfoDocument(Base):
     __tablename__ = "personal_info_documents"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(String(100), index=True)
+    user_id = Column(Integer, index=True)  # Changed from String to Integer to match new auth system
     filename = Column(String(255))
     file_content = Column(LargeBinary)
     content_type = Column(String(100))
@@ -38,7 +38,7 @@ class DocumentProcessingLog(Base):
     id = Column(Integer, primary_key=True, index=True)
     document_type = Column(String(50))  # "resume" or "personal_info"
     document_id = Column(Integer)
-    user_id = Column(String(100), nullable=True)
+    user_id = Column(Integer, nullable=True)  # Changed from String to Integer to match new auth system
     status = Column(String(50))  # "started", "completed", "failed"
     started_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)

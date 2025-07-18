@@ -811,6 +811,47 @@ async def list_user_sessions(
         raise HTTPException(status_code=500, detail="Failed to list sessions")
 
 # ============================================================================
+# DOCUMENTS STATUS ENDPOINT (Authentication Required)
+# ============================================================================
+
+class DocumentStatusResponse(BaseModel):
+    status: str
+    documents: Dict[str, Any]
+    user_id: int
+    message: str
+
+@app.get("/api/v1/documents/status", response_model=DocumentStatusResponse)
+async def get_documents_status(
+    user: User = Depends(get_session_user)
+):
+    """
+    📋 Get status of user's documents (resume and personal info)
+    Returns document information including filename, size, and processing status
+    """
+    try:
+        # Get document service
+        doc_service = get_document_service()
+        
+        # Get documents status for the authenticated user
+        documents_status = doc_service.get_documents_status(user.id)
+        
+        logger.info(f"📋 Retrieved documents status for user {user.id}: {documents_status}")
+        
+        return DocumentStatusResponse(
+            status="success",
+            documents=documents_status,
+            user_id=user.id,
+            message="Documents status retrieved successfully"
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting documents status for user {user.id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving documents status: {str(e)}"
+        )
+
+# ============================================================================
 # DEMO ENDPOINT (No Authentication Required)
 # ============================================================================
 

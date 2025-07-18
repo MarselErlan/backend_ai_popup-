@@ -41,7 +41,7 @@ class DocumentService:
         filename: str, 
         file_content: bytes,
         content_type: str,
-        user_id: str = None
+        user_id: int = None
     ) -> int:
         """Save resume document to database"""
         try:
@@ -72,7 +72,7 @@ class DocumentService:
             logger.error(f"❌ Error saving resume document: {e}")
             raise
     
-    def get_user_resume(self, user_id: str = None) -> Optional[ResumeDocument]:
+    def get_user_resume(self, user_id: int = None) -> Optional[ResumeDocument]:
         """Get the resume document for a user"""
         try:
             with self.get_session() as session:
@@ -120,7 +120,7 @@ class DocumentService:
         filename: str, 
         file_content: bytes,
         content_type: str,
-        user_id: str = None
+        user_id: int = None
     ) -> int:
         """Save personal info document to database"""
         try:
@@ -151,7 +151,7 @@ class DocumentService:
             logger.error(f"❌ Error saving personal info document: {e}")
             raise
     
-    def get_personal_info_document(self, user_id: str = None) -> Optional[PersonalInfoDocument]:
+    def get_personal_info_document(self, user_id: int = None) -> Optional[PersonalInfoDocument]:
         """Get the personal info document for a user"""
         try:
             with self.get_session() as session:
@@ -191,101 +191,42 @@ class DocumentService:
             raise
     
     # ============================================================================
-    # PROCESSING LOG OPERATIONS
+    # CONVENIENCE METHODS
     # ============================================================================
     
-    def log_processing_start(self, document_type: str, document_id: int, user_id: str = None) -> int:
-        """Log the start of document processing"""
-        try:
-            with self.get_session() as session:
-                log = DocumentProcessingLog(
-                    document_type=document_type,
-                    document_id=document_id,
-                    user_id=user_id,
-                    status="started",
-                    started_at=datetime.now()
-                )
-                session.add(log)
-                session.commit()
-                session.refresh(log)
-                return log.id
-                
-        except Exception as e:
-            logger.error(f"❌ Error logging processing start: {e}")
-            raise
+    def store_resume(self, user_id: int, filename: str, content: str) -> int:
+        """Store resume content as text"""
+        return self.save_resume_document(
+            filename=filename,
+            file_content=content.encode('utf-8'),
+            content_type='text/plain',
+            user_id=user_id
+        )
     
-    def log_processing_complete(self, log_id: int, processing_time: int = None,
-                              total_chunks: int = None, embedding_dimension: int = None,
-                              model_used: str = None):
-        """Log successful completion of document processing"""
-        try:
-            with self.get_session() as session:
-                session.query(DocumentProcessingLog).filter(
-                    DocumentProcessingLog.id == log_id
-                ).update({
-                    "status": "completed",
-                    "completed_at": datetime.now(),
-                    "processing_time": processing_time,
-                    "total_chunks": total_chunks,
-                    "embedding_dimension": embedding_dimension,
-                    "model_used": model_used
-                })
-                session.commit()
-                
-        except Exception as e:
-            logger.error(f"❌ Error logging processing completion: {e}")
-            raise
+    def store_personal_info(self, user_id: int, filename: str, content: str) -> int:
+        """Store personal info content as text"""
+        return self.save_personal_info_document(
+            filename=filename,
+            file_content=content.encode('utf-8'),
+            content_type='text/plain',
+            user_id=user_id
+        )
     
-    def log_processing_error(self, log_id: int, error_message: str):
-        """Log processing error"""
-        try:
-            with self.get_session() as session:
-                session.query(DocumentProcessingLog).filter(
-                    DocumentProcessingLog.id == log_id
-                ).update({
-                    "status": "failed",
-                    "completed_at": datetime.now(),
-                    "error_message": error_message
-                })
-                session.commit()
-                
-        except Exception as e:
-            logger.error(f"❌ Error logging processing error: {e}")
-            raise
+    def get_resume_content(self, user_id: int) -> Optional[str]:
+        """Get resume content as text"""
+        resume_doc = self.get_user_resume(user_id)
+        if resume_doc:
+            return resume_doc.file_content.decode('utf-8')
+        return None
     
-    # ============================================================================
-    # UTILITY METHODS
-    # ============================================================================
+    def get_personal_info_content(self, user_id: int) -> Optional[str]:
+        """Get personal info content as text"""
+        personal_info_doc = self.get_personal_info_document(user_id)
+        if personal_info_doc:
+            return personal_info_doc.file_content.decode('utf-8')
+        return None
     
-    def get_document_stats(self) -> Dict[str, Any]:
-        """Get document statistics"""
-        try:
-            with self.get_session() as session:
-                resume_count = session.query(ResumeDocument).filter(
-                    ResumeDocument.is_active == True
-                ).count()
-                
-                personal_info_count = session.query(PersonalInfoDocument).filter(
-                    PersonalInfoDocument.is_active == True
-                ).count()
-                
-                processing_logs_count = session.query(DocumentProcessingLog).count()
-                
-                stats = {
-                    "active_resume_documents": resume_count,
-                    "active_personal_info_documents": personal_info_count,
-                    "total_processing_logs": processing_logs_count,
-                    "timestamp": datetime.now().isoformat()
-                }
-                
-                logger.info(f"📊 Document stats: {stats}")
-                return stats
-                
-        except Exception as e:
-            logger.error(f"❌ Error getting document stats: {e}")
-            raise
-    
-    def get_documents_status(self, user_id: str = None) -> Dict[str, Any]:
+    def get_documents_status(self, user_id: int = None) -> Dict[str, Any]:
         """Get status of user's documents"""
         try:
             resume_doc = self.get_user_resume(user_id)
@@ -308,36 +249,32 @@ class DocumentService:
             logger.error(f"❌ Error getting documents status: {e}")
             raise
     
-    def get_user_resume_documents(self, user_id: str = None) -> List[ResumeDocument]:
+    def get_user_resume_documents(self, user_id: int = None) -> List[ResumeDocument]:
         """⚡ OPTIMIZED: Get user resume documents"""
         try:
             with self.get_session() as session:
-                query = session.query(ResumeDocument).filter(
-                    ResumeDocument.is_active == True
-                )
+                query = session.query(ResumeDocument)
                 
                 if user_id:
                     query = query.filter(ResumeDocument.user_id == user_id)
                 
-                documents = query.order_by(desc(ResumeDocument.created_at)).all()
+                documents = query.order_by(desc(ResumeDocument.id)).all()
                 return documents
                 
         except Exception as e:
             logger.error(f"❌ Error getting user resume documents: {e}")
             raise
     
-    def get_user_personal_info_documents(self, user_id: str = None) -> List[PersonalInfoDocument]:
+    def get_user_personal_info_documents(self, user_id: int = None) -> List[PersonalInfoDocument]:
         """⚡ OPTIMIZED: Get user personal info documents"""
         try:
             with self.get_session() as session:
-                query = session.query(PersonalInfoDocument).filter(
-                    PersonalInfoDocument.is_active == True
-                )
+                query = session.query(PersonalInfoDocument)
                 
                 if user_id:
                     query = query.filter(PersonalInfoDocument.user_id == user_id)
                 
-                documents = query.order_by(desc(PersonalInfoDocument.created_at)).all()
+                documents = query.order_by(desc(PersonalInfoDocument.id)).all()
                 return documents
                 
         except Exception as e:
