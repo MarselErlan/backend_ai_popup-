@@ -6,6 +6,7 @@ import tempfile
 from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime
 from pathlib import Path
+import os
 
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, desc
@@ -18,8 +19,8 @@ class DocumentService:
     """Service for managing documents in database"""
     
     def __init__(self, database_url: str):
-        self.database_url = database_url
-        self.engine = create_engine(database_url)
+        self.database_url = database_url or os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqT@localhost:5432/ai_popup")
+        self.engine = create_engine(self.database_url)
         
         # Create tables if they don't exist
         Base.metadata.create_all(bind=self.engine)

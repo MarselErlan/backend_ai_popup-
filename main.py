@@ -50,6 +50,26 @@ from app.services.embedding_service import EmbeddingService
 from app.services.llm_service import SmartLLMService
 
 # URL tracking endpoints removed
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifecycle management"""
+    logger.info("🚀 Starting Smart Form Fill API (OPTIMIZED)")
+    
+    # Create tables
+    from create_tables import create_tables
+    create_tables(DATABASE_URL)
+    
+    # Pre-warm the singletons
+    try:
+        logger.info("🔧 Pre-warming services...")
+        get_document_service()
+        get_resume_extractor()
+        get_personal_info_extractor()
+        get_form_filler()
+        get_smart_llm_service()
+        logger.info("✅ All services pre-warmed successfully")
+    except Exception as e:
+        logger.error(f"❌ Service pre-warming failed: {e}")
 
 # Load environment variables
 # For Railway deployment, check if we're in Railway environment first
@@ -59,11 +79,11 @@ if not os.getenv("RAILWAY_ENVIRONMENT"):
 
 # Get environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-# For Railway deployment, use DATABASE_URL first, then fallback to POSTGRES_DB_URL
-DATABASE_URL = os.getenv("DATABASE_URL")
-POSTGRES_DB_URL = DATABASE_URL or os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
+# For Railway deployment, use DATABASE_URL first, then fallback to the new default
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqT@localhost:5432/ai_popup")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 PORT = int(os.getenv("PORT", "8000"))
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(',')
 
 # Debug logging for Railway deployment
 if os.getenv("RAILWAY_ENVIRONMENT"):
@@ -115,7 +135,7 @@ def get_document_service():
     """Cached document service singleton"""
     global _document_service
     if _document_service is None:
-        _document_service = DocumentService(POSTGRES_DB_URL)
+        _document_service = DocumentService(DATABASE_URL)
     return _document_service
 
 def get_resume_extractor():
@@ -124,7 +144,7 @@ def get_resume_extractor():
     # Force recreation for debugging
     _resume_extractor = ResumeExtractorOptimized(
         openai_api_key=OPENAI_API_KEY,
-        database_url=POSTGRES_DB_URL,
+        database_url=DATABASE_URL,
         use_hf_fallback=True
     )
     # Clear any existing cache to ensure fresh start
@@ -138,7 +158,7 @@ def get_personal_info_extractor():
     if _personal_info_extractor is None:
         _personal_info_extractor = PersonalInfoExtractorOptimized(
             openai_api_key=OPENAI_API_KEY,
-            database_url=POSTGRES_DB_URL,
+            database_url=DATABASE_URL,
             use_hf_fallback=True
         )
     return _personal_info_extractor
@@ -319,7 +339,7 @@ app.add_middleware(CustomCORSMiddleware)
 # URL tracking router removed
 
 # Initialize services
-document_service = DocumentService(POSTGRES_DB_URL)
+document_service = DocumentService(DATABASE_URL)
 embedding_service = EmbeddingService(
     redis_url=REDIS_URL,
     openai_api_key=OPENAI_API_KEY

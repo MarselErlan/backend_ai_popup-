@@ -4,30 +4,35 @@ Create database tables for Smart Form Fill API
 """
 import os
 from sqlalchemy import create_engine
-from db.models import Base, User
+from models import Base, User
 from loguru import logger
 
-# Database URL
-POSTGRES_DB_URL = os.getenv("POSTGRES_DB_URL", "postgresql://ai_popup:Erlan1824@localhost:5432/ai_popup")
-
-def create_tables():
-    """Create all database tables"""
+def create_tables(db_url: str = None):
+    """Create all database tables using the provided database URL"""
     try:
-        # Create engine
-        engine = create_engine(POSTGRES_DB_URL)
+        # Use provided URL or get from environment
+        database_url = db_url or os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqT@localhost:5432/ai_popup")
         
+        if not database_url:
+            raise ValueError("Database URL is not provided")
+            
+        # Create engine
+        engine = create_engine(database_url)
+        
+        # Verify connection
+        with engine.connect() as connection:
+            logger.info("✅ Database connection successful!")
+
         # Create all tables
         Base.metadata.create_all(bind=engine)
         
-        logger.info("✅ Database tables created successfully!")
-        logger.info(f"   📊 Database: {POSTGRES_DB_URL}")
-        logger.info(f"   📋 Tables created:")
-        logger.info(f"      • users (User authentication)")
+        logger.info("✅ Database tables verified/created successfully!")
+        logger.info(f"   📊 Database: {database_url.split('@')[-1] if '@' in database_url else database_url}") # Avoid logging credentials
         
         return True
         
     except Exception as e:
-        logger.error(f"❌ Failed to create tables: {e}")
+        logger.error(f"❌ Failed to verify/create tables: {e}")
         return False
 
 if __name__ == "__main__":

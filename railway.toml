@@ -10,4 +10,6 @@ restartPolicyMaxRetries = 3
 sleepApplication = false
 
 [env]
-PORT = { default = "8000" } 
+DATABASE_URL = "${{Postgres.DATABASE_URL}}"
+REDIS_URL = "${{Redis.REDIS_URL}}"
+ALLOWED_HOSTS = "amiable-endurance-production.up.railway.app,localhost,127.0.0.1" 
