@@ -530,7 +530,7 @@ class SimpleRegisterResponse(BaseModel):
     Includes user_id and session_id for authentication
     """
     status: str
-    user_id: str
+    user_id: int  # Changed from str to int to match production database
     email: str
     message: str
 
@@ -563,8 +563,16 @@ async def simple_register_user(user_data: UserRegister, db: Session = Depends(ge
                     message="Account reactivated successfully. Please login."
                 )
         
-        # Create new user
-        new_user = User(email=user_data.email)
+        # Create new user with username generated from email
+        import re
+        username = re.sub(r'[^a-zA-Z0-9_]', '', user_data.email.split('@')[0])
+        if not username:
+            username = "user"
+        
+        new_user = User(
+            email=user_data.email,
+            username=username
+        )
         new_user.set_password(user_data.password)
         
         db.add(new_user)
