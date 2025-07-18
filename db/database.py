@@ -7,6 +7,9 @@ from loguru import logger
 # Database URL - use PostgreSQL for production
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:OZNHVfQlRwGhcUBFmkVluOzTonqTpIKa@interchange.proxy.rlwy.net:30153/railway")
 
+# Create Base
+Base = declarative_base()
+
 # Create engine
 engine = create_engine(
     DATABASE_URL,
