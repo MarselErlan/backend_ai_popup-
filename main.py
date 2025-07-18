@@ -91,6 +91,17 @@ if os.getenv("RAILWAY_ENVIRONMENT"):
     print(f"🔑 OPENAI_API_KEY: {'✅ SET' if OPENAI_API_KEY else '❌ NOT SET'}")
     print(f"🗄️ DATABASE_URL: {'✅ SET' if DATABASE_URL else '❌ NOT SET'}")
     print(f"🔴 REDIS_URL: {'✅ SET' if REDIS_URL else '❌ NOT SET'}")
+    # Log DATABASE_URL format without exposing credentials
+    if DATABASE_URL:
+        # Extract host info for debugging
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(DATABASE_URL)
+            print(f"🔍 Database Host: {parsed.hostname}")
+            print(f"🔍 Database Port: {parsed.port}")
+            print(f"🔍 Database Name: {parsed.path.lstrip('/')}")
+        except Exception as e:
+            print(f"⚠️ Could not parse DATABASE_URL: {e}")
 
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY environment variable is required")
