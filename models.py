@@ -11,28 +11,35 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class User(Base):
     """
-    🔐 SIMPLE USER MODEL FOR DEPLOYMENT
+    🔐 PRODUCTION USER MODEL - MATCHES RAILWAY DATABASE SCHEMA
     
-    Just the essentials: ID, Email, Password
+    Schema matches existing production database with 63 users:
+    - id: integer (auto-increment, primary key)
+    - username: string (required)
+    - email: string (optional in production, but we'll require it)
+    - phone_number: string (optional)
+    - hashed_password: string (required - note different name)
+    - is_active: boolean (optional, defaults to true)
     """
-    __tablename__ = "users"
+    __tablename__ = "ai_popup_users"
     
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    email = Column(String, unique=True, index=True, nullable=False)
-    password_hash = Column(String, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String, nullable=False)  # Required in production
+    email = Column(String, nullable=True)  # Optional in production schema
+    phone_number = Column(String, nullable=True)
+    hashed_password = Column(String, nullable=False)  # Production uses 'hashed_password' not 'password_hash'
     is_active = Column(Boolean, default=True)
     
     def set_password(self, password: str):
         """Hash and set password"""
-        self.password_hash = pwd_context.hash(password)
+        self.hashed_password = pwd_context.hash(password)
     
     def verify_password(self, password: str) -> bool:
         """Verify password against hash"""
-        return pwd_context.verify(password, self.password_hash)
+        return pwd_context.verify(password, self.hashed_password)
     
     def __repr__(self):
-        return f"<User(id={self.id}, email={self.email})>"
+        return f"<User(id={self.id}, email={self.email}, username={self.username})>"
 
 # For JWT tokens
 class UserToken(Base):
@@ -41,7 +48,7 @@ class UserToken(Base):
     
     Track active sessions
     """
-    __tablename__ = "user_tokens"
+    __tablename__ = "ai_popup_user_tokens"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(String, nullable=False)
@@ -58,7 +65,7 @@ class UserSession(Base):
     Store user sessions with simple session_id
     Perfect for browser extensions!
     """
-    __tablename__ = "user_sessions"
+    __tablename__ = "ai_popup_user_sessions"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     session_id = Column(String, unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
