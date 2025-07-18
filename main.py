@@ -49,7 +49,7 @@ from app.services.embedding_service import EmbeddingService
 # Import LLM service
 from app.services.llm_service import SmartLLMService
 
-# URL tracking endpoints removed
+# URL tracking endpoints (simplified for frontend compatibility)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifecycle management"""
@@ -809,6 +809,70 @@ async def list_user_sessions(
     except Exception as e:
         logger.error(f"❌ List sessions failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to list sessions")
+
+# ============================================================================
+# URL TRACKING ENDPOINTS (Simplified for Frontend Compatibility)
+# ============================================================================
+
+@app.get("/api/urls/stats/summary")
+async def get_url_stats_summary(
+    user: User = Depends(get_session_user)
+):
+    """
+    📊 Get URL tracking statistics summary
+    Simplified endpoint for frontend compatibility
+    """
+    try:
+        # Return mock data for now since URL tracking is disabled
+        return {
+            "status": "success",
+            "message": "URL stats retrieved successfully",
+            "stats": {
+                "total_urls": 0,
+                "applied": 0,
+                "in_progress": 0,
+                "not_applied": 0
+            },
+            "note": "URL tracking feature is currently disabled. This is mock data for frontend compatibility."
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting URL stats: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving URL stats: {str(e)}"
+        )
+
+@app.post("/api/urls/save")
+async def save_url(
+    url_data: dict,
+    user: User = Depends(get_session_user)
+):
+    """
+    💾 Save URL for tracking
+    Simplified endpoint for frontend compatibility
+    """
+    try:
+        url = url_data.get("url", "")
+        title = url_data.get("title", "Untitled")
+        
+        logger.info(f"📌 URL save requested: {title} ({url}) for user {user.id}")
+        
+        # Return success response (no actual saving since feature is disabled)
+        return {
+            "status": "success",
+            "message": "URL saved successfully (mock - tracking disabled)",
+            "url": url,
+            "title": title,
+            "note": "URL tracking feature is currently disabled. This is a mock response for frontend compatibility."
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error saving URL: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error saving URL: {str(e)}"
+        )
 
 # ============================================================================
 # DOCUMENTS STATUS ENDPOINT (Authentication Required)
